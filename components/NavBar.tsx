@@ -35,16 +35,14 @@ export default function NavBar(props: NavBarProps) {
         <div className='navbar'>
             <div className='navbar__wrapper'>
                 {PAGES.map(x =>
-                    <>
-                        <Link className={`navbar__button ${x.path === props.page ? 'active' : ''}`}
-                            href={`/${x.path === 'index' ? '' : x.path}`}
-                        >
-                            <div className='navbar__logo'>
-                                <ReactSVG src={`/svg/navbar/${x.logo}.svg`} />
-                            </div>
-                            <span className='navbar__text'>{x.title}</span>
-                        </Link>
-                    </>
+                    <Link key={'nav-' + x.path} className={`navbar__button ${x.path === props.page ? 'active' : ''}`}
+                        href={`/${x.path === 'index' ? '' : x.path}`}
+                    >
+                        <div className='navbar__logo'>
+                            <ReactSVG src={`/svg/navbar/${x.logo}.svg`} />
+                        </div>
+                        <span className='navbar__text'>{x.title}</span>
+                    </Link>
                 )}
             </div>
         </div>

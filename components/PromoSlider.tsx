@@ -28,7 +28,7 @@ export default function PromoSlider(props: PromoSliderProps) {
             } as any)}
         >
             {props.slides.map((x, i) =>
-                <SwiperSlide key={'col-img-' + x.img}>
+                <SwiperSlide key={'promo-slide-' + x.title}>
                     <div className='promo-slider__slide'>
                         <div className='promo-slider__dark_opacity' />
                         <div className='promo-slider__dark_opacity-gradient' />

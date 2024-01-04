@@ -1,52 +1,45 @@
 import IndexNavButton from '@/components/IndexNavButton'
 import NavBar from '@/components/NavBar'
 import PromoSlider from '@/components/PromoSlider'
+import ServicesButton from '@/components/ServicesButton'
 import { ReactSVG } from 'react-svg'
 
-const slides = [
+const SERVICES = [
     {
-        title: 'Скидка 20% на доставку',
-        desc: 'Акция распространяется на мясные блюда и действительна до 3 января 16:00.',
-        img: '/images/promo/slide-1.png',
-        btn: {
-            name: 'Подробнее',
-            link: '/',
-        }
+        title: 'Услуги в номер',
+        desc: 'Доставим к вашему номеру',
+        img: '/images/services/room-services.png',
+        link: '/services/room-services'
     },
     {
-        title: 'Скидка 15% на доставку',
-        desc: 'Акция распространяется на мясные блюда и действительна до 3 января 16:00.',
-        img: '/images/promo/slide-1.png',
-        btn: {
-            name: 'Подробнее',
-            link: '/',
-        }
+        title: 'Заказать еду',
+        desc: 'Доставим к вашему номеру',
+        img: '/images/services/eat-delivery.png',
     },
     {
-        title: 'Скидка 10% на доставку',
-        desc: 'Акция распространяется на мясные блюда и действительна до 3 января 16:00.',
-        img: '/images/promo/slide-1.png',
-        btn: {
-            name: 'Подробнее',
-            link: '/',
-        }
+        title: 'Сауны',
+        desc: 'Три вида сауны в шаговой доступности',
+        img: '/images/services/saunas.png',
     },
 ]
 
 export default function ServicesPage() {
 
     return (<>
-        <main>
-            <PromoSlider slides={slides} />
-            <div
-                style={{
-                    padding: '48px 24px',
-                    height: '300px',
-                }}
-            >
-                Страница услуг
+        <main className='--gray-main'>
+            <div className='page-wrapper'>
+                <div className='services-buttons'>
+                    {SERVICES.map(x =>
+                        <ServicesButton
+                            key={'service-' + x.title}
+                            title={x.title}
+                            desc={x.desc}
+                            link={x.link}
+                            image={x.img}
+                        />
+                    )}
+                </div>
             </div>
-
         </main>
         <NavBar page='services' />
     </>)
