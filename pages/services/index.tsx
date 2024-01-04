@@ -1,0 +1,53 @@
+import IndexNavButton from '@/components/IndexNavButton'
+import NavBar from '@/components/NavBar'
+import PromoSlider from '@/components/PromoSlider'
+import { ReactSVG } from 'react-svg'
+
+const slides = [
+    {
+        title: 'Скидка 20% на доставку',
+        desc: 'Акция распространяется на мясные блюда и действительна до 3 января 16:00.',
+        img: '/images/promo/slide-1.png',
+        btn: {
+            name: 'Подробнее',
+            link: '/',
+        }
+    },
+    {
+        title: 'Скидка 15% на доставку',
+        desc: 'Акция распространяется на мясные блюда и действительна до 3 января 16:00.',
+        img: '/images/promo/slide-1.png',
+        btn: {
+            name: 'Подробнее',
+            link: '/',
+        }
+    },
+    {
+        title: 'Скидка 10% на доставку',
+        desc: 'Акция распространяется на мясные блюда и действительна до 3 января 16:00.',
+        img: '/images/promo/slide-1.png',
+        btn: {
+            name: 'Подробнее',
+            link: '/',
+        }
+    },
+]
+
+export default function ServicesPage() {
+
+    return (<>
+        <main>
+            <PromoSlider slides={slides} />
+            <div
+                style={{
+                    padding: '48px 24px',
+                    height: '300px',
+                }}
+            >
+                Страница услуг
+            </div>
+
+        </main>
+        <NavBar page='services' />
+    </>)
+}

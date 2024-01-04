@@ -1,0 +1,47 @@
+.navbar
+    width: 100%
+    background: #FFF
+    border-top: 1px solid #F2F2F2
+    background: #FFF
+    box-shadow: 0px -2px 8px 0px rgba(0, 0, 0, 0.05)
+    position: fixed
+    z-index: 1000
+    bottom: 0
+
+    display: flex
+    justify-content: center
+    &__wrapper
+        padding: 0 24px
+        height: 64px
+        display: flex
+        align-items: center
+        justify-content: space-between
+        max-width: 430px
+        width: 100%
+    &__button
+        display: flex
+        flex-direction: column
+        align-items: center
+        justify-content: center
+        width: 64px
+        height: 64px
+        gap: 3px
+        cursor: pointer
+        opacity: .5
+        transition: all .12s ease-in
+        &.active
+            opacity: 1
+        &:hover
+            opacity: 1
+    &__logo
+        div
+            div
+                display: flex
+                height: fit-content
+    &__text
+        color: #262626
+        text-align: center
+        font-size: 10px
+        font-style: normal
+        font-weight: 400
+        line-height: normal

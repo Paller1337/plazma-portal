@@ -1,0 +1,74 @@
+/*
+ * Анимации
+ */
+@keyframes slide-up
+    0%
+        transform: translate(0%, 100%)
+        opacity: 0
+
+    10%, 90%
+        transform: translate(0%, 0%)
+        opacity: 1
+
+    100%
+        transform: translate(0%, 100%)
+        opacity: 0
+
+$hover: 1s cubic-bezier(0.33, 1, 0.68, 1) 0s
+$burger: 1s cubic-bezier(0.33, 1, 0.68, 1) 0s
+
+/*
+ * Шрифты
+ */
+$--font-basic: "Montserrat"
+%font-main
+    font-family: $--font-basic
+    font-style: normal
+
+%font-gradient
+    -webkit-background-clip: text !important
+    -webkit-text-fill-color: transparent
+    background-clip: text
+    text-fill-color: transparent
+
+/*
+ * Переменные для Брейкпоинтов
+ */
+$minWidth: 320
+$maxWidth: 1920
+$maxWidthContainer: 1170
+$md1: $maxWidthContainer + 12px
+$md2: 991.98px
+$md3: 767.98px
+$md4: 479.98px
+/*
+ * Градиенты / Цвета
+ */
+//$gradientBackground: linear-gradient(to bottom right, rgba(255, 72, 72, 0.9),90%, rgb(255, 119, 77,1)),(rgb(255, 0, 0, 1));
+//$gradientSlide: linear-gradient(to bottom right, rgb(80, 44, 155, 100%), rgb(255, 0 ,138,44%));
+
+
+
+
+
+%--background-burger-noise
+    background-color: var(--main-color)
+    background-position: center center
+    background-repeat: repeat
+
+// Цвет скролла
+$thumb-color: rgba(237, 237, 237, 1)
+/*
+ * Шрифт по умолчанию
+ */
+$--font-size: 12px
+$--fz-logo: 34px
+$--fz-footer-menu: 20px
+
+/*
+ * Шрифт по умолчанию
+ */
+
+/*
+ * Шрифт по умолчанию
+ */

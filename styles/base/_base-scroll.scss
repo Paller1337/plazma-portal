@@ -1,0 +1,47 @@
+html {
+    scroll-behavior: smooth;
+
+    &.has-scroll-smooth {
+        backface-visibility: hidden;
+        // transform: translateZ(0);
+        overflow: hidden;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+
+    &.has-scroll-dragging {
+        user-select: none;
+    }
+}
+
+body {
+    .has-scroll-smooth & {
+        overflow: hidden;
+    }
+}
+
+[data-scroll-container] {
+    .has-scroll-smooth & {
+        min-height: 100vh;
+    }
+
+    [data-scroll-direction="horizontal"] & {
+        height: 100vh;
+        display: inline-block;
+        white-space: nowrap;
+    }
+}
+
+[data-scroll-section] {
+    perspective: 1px;
+
+    [data-scroll-direction="horizontal"] & {
+        display: inline-block;
+        vertical-align: top;
+        white-space: nowrap;
+        height: 100%;
+    }
+}

@@ -1,0 +1,63 @@
+.main-wrap
+    // margin-bottom: 700px
+    background: #fff
+    z-index: 100
+    @media screen and ( max-width: $md2 )
+        margin-bottom: 0
+
+.footer
+    width: 100%
+    background: #262626
+    display: flex
+    justify-content: center
+    padding-bottom: 64px
+    &__wrapper
+        max-width: 430px
+        width: 100%
+        padding: 24px 12px
+        display: flex
+        flex-direction: column
+        gap: 12px
+        position: relative
+
+    &__title
+        color: #FFF
+        font-family: Montserrat
+        font-size: 16px
+        font-style: normal
+        font-weight: 500
+        line-height: normal
+
+    &__text-wrap
+        display: flex
+        flex-direction: column
+        gap: 4px
+
+    &__text
+        color: #FFF
+        font-family: Montserrat
+        font-size: 14px
+        font-style: normal
+        font-weight: 400
+        line-height: normal
+    &__copyright
+        padding-top: 12px
+        color: #FFF
+        text-align: center
+        font-family: Montserrat
+        font-size: 11px
+        font-style: normal
+        font-weight: 400
+        line-height: normal
+    &__socials
+        position: absolute
+        right: 12px
+        top: 24px
+        display: flex
+        flex-direction: column
+        gap: 12px
+    &__social-btn
+        opacity: 1
+        transition: all .12s ease-in-out
+        &:hover
+            opacity: .6

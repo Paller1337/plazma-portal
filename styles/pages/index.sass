@@ -1,0 +1,96 @@
+.index
+    &-nav
+        display: flex
+        flex-direction: row
+        gap: 16px
+        max-width: 430px
+        padding: 12px 24px
+        margin: 0 auto
+        flex-wrap: wrap
+        &__logo
+            div
+                div
+                    display: flex
+                    height: fit-content
+        &__button
+            border-radius: 18px
+            border: 1px solid #F2F2F2
+            background: #FFF
+            box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.10)
+            padding: 12px
+            overflow: hidden
+            position: relative
+            display: flex
+            flex-direction: column
+            gap: 4px
+            min-width: 181px
+            cursor: pointer
+            width: fit-content
+            flex-grow: 1
+            flex-basis: calc(50% - 10px) // Примерное значение, регулируйте под отступы между кнопками
+
+            &:nth-child(3n)
+                flex-basis: 100%
+            &:nth-last-child(2):nth-child(3n-2),
+            &:nth-last-child(2):nth-child(3n-2) ~ .index-nav__button
+                flex-basis: 100%
+            &_help
+                cursor: auto
+                .index-nav__bg-logo
+                    right: 50%
+                    transform: translateX(50%)
+                    top: -40px
+        &__title
+            color: #262626
+            font-family: Montserrat
+            font-size: 16px
+            font-style: normal
+            font-weight: 500
+            line-height: normal
+        &__desc
+            color: #858585
+            font-family: Montserrat
+            font-size: 12px
+            font-style: normal
+            font-weight: 400
+            line-height: normal
+        &__desc-row
+            display: flex
+            flex-direction: row
+            gap: 2px
+            position: relative
+            z-index: 8
+        &__desc-status
+            height: 8px
+            min-height: 8px
+            min-width: 8px
+            width: 8px
+            margin-bottom: auto
+            border-radius: 4px
+            background: #262626
+            overflow: hidden
+
+        &__inner-btn
+            display: flex
+            flex-direction: row
+            padding: 8px 12px
+            justify-content: center
+            align-items: center
+            gap: 10px
+            border-radius: 8px
+            border: 1px solid rgba(3, 129, 0, 0.50)
+            background: #FFF
+            position: absolute
+            z-index: 12
+            right: 12px
+            bottom: 12px
+            transition: all .12s ease-in-out
+            cursor: pointer
+            &:hover
+                background: rgba(3, 129, 0, 1)
+                color: #fff
+        &__bg-logo
+            position: absolute
+            right: -15px
+            top: -10px
+            transform: rotate(-30deg)
