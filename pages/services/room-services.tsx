@@ -62,7 +62,7 @@ interface ServicesPageProps {
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
     try {
-        const res = await fetch('http://localhost:5000/api/services')
+        const res = await fetch('https://portal.kplazma.ru/api/services')
         if (!res.ok) {
             throw new Error(`Failed to fetch services, received status ${res.status}`)
         }
