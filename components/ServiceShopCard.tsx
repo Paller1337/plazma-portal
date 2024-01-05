@@ -1,17 +1,20 @@
 import { useCart } from 'context/CartContext'
 import Image from 'next/image'
 import { ReactSVG } from 'react-svg'
+import { ServiceImage } from 'types/services'
 
 interface ServiceShopCardProps {
     productId: string
     title: string
     price: number
-    image: string
+    image: ServiceImage[]
 }
 
 export default function ServiceShopCard(props: ServiceShopCardProps) {
     const { dispatch } = useCart()
+    const image = props.image[0].attributes
 
+    const imageUrl = 'https://strapi.kplazma.ru' + image.url
     // Функция добавления товара в корзину
 
 
@@ -21,7 +24,7 @@ export default function ServiceShopCard(props: ServiceShopCardProps) {
                 id: props.productId,
                 title: props.title,
                 price: props.price,
-                imageUrl: props.image,
+                imageUrl: imageUrl,
                 quantity: 1,
             }
         })
@@ -33,7 +36,7 @@ export default function ServiceShopCard(props: ServiceShopCardProps) {
             <div className='room-service__name'>
                 {props.title}
             </div>
-            <Image className='room-service__image' src={props.image} height={120} width={120} alt='' unoptimized={true} />
+            <Image className='room-service__image' src={imageUrl} height={image.height} width={image.width} alt='' unoptimized={true} />
             <div className='room-service__footer'>
                 <span className='room-service__price'>
                     {props.price} руб.

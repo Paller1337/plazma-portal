@@ -7,6 +7,9 @@ import { useCart } from 'context/CartContext'
 import { ReactSVG } from 'react-svg'
 import Router from 'next/router'
 import { getWordEnding } from 'functions'
+import { GetServerSideProps } from 'next'
+import { useEffect } from 'react'
+import { Service } from 'types/services'
 
 const ROOM_SERVICES = [
     {
@@ -53,24 +56,65 @@ const ROOM_SERVICES = [
     },
 ]
 
-export default function ServicesPage() {
+interface ServicesPageProps {
+    services: Service[]
+}
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+    try {
+        const res = await fetch('http://localhost:5000/api/services')
+        if (!res.ok) {
+            throw new Error(`Failed to fetch services, received status ${res.status}`)
+        }
+        const data = await res.json()
+
+        return {
+            props: {
+                services: data.data
+            } as ServicesPageProps
+        }
+    } catch (error) {
+        console.error('Ошибка при получении услуг:', error)
+        return {
+            props: {
+                services: []
+            } as ServicesPageProps
+        }
+    }
+}
+
+export default function ServicesPage(props: ServicesPageProps) {
     const { state } = useCart()
     const { services } = state
 
     const itemCount = state.services.items.reduce((total, item) => total + item.quantity, 0)
+
+    useEffect(() => {
+        console.log("Услуги: ", props.services)
+    }, [])
 
     return (<>
         <main className='--gray-main'>
 
             <div className='page-wrapper'>
                 <div className='room-services'>
-                    {ROOM_SERVICES.map((x, i) =>
+                    {/* {ROOM_SERVICES.map((x, i) =>
                         <ServiceShopCard
                             key={'service-' + x.title + i}
                             productId={x.id.toString()}
                             title={x.title}
                             price={x.price}
                             image={x.img}
+                        />
+                    )} */}
+
+                    {props.services.map((x, i) =>
+                        <ServiceShopCard
+                            key={'service-' + x.attributes.title + i}
+                            productId={x.id.toString()}
+                            title={x.attributes.title}
+                            price={x.attributes.price}
+                            image={x.attributes.images.data}
                         />
                     )}
                 </div>
