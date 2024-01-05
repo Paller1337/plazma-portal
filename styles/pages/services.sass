@@ -5,7 +5,8 @@
         gap: 12px
         padding: 12px 0
     &-button
-        width: 382px
+        width: 100%
+        max-width: 382px
         height: 220px
         position: relative
         padding: 32px
@@ -64,6 +65,12 @@
     display: flex
     flex-flow: row wrap
     gap: 16px
+    padding: 0 24px
+    min-width: 344px
+    @media screen and ( max-width: 384px )
+        padding: 0 4px
+        gap: 8px
+
     &__order-wrapper
         position: fixed
         bottom: 64px
@@ -105,7 +112,7 @@
     &__cart-btn
         cursor: pointer
         display: flex
-        width: 143px
+        width: fit-content
         padding: 8px 12px
         justify-content: center
         align-items: center
@@ -122,7 +129,8 @@
 
 .room-service
     display: flex
-    width: 183px
+    width: calc( 50% - 8px )
+    min-width: 160px
     height: 220px
     padding: 12px
     flex-direction: column
@@ -131,6 +139,9 @@
     border-radius: 12px
     border: 1px solid rgba(0, 0, 0, 0.05)
     background: #FFF
+
+    @media screen and ( max-width: 384px )
+        width: calc( 50% - 4px )
 
     &__name
         color: #262626

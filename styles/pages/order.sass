@@ -1,0 +1,217 @@
+.order
+    
+    &-header
+        display: flex
+        flex-direction: row
+        align-items: center
+        justify-content: space-between
+        padding: 24px
+        &__title
+            color: #262626
+            font-size: 24px
+            font-style: normal
+            font-weight: 600
+            line-height: normal
+            text-transform: uppercase
+        &__btn
+            display: flex
+            cursor: pointer
+            padding: 8px 12px
+            justify-content: center
+            align-items: center
+            gap: 6px
+            border-radius: 8px
+            border: 1px solid #262626
+            background: #FFF
+            color: #262626
+            font-size: 14px
+            font-style: normal
+            font-weight: 400
+            line-height: normal
+            user-select: none
+            transition: all .12s ease-in-out
+            div
+                div
+                    transition: all .12s ease-in-out
+                    display: flex
+
+            &:hover
+                background: #262626
+                color: #fff
+                div
+                    div
+                        filter: invert(1)
+
+    &-types
+        display: flex
+        flex-direction: row
+        padding: 0 24px
+        gap: 24px
+        border-bottom: 1px solid rgba(38, 38, 38, 0.20)
+        &__type
+            cursor: pointer
+            user-select: none
+
+            display: flex
+            flex-direction: column
+            gap: 4px
+            position: relative
+
+            color: #262626
+            font-size: 17px
+            font-style: normal
+            font-weight: 600
+            line-height: normal
+            opacity: .5
+            &::after
+                content: ''
+                height: 2px
+                align-self: stretch
+                background: #56754B
+                opacity: 0
+
+            &.active
+                opacity: 1
+                &::after
+                    opacity: 1
+
+    &-body
+        display: flex
+        flex-direction: column
+        padding: 8px 24px
+        align-items: center
+        gap: 0
+
+    &-item
+        display: flex
+        width: 100%
+        padding: 12px 0px
+        justify-content: space-between
+        align-items: center
+        &__meta
+            display: flex
+            align-items: center
+            gap: 12px
+        &__image
+            width: 60px
+            height: 60px
+            border-radius: 8px
+            border: 1px solid rgba(0, 0, 0, 0.10)
+        &__col
+            display: flex
+            flex-direction: column
+            justify-content: center
+            align-items: flex-start
+            gap: 4px
+        &__title
+            color: #262626
+            font-size: 16px
+            font-style: normal
+            font-weight: 500
+            line-height: normal
+
+        &__desc
+            color: rgba(38, 38, 38, 0.40)
+            font-size: 16px
+            font-style: normal
+            font-weight: 500
+            line-height: normal
+            text-transform: uppercase
+
+        &__actions
+            display: flex
+            align-items: center
+            gap: 4px
+        &__counter
+            display: flex
+            height: 60px
+            align-items: center
+            gap: 10px
+            &-buttons
+                display: flex
+                height: 58px
+                flex-direction: column
+                justify-content: space-between
+                align-items: flex-start
+            &-button
+                display: flex
+                width: 26px
+                height: 26px
+                justify-content: space-between
+                align-items: center
+                flex-shrink: 0
+                border-radius: 4px
+                border: 1px solid #E6E6E6
+                cursor: pointer
+                div
+                    display: flex
+        &__count
+            display: flex
+            padding: 7px 0px
+            align-items: center
+            justify-content: center
+            text-align: center
+            gap: 10px
+            align-self: stretch
+            border-radius: 8px
+            background: #E6E6E6
+            color: #262626
+            font-size: 24px
+            font-style: normal
+            font-weight: 500
+            line-height: normal
+            min-width: 60px
+            max-width: 60px
+            height: 60px
+        &__delete
+            cursor: pointer
+            div
+                display: flex
+                opacity: .5
+
+    &-score
+        margin-top: auto
+        display: flex
+        width: 100%
+        padding: 8px 24px
+        justify-content: space-between
+        align-items: center
+        flex-shrink: 0
+        align-self: stretch
+        &__amount
+            display: flex
+            flex-direction: column
+            justify-content: center
+            align-items: flex-start
+            gap: 4px
+        &__title
+            color: #A8A8A8
+            text-align: center
+            font-size: 12px
+            font-style: normal
+            font-weight: 600
+            line-height: normal
+        &__sum
+            color: #262626
+            text-align: center
+            font-size: 16px
+            font-style: normal
+            font-weight: 600
+            line-height: normal
+        &__button
+            cursor: pointer
+            display: flex
+            padding: 12px
+            justify-content: center
+            align-items: center
+            gap: 12px
+
+            border-radius: 8px
+            background: #56754B
+
+            color: #FFF
+            text-align: center
+            font-size: 14px
+            font-style: normal
+            font-weight: 500
+            line-height: normal

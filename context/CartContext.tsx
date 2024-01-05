@@ -1,88 +1,156 @@
-import React, { createContext, useReducer, useContext } from 'react';
+import React, { createContext, useReducer, useContext, useEffect, useState } from 'react'
+
+type CartItem = {
+    id: string
+    title: string
+    price: number
+    quantity: number
+    imageUrl: string
+}
+
+type CartState = {
+    services: {
+        items: CartItem[]
+        total: number
+    }
+    food: {
+        items: CartItem[]
+        total: number
+    }
+}
+
+type CartAction =
+    | { type: 'ADD_ITEM'; category: 'services' | 'food'; item: CartItem }
+    | { type: 'REMOVE_ITEM'; category: 'services' | 'food'; id: string }
+    | { type: 'UPDATE_QUANTITY'; category: 'services' | 'food'; id: string; quantity: number }
+    | { type: 'CLEAR_CART'; category: 'services' | 'food' }
+    | { type: 'LOAD_SAVED_CART'; payload: CartState }
 
 
-const defaultState = { items: [], total: 0 }
-const CartContext = createContext<[typeof defaultState, React.Dispatch<any>]>([defaultState, () => { }])
+const defaultState: CartState = {
+    services: { items: [], total: 0 },
+    food: { items: [], total: 0 }
+}
 
-const cartReducer = (state, action) => {
+const CartContext = createContext<{
+    state: CartState;
+    dispatch: React.Dispatch<CartAction>;
+}>({ state: defaultState, dispatch: () => null })
+
+const cartReducer = (state: CartState, action: CartAction): CartState => {
     switch (action.type) {
         case 'ADD_ITEM': {
-            const existingItemIndex = state.items.findIndex(item => item.title === action.item.title);
-            let newItems = [...state.items];
-            let newTotal = state.total;
+            const { category, item } = action;
+            const existingItemIndex = state[category].items.findIndex(i => i.id === item.id);
 
+            let updatedItems = [...state[category].items];
             if (existingItemIndex >= 0) {
-                newItems[existingItemIndex] = {
-                    ...newItems[existingItemIndex],
-                    quantity: newItems[existingItemIndex].quantity + 1,
+                updatedItems[existingItemIndex] = {
+                    ...updatedItems[existingItemIndex],
+                    quantity: updatedItems[existingItemIndex].quantity + 1,
                 };
             } else {
-                newItems = [...state.items, { ...action.item, quantity: 1 }];
+                updatedItems = [...updatedItems, { ...item, quantity: 1 }];
             }
 
-            // Пересчитываем общую сумму
-            newTotal = newItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-            return { ...state, items: newItems, total: newTotal };
-        }
-        case 'INCREASE_QUANTITY': {
-            let newItems = state.items.map(item => {
-                if (item.title === action.title) {
-                    return { ...item, quantity: item.quantity + 1 };
-                }
-                return item;
-            });
-
-            // Пересчитываем общую сумму
-            let newTotal = newItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-            return { ...state, items: newItems, total: newTotal };
-        }
-        case 'DECREASE_QUANTITY': {
-            let newItems = state.items.map(item => {
-                if (item.title === action.title && item.quantity > 1) {
-                    return { ...item, quantity: item.quantity - 1 };
-                }
-                return item;
-            });
-
-            // Пересчитываем общую сумму
-            let newTotal = newItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-            return { ...state, items: newItems, total: newTotal };
-        }
-        
-        case 'REMOVE_ITEM':
-            // Обработка действия удаления товара из корзины
-            // Вернуть новое состояние
             return {
                 ...state,
-                items: state.items.filter(item => item.id !== action.id),
-                total: state.total - state.items.find(item => item.id === action.id).price,
+                [category]: {
+                    ...state[category],
+                    items: updatedItems,
+                    total: updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+                }
             };
+        }
+        case 'REMOVE_ITEM': {
+            const updatedItems = state[action.category].items.filter(item => item.id !== action.id);
+            const newTotal = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+            return {
+                ...state,
+                [action.category]: {
+                    ...state[action.category],
+                    items: updatedItems,
+                    total: newTotal
+                }
+            };
+        }
+
+        case 'UPDATE_QUANTITY': {
+            const updatedItems = state[action.category].items.map(item =>
+                item.id === action.id ? { ...item, quantity: action.quantity } : item
+            );
+            const newTotal = updatedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+            return {
+                ...state,
+                [action.category]: {
+                    ...state[action.category],
+                    items: updatedItems,
+                    total: newTotal
+                }
+            };
+        }
+
+        case 'CLEAR_CART':
+            // Очистка корзины
+            return {
+                ...state,
+                [action.category]: {
+                    items: [],
+                    total: 0
+                }
+            }
+
+        case 'LOAD_SAVED_CART':
+            // Загрузка сохраненного состояния корзины
+            return action.payload
+            
         // ... другие действия
         default:
-            // В случае неизвестного действия возвращать текущее состояние
             return state;
     }
-};
+}
+
+
 
 export const CartProvider = ({ children }) => {
-    const [state, dispatch] = useReducer(cartReducer, defaultState);
+    const [isMounted, setIsMounted] = useState(false);
+    const [state, dispatch] = useReducer(cartReducer, defaultState)
+
+    useEffect(() => {
+        setIsMounted(true)
+    }, [])
+
+    // Загрузка состояния из localStorage при монтировании компонента
+    useEffect(() => {
+        if (isMounted) {
+            const savedCart = localStorage.getItem('cart');
+            if (savedCart) {
+                dispatch({ type: 'LOAD_SAVED_CART', payload: JSON.parse(savedCart) });
+            }
+        }
+    }, [isMounted])
+
+    // Сохранение состояния в localStorage при его изменении
+    useEffect(() => {
+        if (isMounted) {
+            localStorage.setItem('cart', JSON.stringify(state))
+        }
+    }, [state, isMounted])
 
     return (
-        <CartContext.Provider value={[state, dispatch]}>
+        <CartContext.Provider value={{ state, dispatch }}>
             {children}
         </CartContext.Provider>
-    );
-};
+    )
+}
 
 export const useCart = () => {
     const context = useContext(CartContext);
     if (!context) {
-        throw new Error('useCart должен использоваться внутри CartProvider');
+        throw new Error('useCart должен использоваться внутри CartProvider')
     }
 
-    const [state, dispatch] = context
-    return { state, dispatch }
-};
+    return context
+}

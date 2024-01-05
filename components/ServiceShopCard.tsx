@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { ReactSVG } from 'react-svg'
 
 interface ServiceShopCardProps {
+    productId: string
     title: string
     price: number
     image: string
@@ -12,17 +13,20 @@ export default function ServiceShopCard(props: ServiceShopCardProps) {
     const { dispatch } = useCart()
 
     // Функция добавления товара в корзину
-    const addToCart = () => {
+
+
+    const handleAdd = () => {
         dispatch({
-            type: 'ADD_ITEM',
-            item: {
+            type: 'ADD_ITEM', category: 'services', item: {
+                id: props.productId,
                 title: props.title,
                 price: props.price,
-                image: props.image,
-                quantity: 1, // Предполагаем, что добавляем с единицей товара
-            },
+                imageUrl: props.image,
+                quantity: 1,
+            }
         })
     }
+
 
     return (<>
         <div className='room-service'>
@@ -35,7 +39,7 @@ export default function ServiceShopCard(props: ServiceShopCardProps) {
                     {props.price} руб.
                 </span>
 
-                <div className='room-service__add-btn' onClick={addToCart}>
+                <div className='room-service__add-btn' onClick={handleAdd}>
                     <ReactSVG src='/svg/plus.svg' />
                 </div>
             </div>
