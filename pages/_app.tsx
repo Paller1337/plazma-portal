@@ -11,6 +11,7 @@ import { useRouter } from 'next/router'
 import LoadingBar, { LoadingBarRef } from 'react-top-loading-bar'
 import AppLayout from '@/components/AppLayout'
 import { CartProvider } from 'context/CartContext'
+import { AuthProvider } from 'context/AuthContext'
 
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -35,11 +36,13 @@ export default function App({ Component, pageProps }: AppProps) {
 
             <LoadingBar color='#262626' ref={loaderRef} height={2} />
 
-            <CartProvider>
-                <AppLayout asPath={router.asPath} pageProps={pageProps}>
-                    <Component {...pageProps} />
-                </AppLayout>
-            </CartProvider>
+            <AuthProvider>
+                <CartProvider>
+                    <AppLayout asPath={router.asPath} pageProps={pageProps}>
+                        <Component {...pageProps} />
+                    </AppLayout>
+                </CartProvider>
+            </AuthProvider>
         </>
     )
 }
