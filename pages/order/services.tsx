@@ -3,11 +3,18 @@ import { ReactSVG } from 'react-svg'
 import Image from 'next/image'
 import OrderItem from '@/components/OrderItem'
 import { useCart } from 'context/CartContext'
-import Router from 'next/router'
-import { useState } from 'react'
+import Router, { useRouter } from 'next/router'
+import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import { useAuth } from 'context/AuthContext'
 
 export default function OrderServices(props) {
+    const { isAuthenticated } = useAuth()
+    const router = useRouter()
+    useEffect(() => {
+        if (!isAuthenticated) router.push('/auth')
+    }, [isAuthenticated, router])
+
     const { state, dispatch } = useCart()
     const { services } = state
 

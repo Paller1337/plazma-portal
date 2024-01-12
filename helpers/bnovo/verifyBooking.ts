@@ -1,13 +1,17 @@
+import { DateTime } from 'luxon';
 import { bnovoAuth } from './auth';
 import bnovoClient from './bnovoClient';
 
-export default async function verifyBnovoBooking(surname?: string, roomNumber?: string, dfrom?: string, dto?: string) {
+export default async function verifyBnovoBooking(surname?: string, roomNumber?: string, room?: string) {
     await bnovoAuth() // Убедитесь, что мы авторизованы
+
+    // Получение текущей даты в формате 'YYYY-MM-DD'
+    const today = DateTime.now().toISODate()
 
     try {
         const response = await bnovoClient.post('https://online.bnovo.ru/planning/bookings', {
-            dfrom: '2024-01-01',
-            dto: '2024-01-06',
+            dfrom: today,
+            dto: today,
         }, {
             headers: {
                 'Content-Type': 'application/json',

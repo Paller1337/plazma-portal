@@ -5,11 +5,12 @@ import ServiceShopCard from '@/components/ServiceShopCard'
 import ServicesButton from '@/components/ServicesButton'
 import { useCart } from 'context/CartContext'
 import { ReactSVG } from 'react-svg'
-import Router from 'next/router'
+import Router, { useRouter } from 'next/router'
 import { getWordEnding } from 'functions'
 import { GetServerSideProps } from 'next'
 import { useEffect } from 'react'
 import { Service } from 'types/services'
+import { useAuth } from 'context/AuthContext'
 
 const ROOM_SERVICES = [
     {
@@ -84,6 +85,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 }
 
 export default function ServicesPage(props: ServicesPageProps) {
+    const { isAuthenticated } = useAuth()
+    const router = useRouter()
+    
+    useEffect(() => {
+        if (!isAuthenticated) router.push('/auth')
+    }, [isAuthenticated, router])
+
     const { state } = useCart()
     const { services } = state
 

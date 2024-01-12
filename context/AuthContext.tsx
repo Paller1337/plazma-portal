@@ -1,8 +1,13 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react'
+import authenticationPortal, { verifyToken } from 'helpers/login';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react'
+import Cookies from 'cookies'
 
 interface AuthContextType {
     isAuthenticated: boolean
-    login: (surname: string, roomNumber: number) => Promise<void>
+    login: (surname: string, roomNumber: string) => Promise<{
+        status: boolean;
+        message: string;
+    }>
 }
 
 const AuthContext = createContext<AuthContextType>(null!);
@@ -12,20 +17,19 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    const login = async (surname: string, roomNumber: number) => {
-        try {
-            // Отправка запроса на сервер для проверки данных
-            const response = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ surname, roomNumber }),
-            });
+    useEffect(() => {
+        const isAuth = verifyToken()
+        if (isAuth) setIsAuthenticated(true)
+    }, [])
 
-            if (!response.ok) throw new Error('Ошибка авторизации');
-
-            setIsAuthenticated(true);
-        } catch (error) {
-            console.error(error);
+    const login = async (surname: string, roomNumber: string) => {
+        const auth = await authenticationPortal(surname, roomNumber)
+        if (auth.status) {
+            setIsAuthenticated(true)
+            return auth
+        } else {
+            setIsAuthenticated(false)
+            return auth
         }
     };
 
@@ -33,5 +37,5 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         <AuthContext.Provider value={{ isAuthenticated, login }}>
             {children}
         </AuthContext.Provider>
-    );
-};
+    )
+}

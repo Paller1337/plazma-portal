@@ -1,7 +1,10 @@
+import { useAuth } from 'context/AuthContext';
 import { ReactSVG } from 'react-svg';
 
 export default function Header() {
-    return (<>
+    const { isAuthenticated } = useAuth()
+    
+    if (isAuthenticated) return (<>
         <header className='header'>
             <div className='header__logo'>
                 <ReactSVG src='/svg/logo-white.svg'></ReactSVG>
@@ -15,4 +18,5 @@ export default function Header() {
             </div>
         </header>
     </>)
+    else return (<></>)
 }

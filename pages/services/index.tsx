@@ -2,6 +2,9 @@ import IndexNavButton from '@/components/IndexNavButton'
 import NavBar from '@/components/NavBar'
 import PromoSlider from '@/components/PromoSlider'
 import ServicesButton from '@/components/ServicesButton'
+import { useAuth } from 'context/AuthContext'
+import { useRouter } from 'next/router'
+import { useEffect } from 'react'
 import { ReactSVG } from 'react-svg'
 
 const SERVICES = [
@@ -16,14 +19,19 @@ const SERVICES = [
         desc: 'Доставим к вашему номеру',
         img: '/images/services/eat-delivery.png',
     },
-    {
-        title: 'Сауны',
-        desc: 'Три вида сауны в шаговой доступности',
-        img: '/images/services/saunas.png',
-    },
+    // {
+    //     title: 'Сауны',
+    //     desc: 'Три вида сауны в шаговой доступности',
+    //     img: '/images/services/saunas.png',
+    // },
 ]
 
 export default function ServicesPage() {
+    const { isAuthenticated } = useAuth()
+    const router = useRouter()
+    useEffect(() => {
+        if (!isAuthenticated) router.push('/auth')
+    }, [isAuthenticated, router])
 
     return (<>
         <main className='--gray-main'>

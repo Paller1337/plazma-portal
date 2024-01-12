@@ -2,6 +2,7 @@ import '../styles/app.sass'
 import 'swiper/css'
 import 'swiper/css/bundle'
 // import "aos/dist/aos.css"
+import '@mantine/core/styles.css'
 
 import type { AppProps } from 'next/app'
 import React, { useContext, useEffect, useRef, useState } from 'react'
@@ -12,22 +13,48 @@ import LoadingBar, { LoadingBarRef } from 'react-top-loading-bar'
 import AppLayout from '@/components/AppLayout'
 import { CartProvider } from 'context/CartContext'
 import { AuthProvider } from 'context/AuthContext'
+import { Button, MantineProvider, createTheme } from '@mantine/core'
+import AdminHeader from '@/components/admin/AdminHeader'
 
+
+const theme = createTheme({
+    components: {
+        Button: Button.extend({
+            defaultProps: {
+                color: 'cyan',
+                variant: 'outline',
+                py: 12,
+            },
+        }),
+    },
+})
 
 export default function App({ Component, pageProps }: AppProps) {
-    const router = useRouter()
-    const loaderRef = useRef<LoadingBarRef>(null)
+    const router = useRouter();
+    const loaderRef = useRef<LoadingBarRef>(null);
 
     useEffect(() => {
-        router.events.on('routeChangeStart', () => {
-            loaderRef.current?.continuousStart()
-        })
+        // Логика для путей, отличных от админ-панели
+        if (!router.pathname.startsWith('/admin')) {
+            router.events.on('routeChangeStart', () => {
+                loaderRef.current?.continuousStart();
+            });
 
-        router.events.on('routeChangeComplete', () => {
-            loaderRef.current?.complete()
-        })
-    }, [router.asPath, router.events])
+            router.events.on('routeChangeComplete', () => {
+                loaderRef.current?.complete();
+            });
+        }
+    }, [router]);
 
+    if (router.pathname.startsWith('/admin')) {
+        // Рендеринг админ-панели без контекстов
+        return (<>
+            <MantineProvider theme={theme}>
+                <AdminHeader />
+                <Component {...pageProps} />
+            </MantineProvider>
+        </>)
+    }
     return (
         <>
             <Head>
@@ -36,13 +63,16 @@ export default function App({ Component, pageProps }: AppProps) {
 
             <LoadingBar color='#262626' ref={loaderRef} height={2} />
 
-            <AuthProvider>
-                <CartProvider>
-                    <AppLayout asPath={router.asPath} pageProps={pageProps}>
-                        <Component {...pageProps} />
-                    </AppLayout>
-                </CartProvider>
-            </AuthProvider>
+
+            <MantineProvider theme={theme}>
+                <AuthProvider>
+                    <CartProvider>
+                        <AppLayout asPath={router.asPath} pageProps={pageProps}>
+                            <Component {...pageProps} />
+                        </AppLayout>
+                    </CartProvider>
+                </AuthProvider>
+            </MantineProvider>
         </>
     )
 }
