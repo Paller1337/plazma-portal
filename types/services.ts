@@ -1,3 +1,5 @@
+import { TOrderPaymentType } from './order'
+
 // types.ts
 export interface ServiceImage {
     id: number
@@ -8,7 +10,7 @@ export interface ServiceImage {
     }
 }
 
-export interface Service {
+export interface IService {
     id: number
     attributes: {
         title: string
@@ -19,6 +21,23 @@ export interface Service {
     }
 }
 
+export interface IServiceOrdered {
+    service: IService
+    quantity: number
+}
+
 export interface ServicesResponse {
-    data: Service[]
+    data: IService[]
+}
+
+export type TServiceOrderStatus = 'new' | 'inwork' | 'done' | 'delivered'
+export interface IServiceOrder {
+    status: TServiceOrderStatus
+    room: string //'Домик на набережной 3',
+    customer: string //'Анастасия Сычева',
+    order: IServiceOrdered[],
+    comment: string,
+    phone: string,
+    // paymentAmount: number //1330,
+    paymentType: TOrderPaymentType// 'Банковская карта',
 }

@@ -9,7 +9,7 @@ import Router, { useRouter } from 'next/router'
 import { getWordEnding } from 'functions'
 import { GetServerSideProps } from 'next'
 import { useEffect } from 'react'
-import { Service } from 'types/services'
+import { IService } from 'types/services'
 import { useAuth } from 'context/AuthContext'
 
 const ROOM_SERVICES = [
@@ -58,7 +58,7 @@ const ROOM_SERVICES = [
 ]
 
 interface ServicesPageProps {
-    services: Service[]
+    services: IService[]
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
@@ -87,7 +87,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 export default function ServicesPage(props: ServicesPageProps) {
     const { isAuthenticated } = useAuth()
     const router = useRouter()
-    
+
     useEffect(() => {
         if (!isAuthenticated) router.push('/auth')
     }, [isAuthenticated, router])

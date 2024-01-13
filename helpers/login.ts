@@ -4,6 +4,8 @@ import { axiosInstance } from './axiosInstance'
 import { createGuestAccount, getGuestAccountByRoomIdAndSurname } from './session/guestAccount'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import Cookies from 'js-cookie'
+import { IGuestAccountResident } from 'types/session'
+import { DateTime } from 'luxon'
 
 
 
@@ -34,9 +36,23 @@ export const verifyToken = () => {
     }
 }
 
+export const decodeToken = () => {
+    const token = Cookies.get('session_token')
+    console.log('verifyToken: ', token)
+    if (!token) return {} as JwtPayload
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY)
+        return decoded as JwtPayload
+
+    } catch (error) {
+        console.error('Ошибка при верификации токена:', error);
+        return {} as JwtPayload;
+    }
+}
+
 export default async function authenticationPortal(surname: string, roomId: string) {
     const strapiResponse = await getGuestAccountByRoomIdAndSurname(roomId, surname)
-    // console.log('strapiResponse ', strapiResponse)
+    console.log('strapiResponse ', strapiResponse)
 
     const isToken = verifyToken()
     if (isToken) return { status: true, message: 'Вы уже авторизованы' }
@@ -49,6 +65,7 @@ export default async function authenticationPortal(surname: string, roomId: stri
     }
 
     const bnovoResponse = await axiosInstance(`/api/booking-room/${roomId}`)
+    console.log('bnovoResponse: ', bnovoResponse)
     if (!bnovoResponse.data?.status) {
         return { status: true, message: 'Бронирования не существует.' }
     }
@@ -56,6 +73,12 @@ export default async function authenticationPortal(surname: string, roomId: stri
     const data = bnovoResponse.data.data as TBookingExtra
 
     if (bnovoResponse.status) {
+        const nowDate = DateTime.now().toISO()
+        const isBefore = new Date(data.departure) < new Date(nowDate)
+
+        if (isBefore) return { status: false, message: 'Бронирование уже не актуально' }
+
+
         const customers = getBookingCustomers(data);
         const customer = (await customers).find(
             x => x.surname.toLocaleLowerCase() === surname.toLocaleLowerCase()
@@ -63,6 +86,17 @@ export default async function authenticationPortal(surname: string, roomId: stri
 
         if (customer) {
             // console.log(`Имя: ${customer.name} \nФамилия: ${customer.surname} \nID комнаты: ${data.actual_price?.room_id} \nДата заезда: ${data.arrival} \nДата выезда: ${data.departure} \n`)
+            const residents: IGuestAccountResident[] = data.customers.map((x => (
+                {
+                    name: x.name,
+                    surname: x.surname,
+                    middlename: x.extra.middlename,
+                    birthdate: x.birthdate,
+                    email: x.email,
+                    phone: x.phone,
+                } as IGuestAccountResident
+            )))
+
             const resCreateAccount = await createGuestAccount(
                 {
                     firstName: customer.name,
@@ -70,7 +104,10 @@ export default async function authenticationPortal(surname: string, roomId: stri
                     roomId: parseInt(data.actual_price?.room_id).toString(),
                     checkInDate: data.arrival,
                     checkOutDate: data.departure,
-                    bnovoBookingId: data.id
+                    bnovoBookingId: data.id,
+                    phone: data.customer.phone,
+                    email: data.customer.email,
+                    residents: residents,
                 }
             )
             console.log('Create Account: ', resCreateAccount)

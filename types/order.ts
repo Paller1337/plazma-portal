@@ -10,8 +10,8 @@ export interface IOrderCustomer {
 export interface IOrderInfo {
     status: TOrderStatus
     createAt: string
-    completedAt: string
-    description: string
+    completedAt?: string
+    description?: string
     customer: IOrderCustomer
 }
 
@@ -22,3 +22,5 @@ export interface IServiceOrder {
         quantity: number
     }[]
 }
+
+export type TOrderPaymentType = 'bank-card' | 'cash'

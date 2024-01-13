@@ -8,6 +8,9 @@ interface AuthContextType {
         status: boolean;
         message: string;
     }>
+    currentUser?: {
+
+    }
 }
 
 const AuthContext = createContext<AuthContextType>(null!);

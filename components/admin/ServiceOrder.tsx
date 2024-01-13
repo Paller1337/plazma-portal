@@ -1,4 +1,6 @@
-import { Card, Image, Text, Group, Badge, Button, ActionIcon, Stack } from '@mantine/core'
+import { Card, Image, Text, Group, Badge, Button, ActionIcon, Stack, Flex } from '@mantine/core'
+import { TOrderPaymentType } from 'types/order';
+import { IServiceOrdered, TServiceOrderStatus } from 'types/services';
 // import classes from './BadgeCard.module.css';
 
 const mockdata = {
@@ -18,53 +20,138 @@ const mockdata = {
     ],
 };
 
+interface ServiceOrderProps {
+    status: TServiceOrderStatus
+    room: string,
+    customer: string,
+    order: IServiceOrdered[],
+    comment: string,
+    phone: string,
+    paymentAmount: number,
+    paymentType: TOrderPaymentType,
+}
 
-export default function ServiceOrder(props) {
-    const { image, title, description, country, badges, customer } = mockdata;
-    const features = badges.map((badge) => (
-        <Badge variant="light" key={badge.label} leftSection={badge.emoji}>
-            {badge.label}
-        </Badge>
-    ));
+const cardData = {
+    room: 'Домик на набережной 3',
+    customer: 'Анастасия Сычева',
+    order: [
+        {
+            quantity: 3,
+            service: {
+                attributes: {
+                    title: 'Халат',
+                    price: 120,
+                    images: {
+                        data: [
+                            {
+                                attributes: {
+                                    url: '',
+                                    height: 10,
+                                    width: 10,
+                                }
+                            }
+                        ]
+                    }
+                },
+            }
+        }
+    ],
+    comment: '23',
+    phone: '+79539687367',
+    paymentAmount: 1330,
+    paymentType: 'bank-card',
+} as ServiceOrderProps
+
+interface ServiceOrderItemProps {
+    image?: string
+    name: string
+    amount: number
+}
+
+const ServiceOrderItem = (props: ServiceOrderItemProps) => {
 
     return (
-        <Card withBorder radius="md" p="md" className={'admin-serviceOrder__card'}>
-            {/* <Card.Section>
-                <Image src={image} alt={title} height={180} />
-            </Card.Section> */}
+        <div className='admin-serviceCard__orderItem'>
+            <div className='admin-serviceCard__orderItem-product'>
+                <div className='admin-serviceCard__orderItem-image' style={props.image ? { backgroundImage: `url(${props.image})` } : {}} />
+                <div className='admin-serviceCard__orderItem-name'>{props.name}</div>
+            </div>
+            <div className='admin-serviceCard__orderItem-meta'>
+                <span className='admin-serviceCard__orderItem-amount'>{props.amount} шт.</span>
+            </div>
+        </div>
+    )
+}
 
-            <Stack>
-                <Group justify="apart">
-                    <Text fz="lg" fw={500}>
-                        {title}
-                    </Text>
-                    <Text fz="sm" fw={500}>
-                        {customer}
-                    </Text>
-                    <Badge size="sm" variant="light">
-                        {country}
-                    </Badge>
-                </Group>
-                <Text fz="sm" mt="xs">
-                    {description}
-                </Text>
-            </Stack>
+export default function ServiceOrder(props: ServiceOrderProps) {
+    const paymentType = props.paymentType === 'bank-card' ? 'Банковская карта' : props.paymentType === 'cash' ? 'Наличные' : 'Не указан'
 
-            {/* <Card.Section className={''}>
-                <Text mt="md" className={''} c="dimmed">
-                    Perfect for you, if you enjoy
-                </Text>
-                <Group gap={7} mt={5}>
-                    {features}
-                </Group>
-            </Card.Section> */}
+    return (
+        <div className='admin-serviceCard'>
+            {props.status === 'new' ?
+                <Badge variant="light" className='admin-serviceCard__badge'>Новый</Badge>
+                : <></>
+            }
+            <div className='admin-serviceCard__header'>
+                <div className='admin-serviceCard__status'>
+                    <div />
+                </div>
+                <Flex direction={'column'} gap={2}>
+                    <Flex direction={'row'} gap={8} align={'center'}>
+                        <span className='admin-serviceCard__room'>{props.room}</span>
+                    </Flex>
+                    <Flex direction={'row'} gap={2}>
+                        <span className='admin-serviceCard__customer'>Заказчик:</span>
+                        <span className='admin-serviceCard__customer-name'>{props.customer}</span>
+                    </Flex>
+                </Flex>
+            </div>
 
-            <Group mt="xs">
-                <Button radius="md" style={{ flex: 1 }}>
-                    Открыть заказ
-                </Button>
-            </Group>
-        </Card>
+            <div className='admin-serviceCard__order'>
+                <span className='admin-serviceCard__blockTitle'>Заказ:</span>
+                <div className='admin-serviceCard__orderList'>
+                    {props.order.map((x, i) => <>
+                        <ServiceOrderItem
+                            key={i}
+                            name={x.service.attributes.title}
+                            amount={x.quantity}
+                            image={'https://strapi.kplazma.ru' + x.service.attributes.images.data[0].attributes.url}
+                        />
+                        {i < cardData.order.length - 1 ?
+                            <div className='admin-serviceCard__orderDivider' />
+                            : <></>
+                        }
+                    </>)}
+                </div>
+            </div>
 
+            <div className='admin-serviceCard__comment'>
+                <span className='admin-serviceCard__blockTitle'>Комментарий:</span>
+                <span className='admin-serviceCard__comment-text'>
+                    {props.comment ? props.comment : 'Комментарий не указан'}
+                </span>
+            </div>
+            <div className='admin-serviceCard__feedback'>
+                <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
+                    <span className='admin-serviceCard__blockTitle'>Телефон для связи:</span>
+                    <span className='admin-serviceCard__blockTitle'>{props.phone ? props.phone : 'Не указан'}</span>
+                </Flex>
+            </div>
+            <div className='admin-serviceCard__result'>
+                <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
+                    <span className='admin-serviceCard__blockText'>Сумма заказа:</span>
+                    <span className='admin-serviceCard__blockTitle'>{props.paymentAmount} руб.</span>
+                </Flex>
+
+                <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
+                    <span className='admin-serviceCard__blockText'>Способ оплаты:</span>
+                    <span className='admin-serviceCard__blockTitle'>{paymentType}</span>
+                </Flex>
+            </div>
+            <div className='admin-serviceCard__action'>
+                <Button variant="filled" color="green" size='md' radius={'md'}>Принять</Button>
+                <Button variant="filled" size='md' radius={'md'}>Выполнен</Button>
+            </div>
+        </div>
     )
 }

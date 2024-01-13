@@ -3,37 +3,32 @@ import { IServiceOrder } from 'types/order'
 import { DateTime } from 'luxon'
 
 export async function createServiceOrder(order?: IServiceOrder) {
-    const today = DateTime.now().toISODate()
     try {
         const response = await axios.post('https://strapi.kplazma.ru/api/service-orders', {
             data: {
-                orderInfo: {
-                    status: 'new',
-                    createAt: today,
-                    completedAt: today,
-                    description: 'Тестовый заказ',
-                    customer: {
-                        name: 'Макс',
-                        phone: '+79539539539',
-                        room: '1337',
-                        guest_account: 7,
-                    },
-                },
-                order: [
-                    {
-                        service: 3,
-                        quantity: 1
-                    },
-                    {
-                        service: 2,
-                        quantity: 2
-                    },
-                ]
+                orderInfo: order.orderInfo,
+                order: order.order
             } as IServiceOrder
 
         })
 
         return response.data;
+    } catch (error) {
+        console.error('Ошибка при создании аккаунта гостя:', error);
+        throw error; // Переброс ошибки для дальнейшей обработки
+    }
+}
+
+
+export async function getServiceOrders() {
+    try {
+        const response = await axios.get('https://strapi.kplazma.ru/api/service-orders', {
+            params: {
+                'populate': 'deep,4',
+            }
+        })
+        // console.log('response services ', response.data.data)
+        return response.data.data;
     } catch (error) {
         console.error('Ошибка при создании аккаунта гостя:', error);
         throw error; // Переброс ошибки для дальнейшей обработки

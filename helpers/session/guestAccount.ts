@@ -11,7 +11,10 @@ export async function createGuestAccount(account: IGuestAccount) {
                 checkInDate: account.checkInDate,
                 checkOutDate: account.checkOutDate,
                 bnovoBookingId: account.bnovoBookingId,
-                status: 'active'
+                email: account.email,
+                phone: account.phone,
+                status: 'active',
+                residents: account.residents
             } as IGuestAccount
         });
 
@@ -31,6 +34,26 @@ export async function getGuestAccountByRoomIdAndSurname(roomId: string, surname:
             }
         })
         console.log('guest room res: ', response)
+        if (response.data.data && response.data.data.length > 0) {
+            return response.data.data[0]
+        } else {
+            return null
+        }
+    } catch (error) {
+        console.error('Ошибка при получении аккаунта гостя:', error);
+        throw error;
+    }
+}
+
+export async function getGuestAccountByBookingId(bookingId: number) {
+    try {
+        const response = await axios.get(`https://strapi.kplazma.ru/api/guest-accounts`, {
+            params: {
+                'populate': 'deep,3',
+                'filters[bnovoBookingId][$eq]': bookingId
+            }
+        })
+        console.log('guest account res: ', response)
         if (response.data.data && response.data.data.length > 0) {
             return response.data.data[0]
         } else {

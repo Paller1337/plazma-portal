@@ -106,7 +106,7 @@ export default function AuthPage(props: AuthPageProps) {
                     onChange={value => setRoomId(value)}
                 />
             </div>
-            <Button variant="default" bg={'#262626'} style={{ color: 'white' }} onClick={onLogin}>
+            <Button variant="default" bg={'#262626'} style={{ color: 'white' }} size='md' onClick={onLogin}>
                 Войти
             </Button>
         </main>

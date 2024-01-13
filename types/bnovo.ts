@@ -178,7 +178,7 @@ export type TBnovoCustomer = {
     passport_date_end: any;
     notes: string;
     tags: string;
-    extra: any[];
+    extra: any;
     customerstag: any[];
     files: any[];
 }

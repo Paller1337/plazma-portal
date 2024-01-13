@@ -7,6 +7,10 @@ import Router, { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useAuth } from 'context/AuthContext'
+import { createServiceOrder } from 'helpers/order/services'
+import { DateTime } from 'luxon'
+import { decodeToken } from 'helpers/login'
+import { getGuestAccountByBookingId } from 'helpers/session/guestAccount'
 
 export default function OrderServices(props) {
     const { isAuthenticated } = useAuth()
@@ -40,12 +44,42 @@ export default function OrderServices(props) {
     }
 
     const handleCheckout = async () => {
+        const decoded = decodeToken()
+        const guestAccount = await getGuestAccountByBookingId(decoded.bnovoBookingId)
+
+        const serviceOrder = state.services.items.map(x => ({ service: parseInt(x.id), quantity: x.quantity }))
+        const nowTime = DateTime.now().toISO()
+        console.log('guestAccount: ', guestAccount)
         try {
             const response = await sendOrderToTelegram(state); // Предполагается, что здесь вызывается функция отправки заказа
+            const responseStrapi = await createServiceOrder({
+                order: serviceOrder,
+                orderInfo: {
+                    createAt: nowTime,
+                    description: 'Тестовый комментарий',
+                    status: 'new',
+                    customer: {
+                        name: guestAccount.attributes.firstName,
+                        phone: guestAccount.attributes.phone,
+                        room: guestAccount.attributes.roomId,
+                        guest_account: guestAccount.id,
+                    }
+                }
+            })
+
             if (response.message) {
                 toast.success('Заказ успешно отправлен!')
-                dispatch({ type: 'CLEAR_CART', category: 'services' }); // Очистить корзину услуг
-                dispatch({ type: 'CLEAR_CART', category: 'food' });    // Очистить корзину еды
+                console.log(state)
+                console.log('serviceOrder: ', serviceOrder)
+                // dispatch({ type: 'CLEAR_CART', category: 'services' }); // Очистить корзину услуг
+                // dispatch({ type: 'CLEAR_CART', category: 'food' });    // Очистить корзину еды
+            }
+
+            if (responseStrapi) {
+                toast.success('Заказ успешно отправлен в Strapi!')
+                console.log('responseStrapi: ', responseStrapi)
+                // dispatch({ type: 'CLEAR_CART', category: 'services' }); // Очистить корзину услуг
+                // dispatch({ type: 'CLEAR_CART', category: 'food' });    // Очистить корзину еды
             }
         } catch (error) {
             toast.error('Ошибка при отправке заказа.')
