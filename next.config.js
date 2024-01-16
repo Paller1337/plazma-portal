@@ -3,6 +3,7 @@ const nextConfig = {
     images: {
         domains: [
             'strapi.kplazma.ru',
+            '192.168.1.19',
         ]
     },
 }

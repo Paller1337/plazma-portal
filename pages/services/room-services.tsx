@@ -11,6 +11,7 @@ import { GetServerSideProps } from 'next'
 import { useEffect } from 'react'
 import { IService } from 'types/services'
 import { useAuth } from 'context/AuthContext'
+import { DEFAULTS } from 'defaults'
 
 const ROOM_SERVICES = [
     {
@@ -63,7 +64,7 @@ interface ServicesPageProps {
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
     try {
-        const res = await fetch('https://portal.kplazma.ru/api/services')
+        const res = await fetch(`${DEFAULTS.SOCKET.URL}/api/services`)
         if (!res.ok) {
             throw new Error(`Failed to fetch services, received status ${res.status}`)
         }
@@ -122,7 +123,7 @@ export default function ServicesPage(props: ServicesPageProps) {
                             productId={x.id.toString()}
                             title={x.attributes.title}
                             price={x.attributes.price}
-                            image={x.attributes.images.data}
+                            image={x.attributes.images?.data}
                         />
                     )}
                 </div>

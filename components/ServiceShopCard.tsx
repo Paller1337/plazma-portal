@@ -13,7 +13,11 @@ interface ServiceShopCardProps {
 
 export default function ServiceShopCard(props: ServiceShopCardProps) {
     const { dispatch } = useCart()
-    const image = props.image[0].attributes
+    const image = props.image && props.image.length > 0 ? props.image[0].attributes : {
+        height: 120,
+        width: 120,
+        url: '/images/room-services/not-found.png'
+    }
 
     const imageUrl = DEFAULTS.STRAPI.url + image.url
     // Функция добавления товара в корзину

@@ -76,15 +76,24 @@ export async function getAllBookings(dfrom: string, dto: string) {
 export function getBookingCustomers(bookingData: TBookingExtra) {
     console.log('getBookingCustomers: ', bookingData)
     if (!bookingData) return
-    const customers = bookingData.customers?.map(x => {
-        return {
-            name: x.name,
-            surname: x.surname,
-            phone: x.phone
-        }
-    })
+    if (bookingData.customers && bookingData.customers.length > 0) {
+        const customers = bookingData.customers?.map(x => {
+            return {
+                name: x.name,
+                surname: x.surname,
+                phone: x.phone
+            }
+        })
 
-    console.log('Customers in this room: ', customers?.map(x => x.name), ', ')
-    return customers
-
+        console.log('Customers in this room: ', customers?.map(x => x.name), ', ')
+        return customers
+    } else if (bookingData.customer) {
+        const customer = [{
+            name: bookingData.customer.name,
+            surname: bookingData.customer.surname,
+            phone: bookingData.customer.phone
+        }]
+        console.log('Customer in this room: ', customer?.map(x => x.name), ', ')
+        return customer
+    }
 }
