@@ -61,9 +61,9 @@ export default function AuthPage(props: AuthPageProps) {
         if (isAuthenticated) router.push('/')
     }, [isAuthenticated])
 
-    useEffect(() => {
-        console.log('ROOMS: ', '\\n', rooms)
-    }, [])
+    // useEffect(() => {
+    //     console.log('ROOMS: ', '\\n', rooms)
+    // }, [])
 
     useEffect(() => {
         console.log(roomId,)
@@ -74,9 +74,6 @@ export default function AuthPage(props: AuthPageProps) {
     }, [surname])
 
     const onLogin = async () => {
-        // toast.loading(`Фамилия: ${surname}, ID Комнаты: ${roomId}`, {
-        //     duration: 1000
-        // })
         const isAuth = await login(surname, roomId)
         if (isAuth.status) {
             toast.success(isAuth.message)

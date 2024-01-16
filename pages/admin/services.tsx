@@ -1,69 +1,87 @@
 import ServiceOrder from '@/components/admin/ServiceOrder';
 import { Flex, Stack } from '@mantine/core';
 import { getRooms } from 'helpers/bnovo/getRooms';
-import { getServiceOrders } from 'helpers/order/services';
+import { getServiceOrders, normalizeServiceOrderData } from 'helpers/order/services';
 import { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
-import { IService, IServiceOrder, IServiceOrdered } from 'types/services';
+import { IService, IServiceOrderData, IServiceOrdered, TServiceOrderStatus } from 'types/services';
 
+import io from 'socket.io-client'
+import toast from 'react-hot-toast';
+import { DEFAULTS } from 'defaults';
+import { checkOrderStatus } from 'helpers/order/order';
+import { IOrderInfo, IServiceOrder } from 'types/order';
 
 
 
 interface AdminServicesPageProps {
-    services?: IServiceOrder[]
+    orders?: IServiceOrder[]
     rooms?: any
 }
 
+export interface IServiceOrderWithEntering extends IServiceOrder {
+    isEntering?: boolean;
+}
+
+
 export const getServerSideProps: GetServerSideProps = async (context) => {
     try {
-        const res = await getServiceOrders()
+        const res = await getServiceOrders();
+        const rooms = await getRooms();
+
         if (!res) {
-            throw new Error(`Заказов нет`)
+            throw new Error(`Заказов нет`);
         }
-        console.log(res[0])
-        const services: IServiceOrder[] = res.map(x => {
-            const orderData: IServiceOrdered[] = x.attributes.order.map(item => (
-                {
-                    quantity: item.quantity,
-                    service: {
-                        attributes: {
-                            title: item.service.data.attributes.title,
-                            price: item.service.data.attributes.price,
-                            images: {
-                                data: item.service.data.attributes.images.data,
-                            }
-                        }
-                    }
-                } as IServiceOrdered
-            ))
-            return (
-                {
-                    status: x.attributes.orderInfo.status,
+
+        if (!rooms) {
+            throw new Error(`Комнат нет`);
+        }
+
+        const orders: IServiceOrder[] = res.map(x => {
+            const guestAccountData = x.attributes.orderInfo.customer.guest_account.data;
+            console.log('guestAccountData ', guestAccountData)
+            const orderInfo: IOrderInfo = {
+                status: x.attributes.orderInfo.status,
+                createAt: x.attributes.createdAt,
+                completedAt: x.attributes.orderInfo.completed_at,
+                description: x.attributes.orderInfo.description,
+                customer: {
+                    name: x.attributes.orderInfo.customer.name,
                     room: x.attributes.orderInfo.customer.room,
-                    customer: x.attributes.orderInfo.customer.name,
-                    comment: x.attributes.orderInfo.description,
                     phone: x.attributes.orderInfo.customer.phone,
-                    paymentType: 'cash',
-                    order: orderData,
-                } as IServiceOrder
-            )
-        })
+                    guest_account: {
+                        id: guestAccountData.id,
+                        ...guestAccountData.attributes
+                    }
+                },
+                paymentType: x.attributes.orderInfo.paymentType
+            };
 
-        const rooms = await getRooms()
+            const orderData = x.attributes.order.map(item => {
+
+                // console.log('service.item: ', item)
+                return {
+                    service: item.service.data,
+                    quantity: item.quantity,
+                } as IServiceOrdered
+            })
+
+            return {
+                id: x.id,
+                orderInfo,
+                order: orderData
+            } as IServiceOrder
+        });
 
         return {
             props: {
-                services: services,
+                orders: orders,
                 rooms: rooms,
-            } as AdminServicesPageProps
-        }
+            }
+        };
     } catch (error) {
-        console.error('Ошибка при получении услуг:', error)
-        return {
-            props: {
-                services: []
-            } as AdminServicesPageProps
-        }
+        console.error('Ошибка:', error);
+        return { props: { orders: [], rooms: [] } };
     }
 }
 interface PageNavItemProps {
@@ -87,6 +105,8 @@ const PageNavItem = (props: PageNavItemProps) => {
 
 export default function AdminServicesPage(props: AdminServicesPageProps) {
     const [currentNav, setCurrentNav] = useState(1)
+    const hotelRooms = props.rooms?.filter(x => x.tags !== '')
+    const [orders, setOrders] = useState<IServiceOrderWithEntering[]>(props.orders)
 
     const navItems = [
         { id: 1, name: 'Новые', count: 6 },
@@ -94,11 +114,78 @@ export default function AdminServicesPage(props: AdminServicesPageProps) {
         { id: 3, name: 'Ожидают', count: 17 }
     ]
 
+    const socket = io(DEFAULTS.SOCKET.URL, {
+        query: {
+            userId: 100200101,
+            role: 'admin',
+        }
+    })
 
-    const hotelRooms = props.rooms.filter(x => x.tags !== '')
     useEffect(() => {
-        console.log("Список комнат: \n", props.services)
-    }, [hotelRooms])
+        socket.on('connect', () => {
+            console.log('Connected to Strapi WebSocket');
+        })
+
+        socket.on('orderCreate', (data) => {
+            console.log('Received new order', data.newOrder);
+
+            const newOrderData = data.newOrder; // предположим, что данные заказа находятся в свойстве newStatus
+            const normalizedOrder = normalizeServiceOrderData(newOrderData)
+
+            console.log('new normalizedOrder', normalizedOrder)
+            setOrders(prevOrders => [normalizedOrder, ...prevOrders]);
+
+            setTimeout(() => {
+                setOrders(prevOrders => prevOrders.map(order => {
+                    if (order.id === normalizedOrder.id) {
+                        const { isEntering, ...rest } = order;
+                        return { ...rest };
+                    }
+                    return order;
+                }));
+            }, 300);
+        });
+
+        socket.on('orderStatusChange', (data) => {
+            console.log(data)
+            const orderId = data.orderId;
+            const newStatus = data.newStatus;
+            const roomId = data.roomId
+
+            // Обновление статуса конкретного заказа в состоянии
+            setOrders(prevOrders => prevOrders.map(order => {
+                if (order.id === orderId) {
+                    return { ...order, orderInfo: { ...order.orderInfo, status: newStatus } }; // Обновляем статус заказа
+                }
+                return order;
+            }));
+
+            // Отображение уведомления о смене статуса
+            const serviceRoom = hotelRooms.find(x => x.id === roomId)?.tags;
+            console.log('Event: ', data.event);
+            console.log('Новый статус заказа для "', serviceRoom, '" - ', newStatus);
+            toast.success(
+                <span>
+                    Новый статус заказа ({checkOrderStatus(newStatus)}) для <br /><strong>{serviceRoom}</strong>
+                </span>
+            );
+        })
+
+        socket.on('connect_error', (error) => {
+            console.error('Connection error:', error);
+        })
+
+        return () => {
+            socket.off('connect')
+            socket.off('orderStatusChange')
+            socket.off('orderCreate')
+            socket.disconnect()
+        };
+    }, [])
+
+    useEffect(() => {
+        console.log("Заказы: \n", orders)
+    }, [orders])
     return (
         <>
             <main className='admin-page'>
@@ -119,21 +206,19 @@ export default function AdminServicesPage(props: AdminServicesPageProps) {
                     </div>
 
                     <div className='admin-serviceCards'>
-                        {props.services.map((service, i) => {
-                            const serviceRoom = hotelRooms.find(x => x.id === service.room)?.tags
-                            console.log('Заказ ', service.customer, 'Комната: ', serviceRoom)
+                        {orders.map((service, i) => {
+                            const serviceRoom = hotelRooms.find(x => x.id === service.orderInfo.customer.room)?.tags
+                            const orderClass = `service-order ${service.isEntering ? 'service-order-enter' : ''}`
+                            // console.log('Заказ ', service.orderInfo.customer.name, 'Комната: ', serviceRoom)
                             return (
-                                <ServiceOrder
-                                    key={i + serviceRoom + service.comment}
-                                    status={service.status}
-                                    comment={service.comment}
-                                    customer={service.customer}
-                                    phone={service.phone}
-                                    room={serviceRoom}
-                                    paymentType={service.paymentType}
-                                    paymentAmount={1000}
-                                    order={service.order}
-                                />
+                                <div className={`service-order ${orderClass}`} key={service.id}>
+                                    <ServiceOrder
+                                        id={service.id}
+                                        orderInfo={service.orderInfo}
+                                        order={service.order}
+                                        roomName={serviceRoom}
+                                    />
+                                </div>
                             )
                         })}
                     </div>

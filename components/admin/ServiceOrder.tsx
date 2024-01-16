@@ -1,7 +1,8 @@
 import { Card, Image, Text, Group, Badge, Button, ActionIcon, Stack, Flex } from '@mantine/core'
-import { TOrderPaymentType } from 'types/order';
-import { IServiceOrdered, TServiceOrderStatus } from 'types/services';
-// import classes from './BadgeCard.module.css';
+import { DEFAULTS } from 'defaults';
+import { useEffect, useState } from 'react'
+import { IOrderInfo, TOrderPaymentType } from 'types/order'
+import { IServiceOrdered, TServiceOrderStatus } from 'types/services'
 
 const mockdata = {
     image:
@@ -20,47 +21,12 @@ const mockdata = {
     ],
 };
 
-interface ServiceOrderProps {
-    status: TServiceOrderStatus
-    room: string,
-    customer: string,
+export interface ICServiceOrderProps {
+    id: number,
+    roomName: string,
     order: IServiceOrdered[],
-    comment: string,
-    phone: string,
-    paymentAmount: number,
-    paymentType: TOrderPaymentType,
+    orderInfo: IOrderInfo
 }
-
-const cardData = {
-    room: 'Домик на набережной 3',
-    customer: 'Анастасия Сычева',
-    order: [
-        {
-            quantity: 3,
-            service: {
-                attributes: {
-                    title: 'Халат',
-                    price: 120,
-                    images: {
-                        data: [
-                            {
-                                attributes: {
-                                    url: '',
-                                    height: 10,
-                                    width: 10,
-                                }
-                            }
-                        ]
-                    }
-                },
-            }
-        }
-    ],
-    comment: '23',
-    phone: '+79539687367',
-    paymentAmount: 1330,
-    paymentType: 'bank-card',
-} as ServiceOrderProps
 
 interface ServiceOrderItemProps {
     image?: string
@@ -69,7 +35,6 @@ interface ServiceOrderItemProps {
 }
 
 const ServiceOrderItem = (props: ServiceOrderItemProps) => {
-
     return (
         <div className='admin-serviceCard__orderItem'>
             <div className='admin-serviceCard__orderItem-product'>
@@ -83,26 +48,101 @@ const ServiceOrderItem = (props: ServiceOrderItemProps) => {
     )
 }
 
-export default function ServiceOrder(props: ServiceOrderProps) {
-    const paymentType = props.paymentType === 'bank-card' ? 'Банковская карта' : props.paymentType === 'cash' ? 'Наличные' : 'Не указан'
+const ServiceOrderBadge = (props: { status: TServiceOrderStatus, id: number }) => {
+    const checkOrderStatus = (status) => {
+        // if (!props.status) return
+        switch (props.status) {
+            case 'new':
+                return {
+                    name: 'Новый',
+                    color: 'blue',
+                }
+            // break;
+            case 'delivered':
+                return {
+                    name: 'Доставляется',
+                    color: 'orange',
+                }
+            // break;
+
+            case 'done':
+                return {
+                    name: 'Выполнен',
+                    color: 'green',
+                }
+            // break
+            case 'inwork':
+                return {
+                    name: 'В работе',
+                    color: 'gray',
+                }
+            // break
+            default:
+                return {
+                    name: 'Не определен',
+                    color: 'lime.4',
+                }
+            // break
+        }
+    }
+
+    const badge = checkOrderStatus(props.status)
 
     return (
-        <div className='admin-serviceCard'>
-            {props.status === 'new' ?
-                <Badge variant="light" className='admin-serviceCard__badge'>Новый</Badge>
-                : <></>
+        <Flex direction={'row'} justify={'space-between'}>
+            <span className='admin-serviceCard__id'>ID:{props.id}</span>
+            <Badge autoContrast variant="light" color={badge.color} className='admin-serviceCard__badge' >
+                {badge.name}
+            </Badge>
+        </Flex>
+    )
+}
+
+export default function ServiceOrder(props: ICServiceOrderProps) {
+    const paymentType = props.orderInfo.paymentType === 'bank-card' ? 'Банковская карта' : props.orderInfo.paymentType === 'cash' ? 'Наличные' : 'Не указан'
+
+    async function updateStatus(status: TServiceOrderStatus, newStatus: TServiceOrderStatus) {
+        try {
+            const response = await fetch('/api/order/service/update', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ props, status, newStatus })
+            });
+
+            if (!response.ok) {
+                throw new Error('Ошибка при обновлении статуса заказа');
             }
+
+            // const data = await response.json();
+            // console.log('Status update: ', data)
+            // return data;
+            return
+        } catch (error) {
+            console.error('Ошибка:', error);
+            throw error;
+        }
+    }
+
+    useEffect(() => {
+        console.log('ServiceOrder: ', props.orderInfo.customer.name, ': ', props)
+    }, [])
+    return (
+        <div className='admin-serviceCard'>
+            <ServiceOrderBadge status={props.orderInfo.status} id={props.id} />
+
             <div className='admin-serviceCard__header'>
                 <div className='admin-serviceCard__status'>
                     <div />
                 </div>
                 <Flex direction={'column'} gap={2}>
                     <Flex direction={'row'} gap={8} align={'center'}>
-                        <span className='admin-serviceCard__room'>{props.room}</span>
+                        <span className='admin-serviceCard__room'>{props.roomName}</span>
                     </Flex>
                     <Flex direction={'row'} gap={2}>
                         <span className='admin-serviceCard__customer'>Заказчик:</span>
-                        <span className='admin-serviceCard__customer-name'>{props.customer}</span>
+                        <span className='admin-serviceCard__customer-name'>{props.orderInfo.customer.name}</span>
                     </Flex>
                 </Flex>
             </div>
@@ -110,37 +150,41 @@ export default function ServiceOrder(props: ServiceOrderProps) {
             <div className='admin-serviceCard__order'>
                 <span className='admin-serviceCard__blockTitle'>Заказ:</span>
                 <div className='admin-serviceCard__orderList'>
-                    {props.order.map((x, i) => <>
-                        <ServiceOrderItem
-                            key={i}
-                            name={x.service.attributes.title}
-                            amount={x.quantity}
-                            image={'https://strapi.kplazma.ru' + x.service.attributes.images.data[0].attributes.url}
-                        />
-                        {i < cardData.order.length - 1 ?
-                            <div className='admin-serviceCard__orderDivider' />
-                            : <></>
-                        }
-                    </>)}
+                    {props.order.map((x, i) => {
+                        return (
+                            <>
+                                <ServiceOrderItem
+                                    key={i}
+                                    name={x.service.attributes.title}
+                                    amount={x.quantity}
+                                    image={DEFAULTS.STRAPI.url + x.service.attributes.images.data[0].attributes.url}
+                                />
+                                {i < props.order.length - 1 ?
+                                    <div className='admin-serviceCard__orderDivider' />
+                                    : <></>
+                                }
+                            </>
+                        )
+                    })}
                 </div>
             </div>
 
             <div className='admin-serviceCard__comment'>
                 <span className='admin-serviceCard__blockTitle'>Комментарий:</span>
                 <span className='admin-serviceCard__comment-text'>
-                    {props.comment ? props.comment : 'Комментарий не указан'}
+                    {props.orderInfo.description ? props.orderInfo.description : 'Комментарий не указан'}
                 </span>
             </div>
             <div className='admin-serviceCard__feedback'>
                 <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
                     <span className='admin-serviceCard__blockTitle'>Телефон для связи:</span>
-                    <span className='admin-serviceCard__blockTitle'>{props.phone ? props.phone : 'Не указан'}</span>
+                    <span className='admin-serviceCard__blockTitle'>{props.orderInfo.customer.phone ? props.orderInfo.customer.phone : 'Не указан'}</span>
                 </Flex>
             </div>
             <div className='admin-serviceCard__result'>
                 <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
                     <span className='admin-serviceCard__blockText'>Сумма заказа:</span>
-                    <span className='admin-serviceCard__blockTitle'>{props.paymentAmount} руб.</span>
+                    <span className='admin-serviceCard__blockTitle'>{1000} руб.</span>
                 </Flex>
 
                 <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
@@ -149,8 +193,9 @@ export default function ServiceOrder(props: ServiceOrderProps) {
                 </Flex>
             </div>
             <div className='admin-serviceCard__action'>
-                <Button variant="filled" color="green" size='md' radius={'md'}>Принять</Button>
-                <Button variant="filled" size='md' radius={'md'}>Выполнен</Button>
+                <Button onClick={() => updateStatus(props.orderInfo.status, 'inwork')} variant="filled" color="blue" size='md' radius={'md'}>Принять</Button>
+                <Button onClick={() => updateStatus(props.orderInfo.status, 'delivered')} variant="filled" color="orange" size='md' radius={'md'}>На доставку</Button>
+                <Button onClick={() => updateStatus(props.orderInfo.status, 'done')} variant="filled" color={'green'} size='md' radius={'md'}>Выполнен</Button>
             </div>
         </div>
     )

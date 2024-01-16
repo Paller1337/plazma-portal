@@ -1,4 +1,5 @@
 import { useCart } from 'context/CartContext'
+import { DEFAULTS } from 'defaults'
 import Image from 'next/image'
 import { ReactSVG } from 'react-svg'
 import { ServiceImage } from 'types/services'
@@ -14,7 +15,7 @@ export default function ServiceShopCard(props: ServiceShopCardProps) {
     const { dispatch } = useCart()
     const image = props.image[0].attributes
 
-    const imageUrl = 'https://strapi.kplazma.ru' + image.url
+    const imageUrl = DEFAULTS.STRAPI.url + image.url
     // Функция добавления товара в корзину
 
 

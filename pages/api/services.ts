@@ -1,10 +1,11 @@
 // pages/api/services.ts
+import { DEFAULTS } from 'defaults';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { ServicesResponse } from 'types/services';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     try {
-        const strapiRes = await fetch('https://strapi.kplazma.ru/api/services?populate=*');
+        const strapiRes = await fetch(`${DEFAULTS.STRAPI.url}/api/services?populate=*`);
         if (!strapiRes.ok) {
             throw new Error(`Error from Strapi: ${strapiRes.status}`);
         }

@@ -1,9 +1,10 @@
 import axios from 'axios'
+import { DEFAULTS } from 'defaults';
 import { IGuestAccount } from 'types/session';
 
 export async function createGuestAccount(account: IGuestAccount) {
     try {
-        const response = await axios.post('https://strapi.kplazma.ru/api/guest-accounts', {
+        const response = await axios.post(`${DEFAULTS.STRAPI.url}/api/guest-accounts`, {
             data: {
                 firstName: account.firstName,
                 lastName: account.lastName,
@@ -27,10 +28,10 @@ export async function createGuestAccount(account: IGuestAccount) {
 
 export async function getGuestAccountByRoomIdAndSurname(roomId: string, surname: string) {
     try {
-        const response = await axios.get(`https://strapi.kplazma.ru/api/guest-accounts`, {
+        const response = await axios.get(`${DEFAULTS.STRAPI.url}/api/guest-accounts`, {
             params: {
-                'filters[roomId][$eq]': roomId,
-                'filters[lastName][$eq]': surname
+                'filters[roomId][$eq]': roomId.toLocaleLowerCase(),
+                'filters[lastName][$eqi]': surname.toLocaleLowerCase()
             }
         })
         console.log('guest room res: ', response)
@@ -47,7 +48,7 @@ export async function getGuestAccountByRoomIdAndSurname(roomId: string, surname:
 
 export async function getGuestAccountByBookingId(bookingId: number) {
     try {
-        const response = await axios.get(`https://strapi.kplazma.ru/api/guest-accounts`, {
+        const response = await axios.get(`${DEFAULTS.STRAPI.url}/api/guest-accounts`, {
             params: {
                 'populate': 'deep,3',
                 'filters[bnovoBookingId][$eq]': bookingId

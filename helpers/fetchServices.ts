@@ -1,7 +1,8 @@
+import { DEFAULTS } from 'defaults'
 import { ServicesResponse } from 'types/services'
 
 export async function fetchServices(): Promise<ServicesResponse> {
-    const res = await fetch('https://strapi.kplazma.ru/api/services?populate=*')
+    const res = await fetch(`${DEFAULTS.STRAPI.url}/api/services?populate=*`)
     if (!res.ok) {
         throw new Error(`Failed to fetch services, received status ${res.status}`)
     }

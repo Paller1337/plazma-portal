@@ -15,6 +15,7 @@ import { CartProvider } from 'context/CartContext'
 import { AuthProvider } from 'context/AuthContext'
 import { Button, MantineProvider, createTheme } from '@mantine/core'
 import AdminHeader from '@/components/admin/AdminHeader'
+import { Toaster } from 'react-hot-toast'
 
 
 const theme = createTheme({
@@ -50,6 +51,7 @@ export default function App({ Component, pageProps }: AppProps) {
         // Рендеринг админ-панели без контекстов
         return (<>
             <MantineProvider theme={theme}>
+                <Toaster />
                 <AdminHeader />
                 <Component {...pageProps} />
             </MantineProvider>

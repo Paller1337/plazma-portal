@@ -12,7 +12,7 @@ export interface ServiceImage {
 
 export interface IService {
     id: number
-    attributes: {
+    attributes?: {
         title: string
         price: number
         images: {
@@ -31,7 +31,8 @@ export interface ServicesResponse {
 }
 
 export type TServiceOrderStatus = 'new' | 'inwork' | 'done' | 'delivered'
-export interface IServiceOrder {
+export interface IServiceOrderData {
+    id?: number
     status: TServiceOrderStatus
     room: string //'Домик на набережной 3',
     customer: string //'Анастасия Сычева',

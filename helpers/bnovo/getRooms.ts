@@ -10,7 +10,7 @@ export async function getRooms() {
             //
         });
         const data = response.data.rooms as TBnovoRoom[]
-
+        
         return data
     } catch (error) {
         console.error('Ошибка при получении списка комнат:', error);

@@ -11,10 +11,12 @@ import { DateTime } from 'luxon'
 
 const SECRET_KEY = 'PlazmaHotel1337PorTaL'
 
-const generateToken = (bnovoBookingId, checkOutDate) => {
+const generateToken = (accountId, bnovoBookingId, checkOutDate, role) => {
     const payload = {
+        accountId,
         bnovoBookingId,
-        checkOutDate
+        checkOutDate,
+        role
     }
     const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1d' })
     return token
@@ -52,20 +54,21 @@ export const decodeToken = () => {
 
 export default async function authenticationPortal(surname: string, roomId: string) {
     const strapiResponse = await getGuestAccountByRoomIdAndSurname(roomId, surname)
-    console.log('strapiResponse ', strapiResponse)
+    // console.log('strapiResponse ', strapiResponse)
 
     const isToken = verifyToken()
     if (isToken) return { status: true, message: 'Вы уже авторизованы' }
 
     if (strapiResponse) {
-        const sessionToken = generateToken(strapiResponse.attributes.bnovoBookingId, strapiResponse.attributes.checkOutDate)
+        const role = 'guest'
+        const sessionToken = generateToken(strapiResponse.id, strapiResponse.attributes.bnovoBookingId, strapiResponse.attributes.checkOutDate, role)
         Cookies.set('session_token', sessionToken)
 
         return { status: true, message: 'Аккаунт найден. Авторизация успешна!' }
     }
 
     const bnovoResponse = await axiosInstance(`/api/booking-room/${roomId}`)
-    console.log('bnovoResponse: ', bnovoResponse)
+    // console.log('bnovoResponse: ', bnovoResponse)
     if (!bnovoResponse.data?.status) {
         return { status: true, message: 'Бронирования не существует.' }
     }
@@ -110,9 +113,11 @@ export default async function authenticationPortal(surname: string, roomId: stri
                     residents: residents,
                 }
             )
-            console.log('Create Account: ', resCreateAccount)
+            // console.log('Create Account: ', resCreateAccount)
 
-            const sessionToken = generateToken(data.id, data.departure)
+            const role = 'guest'
+            const createdAccountId = resCreateAccount.data.id
+            const sessionToken = generateToken(createdAccountId, data.id, data.departure, role)
             Cookies.set('session_token', sessionToken)
 
             return { status: true, message: 'Сессия проживания создана. Авторизация успешна.' }

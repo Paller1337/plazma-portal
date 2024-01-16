@@ -55,7 +55,7 @@ export default function OrderServices(props) {
             const responseStrapi = await createServiceOrder({
                 order: serviceOrder,
                 orderInfo: {
-                    createAt: nowTime,
+                    create_at: nowTime,
                     description: 'Тестовый комментарий',
                     status: 'new',
                     customer: {
@@ -63,7 +63,9 @@ export default function OrderServices(props) {
                         phone: guestAccount.attributes.phone,
                         room: guestAccount.attributes.roomId,
                         guest_account: guestAccount.id,
-                    }
+                    },
+                    paymentType: 'bank-card',
+                    previous_status: 'new',
                 }
             })
 
