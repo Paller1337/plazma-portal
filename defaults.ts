@@ -1,6 +1,6 @@
 export module DEFAULTS {
     const URL = {
-        prod: 'https://portal.kplazma.ru',
+        prod: 'http://localhost:1337',
         local: 'http://192.168.1.19:1337'
     }
     export const SOCKET = {
