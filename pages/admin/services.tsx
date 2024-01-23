@@ -1,7 +1,7 @@
 import ServiceOrder from '@/components/admin/ServiceOrder';
 import { Flex, Stack } from '@mantine/core';
 import { getRooms } from 'helpers/bnovo/getRooms';
-import { getServiceOrders, normalizeServiceOrderData } from 'helpers/order/services';
+import { getServiceOrders, normalizeServiceOrderData, servicesFromRes } from 'helpers/order/services';
 import { GetServerSideProps } from 'next';
 import { useEffect, useState } from 'react';
 import { IService, IServiceOrderData, IServiceOrdered, TServiceOrderStatus } from 'types/services';
@@ -37,41 +37,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
             throw new Error(`Комнат нет`);
         }
 
-        const orders: IServiceOrder[] = res.map(x => {
-            const guestAccountData = x.attributes.orderInfo.customer.guest_account.data;
-            console.log('guestAccountData ', guestAccountData)
-            const orderInfo: IOrderInfo = {
-                status: x.attributes.orderInfo.status,
-                createAt: x.attributes.createdAt,
-                completedAt: x.attributes.orderInfo.completed_at,
-                description: x.attributes.orderInfo.description,
-                customer: {
-                    name: x.attributes.orderInfo.customer.name,
-                    room: x.attributes.orderInfo.customer.room,
-                    phone: x.attributes.orderInfo.customer.phone,
-                    guest_account: {
-                        id: guestAccountData.id,
-                        ...guestAccountData.attributes
-                    }
-                },
-                paymentType: x.attributes.orderInfo.paymentType
-            };
-
-            const orderData = x.attributes.order.map(item => {
-
-                // console.log('service.item: ', item)
-                return {
-                    service: item.service.data,
-                    quantity: item.quantity,
-                } as IServiceOrdered
-            })
-
-            return {
-                id: x.id,
-                orderInfo,
-                order: orderData
-            } as IServiceOrder
-        });
+        const orders: IServiceOrder[] = servicesFromRes(res)
 
         return {
             props: {
@@ -181,7 +147,7 @@ export default function AdminServicesPage(props: AdminServicesPageProps) {
             socket.off('orderCreate')
             socket.disconnect()
         };
-    }, [])
+    }, [hotelRooms, socket])
 
     useEffect(() => {
         console.log("Заказы: \n", orders)

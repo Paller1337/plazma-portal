@@ -1,5 +1,5 @@
 import { Pagination } from 'swiper/modules'
-import { Swiper, SwiperSlide } from 'swiper/react'
+import { Swiper, SwiperProps, SwiperSlide } from 'swiper/react'
 import Image from 'next/image'
 
 interface PromoSliderProps {
@@ -25,7 +25,8 @@ export default function PromoSlider(props: PromoSliderProps) {
                     clickable: true,
                     type: 'bullets',
                 },
-            } as any)}
+                className: 'index-swiper',
+            } as SwiperProps)}
         >
             {props.slides.map((x, i) =>
                 <SwiperSlide key={'promo-slide-' + x.title}>

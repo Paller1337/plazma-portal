@@ -1,4 +1,15 @@
 .index
+    &-swiper
+        padding-bottom: 40px !important
+        .swiper-pagination-bullet
+            width: 16px
+            height: 16px
+            border: 4px solid #fff
+            background: #262626
+            opacity: 1
+            &-active
+                border: 4px solid #262626
+                background: #fff
     &-nav
         display: flex
         flex-direction: row
@@ -14,6 +25,8 @@
                     height: fit-content
         &__button
             border-radius: 18px
+            border: none
+            box-sizing: border-box
             outline: 1px solid #F2F2F2
             background: #FFF
             box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.10)
@@ -40,6 +53,13 @@
                     right: 50%
                     transform: translateX(50%)
                     top: -40px
+
+            &_order
+                cursor: auto
+                .index-nav__bg-logo
+                    right: 50%
+                    transform: translateX(50%)
+                    top: 0px
         &__title
             color: #262626
             font-family: Montserrat
@@ -47,6 +67,8 @@
             font-style: normal
             font-weight: 500
             line-height: normal
+            position: relative
+            z-index: 10
         &__desc
             color: #858585
             font-family: Montserrat
@@ -54,6 +76,8 @@
             font-style: normal
             font-weight: 400
             line-height: normal
+            position: relative
+            z-index: 10
         &__desc-row
             display: flex
             flex-direction: row
@@ -87,6 +111,11 @@
             transition: all .12s ease-in-out
             cursor: pointer
             color: #262626
+            &_dark
+                border-color: #262626
+                &:hover
+                    background: #262626 !important
+                    color: #fff
             &:hover
                 background: rgba(3, 129, 0, 1)
                 color: #fff
@@ -95,3 +124,6 @@
             right: -15px
             top: -10px
             transform: rotate(-30deg)
+
+    &-orders
+        padding: 24px 24px

@@ -1,0 +1,69 @@
+.help-content
+    display: flex
+    flex-direction: column
+    gap: 24px
+    align-items: center
+
+.faq
+    &-title
+        color: #262626
+        text-align: center
+        font-family: Montserrat
+        font-size: 20px
+        font-style: normal
+        font-weight: 600
+        line-height: normal
+        width: 100%
+        align-self: stretch
+        display: flex
+        padding-top: 24px
+        align-items: center
+        justify-content: center
+        
+    &-list
+        display: flex
+        flex-direction: column
+        align-items: center
+        gap: 24px
+
+    &-card
+        border-radius: 12px
+        background: #fff
+        border: 1px solid rgba(0, 0, 0, 0.05)
+        box-shadow: 0px 0px 4px 0px rgba(0, 0, 0, 0.05)
+        width: 100%
+        &__header
+            padding: 12px 12px 12px 24px
+            display: flex
+            align-items: center
+            justify-content: space-between
+            cursor: pointer
+        &__question
+            color: #262626
+            font-family: Montserrat
+            font-size: 18px
+            font-style: normal
+            font-weight: 500
+            line-height: normal
+        &__toggle
+            cursor: pointer
+            margin-left: auto
+            div
+                display: flex
+
+        &__content
+            padding: 12px 24px 24px 24px
+            display: flex
+            flex-direction: column
+            gap: 8px
+            max-height: 600px
+            transition: all .18s ease-in-out
+            overflow: hidden
+            &.closed
+                max-height: 0px
+                padding-top: 0px
+                padding-bottom: 0px
+            & > *
+                font-family: Montserrat
+                line-height: 120%
+                color: #262626

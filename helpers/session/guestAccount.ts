@@ -30,11 +30,12 @@ export async function getGuestAccountByRoomIdAndSurname(roomId: string, surname:
     try {
         const response = await axios.get(`${DEFAULTS.STRAPI.url}/api/guest-accounts`, {
             params: {
+                'populate': 'deep,3',
                 'filters[roomId][$eq]': roomId.toLocaleLowerCase(),
                 'filters[lastName][$eqi]': surname.toLocaleLowerCase()
             }
         })
-        console.log('guest room res: ', response)
+        console.log('guest room res: ', response.data)
         if (response.data.data && response.data.data.length > 0) {
             return response.data.data[0]
         } else {

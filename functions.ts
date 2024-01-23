@@ -11,32 +11,12 @@ export const getWordEnding = (count) => {
     }
 }
 
-export const useResetZoom = () => {
-    const router = useRouter();
-
+export const useFooterBottomPadding = (pb: number) => {
     useEffect(() => {
-        const handleRouteChange = () => {
-            if ('visualViewport' in window) {
-                const resetZoom = () => {
-                    if (window.visualViewport.scale > 1) {
-                        document.body.style.setProperty('zoom', String(1 / window.visualViewport.scale));
-                    } else {
-                        document.body.style.removeProperty('zoom');
-                    }
-                };
-
-                window.visualViewport.addEventListener('resize', resetZoom);
-
-                // Удаляем обработчик при размонтировании
-                return () => window.visualViewport.removeEventListener('resize', resetZoom);
-            }
-        };
-
-        router.events.on('routeChangeComplete', handleRouteChange);
-
-        // Удаляем обработчик при размонтировании
-        return () => {
-            router.events.off('routeChangeComplete', handleRouteChange);
-        };
-    }, [router.events]);
+        const footer = document.getElementsByClassName('footer')[0] as HTMLDivElement
+        
+        if (footer) {
+            footer.style.marginBottom = `${pb}px`;
+        }
+    }, [pb]); // Зависимость от pb гарантирует, что эффект сработает при его изменении
 };

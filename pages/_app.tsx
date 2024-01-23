@@ -16,6 +16,9 @@ import { AuthProvider } from 'context/AuthContext'
 import { Button, MantineProvider, createTheme } from '@mantine/core'
 import AdminHeader from '@/components/admin/AdminHeader'
 import { Toaster } from 'react-hot-toast'
+import jwt, { JwtPayload } from 'jsonwebtoken'
+import { GetServerSideProps } from 'next'
+import { SECRET_KEY } from 'helpers/login'
 
 
 const theme = createTheme({
@@ -30,7 +33,27 @@ const theme = createTheme({
     },
 })
 
-export default function App({ Component, pageProps }: AppProps) {
+
+// export const getServerSideProps: GetServerSideProps = async (context) => {
+//     const token = context.req.headers.cookie?.split('; ').find(c => c.startsWith('session_token='))?.split('=')[1];
+//     let isAuthenticated = true;
+
+//     // if (token) {
+//     //     try {
+//     //         jwt.verify(token, SECRET_KEY);
+//     //         isAuthenticated = true;
+//     //     } catch (error) {
+//     //         // Обработка ошибки, если токен недействителен
+//     //     }
+//     // }
+
+//     return {
+//         props: { isAuthenticated },
+//     };
+// };
+
+
+export default function App({ Component, pageProps }) {
     const router = useRouter();
     const loaderRef = useRef<LoadingBarRef>(null);
 
@@ -61,6 +84,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <>
             <Head>
                 <link rel="icon" href="/favicon.ico" />
+                <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
             </Head>
 
             <LoadingBar color='#262626' ref={loaderRef} height={2} />
@@ -69,6 +93,7 @@ export default function App({ Component, pageProps }: AppProps) {
             <MantineProvider theme={theme}>
                 <AuthProvider>
                     <CartProvider>
+                        <Toaster />
                         <AppLayout asPath={router.asPath} pageProps={pageProps}>
                             <Component {...pageProps} />
                         </AppLayout>

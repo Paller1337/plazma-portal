@@ -1,17 +1,24 @@
 import { TBooking, TBookingExtra } from 'types/bnovo';
-import { bnovoAuth } from './auth'
+import { bnovoAuth, cacheToRedis, getCachedRedis } from './auth'
 import bnovoClient from './bnovoClient'
 import { DateTime } from 'luxon'
 import axios from 'axios';
 import { axiosInstance } from 'helpers/axiosInstance';
 
 export async function getBooking(id: number) {
-    await bnovoAuth() // Убедитесь, что мы авторизованы
+    const redisBooking = await getCachedRedis(`bookingBnovo_${id}`)
+    if (redisBooking) return JSON.parse(redisBooking)
 
+    await bnovoAuth() // Убедитесь, что мы авторизованы
     try {
+        console.log('Получаем бнорирование из bnovo')
+
         const response = await bnovoClient.post(`https://online.bnovo.ru/booking/general/${id}`, {
             // Параметры запроса, если они нужны
         });
+        // console.log(response.data)
+        console.log('Номер бронирования для редиса: ', response.data.booking.id)
+        await cacheToRedis(`bookingBnovo_${id}`, JSON.stringify(response.data), 14400)
 
         return response.data;
     } catch (error) {
@@ -50,14 +57,18 @@ export async function getBookingByRoomId(id: number) {
     }
 }
 
-export async function getAllBookings(dfrom: string, dto: string) {
+export async function getAllBookings(dfrom?: string, dto?: string) {
+    const redisBookingAll = await getCachedRedis(`bookingBnovoAll_from-${dfrom ? dfrom : 'min'}_to-${dto ? dto : 'max'}`)
+    if (redisBookingAll) return JSON.parse(redisBookingAll)
+
     await bnovoAuth()
 
+    const data = dfrom && dto ? {
+        dfrom,
+        dto
+    } : {}
     try {
-        const response = await bnovoClient.post('https://online.bnovo.ru/planning/bookings', {
-            dfrom: dfrom,
-            dto: dto,
-        }, {
+        const response = await bnovoClient.post('https://online.bnovo.ru/planning/bookings', data ? data : {}, {
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
@@ -65,6 +76,8 @@ export async function getAllBookings(dfrom: string, dto: string) {
         });
 
         const bookings = await response.data.result as TBooking[]
+        await cacheToRedis(`bookingBnovoAll_from-${dfrom ? dfrom : 'min'}_to-${dto ? dto : 'max'}`, JSON.stringify(bookings), 3600)
+
         return bookings
     } catch (error) {
         console.error('Ошибка при проверке бронирования через Bnovo:', error);
@@ -85,7 +98,7 @@ export function getBookingCustomers(bookingData: TBookingExtra) {
             }
         })
 
-        console.log('Customers in this room: ', customers?.map(x => x.name), ', ')
+        console.log('Customer in this room: ', customers?.map(x => ({ 'Имя': x.name, 'Фамилия': x.surname })))
         return customers
     } else if (bookingData.customer) {
         const customer = [{
@@ -93,7 +106,7 @@ export function getBookingCustomers(bookingData: TBookingExtra) {
             surname: bookingData.customer.surname,
             phone: bookingData.customer.phone
         }]
-        console.log('Customer in this room: ', customer?.map(x => x.name), ', ')
+        console.log('Customer in this room: ', `${customer?.map(x => ({ 'Имя': x.name, 'Фамилия': x.surname }))}`, ', ')
         return customer
     }
 }

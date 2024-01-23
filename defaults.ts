@@ -9,4 +9,10 @@ export module DEFAULTS {
     export const STRAPI = {
         url: URL.prod,
     }
+    export const PORTAL = {
+        url: {
+            prod: 'https://portal.kplazma.ru',
+            dev: 'http://192.168.1.19:4000',
+        }
+    }
 }

@@ -1,14 +1,15 @@
-import { Button, Select, TextInput } from '@mantine/core'
+import Button from '@/components/Button'
+import { Select, TextInput } from '@mantine/core'
 import { useAuth } from 'context/AuthContext'
 import { getRooms } from 'helpers/bnovo/getRooms'
-import authenticationPortal from 'helpers/login'
+import authenticationPortal, { verifyToken } from 'helpers/login'
 import { GetServerSideProps } from 'next'
 import { Router, useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { ReactSVG } from 'react-svg'
 import { TBnovoRoom } from 'types/bnovo'
-
+import { debounce } from 'lodash'
 
 // interface TBnovoRoom {
 //     id: string
@@ -26,7 +27,20 @@ interface AuthPageProps {
     rooms: TBnovoRoom[]
 }
 
-export const getServerSideProps: GetServerSideProps = async () => {
+export const getServerSideProps: GetServerSideProps = async (context) => {
+    const token = context.req.cookies.session_token
+    const verify = verifyToken(token)
+    console.log('verify?: ', verify)
+
+    if (verify) {
+        return {
+            redirect: {
+                destination: '/',
+                permanent: false,
+            },
+        }
+    }
+
     try {
         const rooms = await getRooms()
         const availableRooms = rooms.filter(x => x.tags !== '')
@@ -57,9 +71,9 @@ export default function AuthPage(props: AuthPageProps) {
     }))
 
     useEffect(() => {
-        console.log('isAuthenticated: ', isAuthenticated)
+        console.log('auth.tsx isAuthenticated: ', isAuthenticated)
         if (isAuthenticated) router.push('/')
-    }, [isAuthenticated])
+    }, [isAuthenticated, router])
 
     // useEffect(() => {
     //     console.log('ROOMS: ', '\\n', rooms)
@@ -73,39 +87,46 @@ export default function AuthPage(props: AuthPageProps) {
         console.log(surname,)
     }, [surname])
 
-    const onLogin = async () => {
+    const onLogin = debounce(async () => {
         const isAuth = await login(surname, roomId)
         if (isAuth.status) {
             toast.success(isAuth.message)
         } else {
             toast.error(isAuth.message)
         }
-    }
+    }, 300)
+
+
+    
     return (<>
         <main className='auth-page'>
-            <div className='auth-page__logo'>
-                <ReactSVG src='/svg/logo-dark-x128.svg' />
-            </div>
+            <div className='auth-page__wrapper'>
+                <div className='auth-page__logo'>
+                    <ReactSVG src='/svg/logo-dark-x128.svg' />
+                </div>
 
-            <div className='auth-page__title'>
-                ВХОД В ГОСТЕВОЙ ПОРТАЛ
-            </div>
+                <div className='auth-page__title'>
+                    ВХОД В ГОСТЕВОЙ ПОРТАЛ
+                </div>
 
-            <div className='auth-page__form'>
-                <TextInput placeholder="Фамилия" className='' onChange={event => setSurname(event.currentTarget.value.toString())} />
+                <div className='auth-page__form'>
+                    <TextInput placeholder="Фамилия" className='' onChange={event => setSurname(event.currentTarget.value.toString())}
+                        radius={'md'} size='lg'
+                    />
 
-                <Select
-                    mt="md"
-                    comboboxProps={{ withinPortal: true }}
-                    data={rooms}
-                    placeholder="Комната"
-                    searchable
-                    onChange={value => setRoomId(value)}
-                />
+                    <Select
+                        mt="md"
+                        size='lg'
+                        radius={'md'}
+                        comboboxProps={{ withinPortal: true }}
+                        data={rooms}
+                        placeholder="Комната"
+                        searchable
+                        onChange={value => setRoomId(value)}
+                    />
+                </div>
+                <Button onClick={onLogin} text='Войти' stretch />
             </div>
-            <Button variant="default" bg={'#262626'} style={{ color: 'white' }} size='md' onClick={onLogin}>
-                Войти
-            </Button>
         </main>
     </>)
 }

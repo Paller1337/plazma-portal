@@ -11,14 +11,29 @@ import { createServiceOrder } from 'helpers/order/services'
 import { DateTime } from 'luxon'
 import { decodeToken } from 'helpers/login'
 import { getGuestAccountByBookingId } from 'helpers/session/guestAccount'
+import OrderSendModal from '@/components/OrderSendModal'
+import { GetServerSideProps } from 'next'
+import { withAuthServerSideProps } from 'helpers/withAuthServerSideProps'
+import { axiosInstance } from 'helpers/axiosInstance'
+import Cookies from 'js-cookie'
+
+
+export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(async (context) => {
+    try {
+
+        return {
+            props: {}
+        }
+    } catch (error) {
+        console.error('Ошибка ...:', error)
+        return {
+            props: {}
+        }
+    }
+})
 
 export default function OrderServices(props) {
-    const { isAuthenticated } = useAuth()
-    const router = useRouter()
-    useEffect(() => {
-        if (!isAuthenticated) router.push('/auth')
-    }, [isAuthenticated, router])
-
+    const [modalIsOpen, setModalIsOpen] = useState(false)
     const { state, dispatch } = useCart()
     const { services } = state
 
@@ -44,51 +59,70 @@ export default function OrderServices(props) {
     }
 
     const handleCheckout = async () => {
-        const decoded = decodeToken()
-        const guestAccount = await getGuestAccountByBookingId(decoded.bnovoBookingId)
+        const token = Cookies.get('session_token')
+        const res = await axiosInstance.post('/api/token/decode', {
+            token
+        })
+        if (res.status === 200) {
+            const decoded = res.data
 
-        const serviceOrder = state.services.items.map(x => ({ service: parseInt(x.id), quantity: x.quantity }))
-        const nowTime = DateTime.now().toISO()
-        console.log('guestAccount: ', guestAccount)
-        try {
-            const response = await sendOrderToTelegram(state); // Предполагается, что здесь вызывается функция отправки заказа
-            const responseStrapi = await createServiceOrder({
-                order: serviceOrder,
-                orderInfo: {
-                    create_at: nowTime,
-                    description: 'Тестовый комментарий',
-                    status: 'new',
-                    customer: {
-                        name: guestAccount.attributes.firstName,
-                        phone: guestAccount.attributes.phone,
-                        room: guestAccount.attributes.roomId,
-                        guest_account: guestAccount.id,
-                    },
-                    paymentType: 'bank-card',
-                    previous_status: 'new',
+            const guestAccount = await getGuestAccountByBookingId(decoded.bnovoBookingId)
+
+            const serviceOrder = state.services.items.map(x => ({ service: parseInt(x.id), quantity: x.quantity }))
+            const nowTime = DateTime.now().toISO()
+            console.log('guestAccount: ', guestAccount)
+
+            if (serviceOrder.length === 0) {
+                toast.error('Ваша корзина пуста!')
+                return
+            }
+            try {
+                const response = await sendOrderToTelegram(state); // Предполагается, что здесь вызывается функция отправки заказа
+                const responseStrapi = await createServiceOrder({
+                    order: serviceOrder,
+                    orderInfo: {
+                        create_at: nowTime,
+                        description: 'Тестовый комментарий',
+                        status: 'new',
+                        customer: {
+                            name: guestAccount.attributes.firstName,
+                            phone: guestAccount.attributes.phone,
+                            room: guestAccount.attributes.roomId,
+                            guest_account: guestAccount.id,
+                        },
+                        paymentType: 'bank-card',
+                        previous_status: 'new',
+                    }
+                })
+
+                if (response.message) {
+                    // toast.success('Заказ успешно отправлен!')
+                    console.log(state)
+                    console.log('serviceOrder: ', serviceOrder)
+                    dispatch({ type: 'CLEAR_CART', category: 'services' }); // Очистить корзину услуг
+                    dispatch({ type: 'CLEAR_CART', category: 'food' });    // Очистить корзину еды
                 }
-            })
 
-            if (response.message) {
-                toast.success('Заказ успешно отправлен!')
-                console.log(state)
-                console.log('serviceOrder: ', serviceOrder)
-                // dispatch({ type: 'CLEAR_CART', category: 'services' }); // Очистить корзину услуг
-                // dispatch({ type: 'CLEAR_CART', category: 'food' });    // Очистить корзину еды
+                if (responseStrapi) {
+                    // toast.success('Успешный заказ!')
+                    setModalIsOpen(true)
+                    console.log('responseStrapi: ', responseStrapi)
+                    dispatch({ type: 'CLEAR_CART', category: 'services' }); // Очистить корзину услуг
+                    dispatch({ type: 'CLEAR_CART', category: 'food' });    // Очистить корзину еды
+                }
+            } catch (error) {
+                toast.error('Ошибка при отправке заказа.')
             }
-
-            if (responseStrapi) {
-                toast.success('Заказ успешно отправлен в Strapi!')
-                console.log('responseStrapi: ', responseStrapi)
-                // dispatch({ type: 'CLEAR_CART', category: 'services' }); // Очистить корзину услуг
-                // dispatch({ type: 'CLEAR_CART', category: 'food' });    // Очистить корзину еды
-            }
-        } catch (error) {
-            toast.error('Ошибка при отправке заказа.')
         }
     }
 
+    const closeModal = () => {
+        setModalIsOpen(false);
+    };
+
     return (<>
+
+        <OrderSendModal isOpen={modalIsOpen} onClose={closeModal} />
         <main>
             <div className='page-wrapper'>
                 <div className='order'>

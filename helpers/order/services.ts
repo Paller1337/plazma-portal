@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { IOrderInfo, IServiceOrder, TOrderStatus } from 'types/order'
 import { DateTime } from 'luxon'
-import { IService, IServiceOrderData } from 'types/services';
+import { IService, IServiceOrderData, IServiceOrdered } from 'types/services';
 import { ICServiceOrderProps } from '@/components/admin/ServiceOrder';
 import { DEFAULTS } from 'defaults';
 import { IServiceOrderWithEntering } from 'pages/admin/services';
@@ -39,22 +39,22 @@ export async function updateServiceOrderStatus(props: ICServiceOrderProps, statu
                 }
             }
         });
-        console.log('New Order Info: ', {
-            orderInfo: {
-                ...props.orderInfo, // Сохраняем все существующие поля
-                create_at: props.orderInfo.createAt,
-                customer: {
-                    ...props.orderInfo.customer,
-                    guest_account: props.orderInfo.customer.guest_account.id
-                },
-                status: newStatus,
-                previous_status: status
-            }
-        })
+        // console.log('New Order Info: ', {
+        //     orderInfo: {
+        //         ...props.orderInfo, // Сохраняем все существующие поля
+        //         create_at: props.orderInfo.createAt,
+        //         customer: {
+        //             ...props.orderInfo.customer,
+        //             guest_account: props.orderInfo.customer.guest_account.id
+        //         },
+        //         status: newStatus,
+        //         previous_status: status
+        //     }
+        // })
 
-        console.log('guest_account: ', {
-            guest_account: props.orderInfo.customer.guest_account
-        })
+        // console.log('guest_account: ', {
+        //     guest_account: props.orderInfo.customer.guest_account
+        // })
         return response.data;
         // return
     } catch (error) {
@@ -80,7 +80,62 @@ export async function getServiceOrders() {
     }
 }
 
+export async function getServiceOrdersByGuestId(id: number) {
+    try {
+        const response = await axios.get(`${DEFAULTS.STRAPI.url}/api/service-orders`, {
+            params: {
+                // 'sort': "created_at:DESC",
+                'filters[orderInfo][customer][guest_account][id][$eq]': id,
+                'sort[orderInfo][create_at]': `desc`,
+                'populate': 'deep,4',
+            }
+        })
 
+        return response.data.data;
+    } catch (error) {
+        console.error('Ошибка при создании аккаунта гостя:', error);
+        throw error; // Переброс ошибки для дальнейшей обработки
+    }
+}
+
+export function servicesFromRes(res){
+    const orders = res.map(x => {
+        const guestAccountData = x.attributes.orderInfo.customer.guest_account.data;
+        // console.log('guestAccountData ', guestAccountData)
+        const orderInfo: IOrderInfo = {
+            status: x.attributes.orderInfo.status,
+            createAt: x.attributes.createdAt,
+            completedAt: x.attributes.orderInfo.completed_at,
+            description: x.attributes.orderInfo.description,
+            customer: {
+                name: x.attributes.orderInfo.customer.name,
+                room: x.attributes.orderInfo.customer.room,
+                phone: x.attributes.orderInfo.customer.phone,
+                guest_account: {
+                    id: guestAccountData.id,
+                    ...guestAccountData.attributes
+                }
+            },
+            paymentType: x.attributes.orderInfo.paymentType
+        };
+
+        const orderData = x.attributes.order.map(item => {
+
+            // console.log('service.item: ', item)
+            return {
+                service: item.service.data,
+                quantity: item.quantity,
+            } as IServiceOrdered
+        })
+
+        return {
+            id: x.id,
+            orderInfo,
+            order: orderData
+        } as IServiceOrder
+    });
+    return orders
+}
 export function normalizeServiceOrderData(data) {
     const orderItems = data.order.map(item => {
         const service = {

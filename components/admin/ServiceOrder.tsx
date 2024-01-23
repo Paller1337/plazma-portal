@@ -61,20 +61,20 @@ const ServiceOrderBadge = (props: { status: TServiceOrderStatus, id: number }) =
             case 'delivered':
                 return {
                     name: 'Доставляется',
-                    color: 'orange',
+                    color: 'green',
                 }
             // break;
 
             case 'done':
                 return {
                     name: 'Выполнен',
-                    color: 'green',
+                    color: 'gray',
                 }
             // break
             case 'inwork':
                 return {
                     name: 'В работе',
-                    color: 'gray',
+                    color: 'orange',
                 }
             // break
             default:
@@ -127,7 +127,7 @@ export default function ServiceOrder(props: ICServiceOrderProps) {
 
     useEffect(() => {
         console.log('ServiceOrder: ', props.orderInfo.customer.name, ': ', props)
-    }, [])
+    }, [props])
     return (
         <div className='admin-serviceCard'>
             <ServiceOrderBadge status={props.orderInfo.status} id={props.id} />

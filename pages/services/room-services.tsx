@@ -12,6 +12,9 @@ import { useEffect } from 'react'
 import { IService } from 'types/services'
 import { useAuth } from 'context/AuthContext'
 import { DEFAULTS } from 'defaults'
+import HeaderUnder from '@/components/HeaderUndex'
+import { useFooterBottomPadding } from 'functions'
+import { withAuthServerSideProps } from 'helpers/withAuthServerSideProps'
 
 const ROOM_SERVICES = [
     {
@@ -62,7 +65,7 @@ interface ServicesPageProps {
     services: IService[]
 }
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
+export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(async (context) => {
     try {
         const res = await fetch(`${DEFAULTS.SOCKET.URL}/api/services`)
         if (!res.ok) {
@@ -83,15 +86,10 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
             } as ServicesPageProps
         }
     }
-}
+})
 
 export default function ServicesPage(props: ServicesPageProps) {
-    const { isAuthenticated } = useAuth()
-    const router = useRouter()
-
-    useEffect(() => {
-        if (!isAuthenticated) router.push('/auth')
-    }, [isAuthenticated, router])
+    useFooterBottomPadding(88)
 
     const { state } = useCart()
     const { services } = state
@@ -100,11 +98,11 @@ export default function ServicesPage(props: ServicesPageProps) {
 
     useEffect(() => {
         console.log("Услуги: ", props.services)
-    }, [])
+    }, [props.services])
 
     return (<>
+        <HeaderUnder title='Услуги в номер' onClick={() => Router.push('/services')} />
         <main className='--gray-main'>
-
             <div className='page-wrapper'>
                 <div className='room-services'>
                     {/* {ROOM_SERVICES.map((x, i) =>

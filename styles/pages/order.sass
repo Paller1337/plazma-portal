@@ -1,5 +1,4 @@
 .order
-    
     &-header
         display: flex
         flex-direction: row
@@ -215,3 +214,132 @@
             font-style: normal
             font-weight: 500
             line-height: normal
+
+.order-list
+    display: flex
+    flex-direction: column
+    gap: 24px
+    &__main
+        background: #F6F6F6
+.guest-order
+    background: #fff
+    padding: 24px
+    border-radius: 24px
+    &__header
+        display: flex
+        justify-content: space-between
+        align-items: center
+
+    &__date
+        color: #262626
+        font-family: Montserrat
+        font-size: 14px
+        font-style: normal
+        font-weight: 600
+        line-height: normal
+
+    &__status
+        padding: 4px 8px
+        border-radius: 8px
+        background: #fff
+        border: 2px solid var(--status-color)
+        color: var(--status-color)
+        font-family: Montserrat
+        font-size: 15px
+        font-style: normal
+        font-weight: 600
+        line-height: normal
+
+        &--active
+            color: var(--status-color)// Замените на актуальный цвет для "В работе"
+
+    &__info
+        display: flex
+        flex-direction: column
+        gap: 4px
+        padding-top: 12px
+
+    &__number
+        color: #262626
+        font-family: Montserrat
+        font-size: 24px
+        font-style: normal
+        font-weight: 700
+        line-height: normal
+
+    &__type
+        color: #BABABA
+        font-family: Montserrat
+        font-size: 16px
+        font-style: normal
+        font-weight: 600
+        line-height: normal
+
+    &__services
+        display: flex
+        flex-direction: column
+        gap: 12px
+        padding: 18px 0 12px 0
+
+    &__part
+        display: flex
+        align-items: center
+        gap: 4px
+        &-amount
+            display: flex
+            gap: 4px
+            align-items: center
+
+        &-quantity
+            color: rgba(38, 38, 38, 0.40)
+            font-family: Montserrat
+            font-size: 16px
+            font-style: normal
+            font-weight: 600
+            line-height: normal
+
+        &-price
+            color: #262626
+            font-family: Montserrat
+            font-size: 16px
+            font-style: normal
+            font-weight: 600
+            line-height: normal
+
+    &__image
+        width: 32px // Размеры могут отличаться
+        height: 32px
+        margin-right: 10px
+        border-radius: 8px
+        border: 1px solid rgba(0, 0, 0, 0.10)
+        background-size: cover
+        background-repeat: no-repeat
+
+    &__item
+        flex-grow: 1
+
+    &__total
+        display: flex
+        flex-direction: column
+        gap: 4px
+        margin-top: 15px
+        padding-top: 10px
+        border-top: 1px solid #eee
+        &-row
+            width: 100%
+            display: flex
+            justify-content: space-between
+
+    &__total-label
+        color: #666
+
+    &__total-amount
+        color: #262626
+        font-family: Montserrat
+        font-size: 16px
+        font-style: normal
+        font-weight: 600
+        line-height: normal
+
+    &__buttons
+        padding-top: 24px

@@ -1,20 +1,31 @@
-// pages/api/authenticate.ts
-import type { NextApiRequest, NextApiResponse } from 'next'
-// import { findOrCreateUserInStrapi, updateUserExpiry } from '../../api/strapi'
-import verifyBnovoBooking from 'helpers/bnovo/verifyBooking';
-import { getBookingByRoomId } from 'helpers/bnovo/getBooking';
-import { axiosInstance } from 'helpers/axiosInstance';
+import authenticationPortal, { generateToken } from 'helpers/login';
+import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const roomId = 826385
-    // const surname = req.body.surname
+    if (req.method !== 'POST') {
+        // Отправляем 405 Method Not Allowed, если метод не POST
+        res.setHeader('Allow', ['POST'])
+        res.status(405).json({ message: 'Method Not Allowed' });
+        return;
+    }
+
+    const surname = req.body.data.surname;
+    const roomNumber = req.body.data.roomNumber;
+    console.log('surname ', surname)
+    console.log('roomNumber ', roomNumber)
 
     try {
-        const data = await getBookingByRoomId(roomId)
-        console.log(data)
+        const data = await authenticationPortal(surname, roomNumber);
+        console.log('Auth Func Data: ', data)
+        const sessionToken = generateToken(
+            data.data.id,
+            data.data.bnovoBookingId,
+            data.data.checkOutDate,
+            data.data.role
+        )
 
-
-        res.status(200).json(data)
+        console.log({ data, sessionToken })
+        res.status(200).json({ data, sessionToken });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
