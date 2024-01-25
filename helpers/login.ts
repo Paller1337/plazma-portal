@@ -18,7 +18,8 @@ export const generateToken = (accountId, bnovoBookingId, checkOutDate, role) => 
         accountId,
         bnovoBookingId,
         checkOutDate,
-        role
+        role,
+        isExpired: false
     }
     const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1d' })
     return token
@@ -49,8 +50,10 @@ export const decodeToken = (token) => {
         return decoded as JwtPayload
 
     } catch (error) {
-        console.error('Ошибка при верификации токена:', error);
-        return {} as JwtPayload;
+        console.error('Ошибка при декодировании токена:', error);
+        return {
+            isExpired: true
+        } as JwtPayload
     }
 }
 

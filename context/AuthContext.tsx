@@ -58,6 +58,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (res.status === 200) {
                 console.log('decode res: ', res)
                 const decodedToken = res.data
+                if (decodedToken.isExpired) {
+                    Cookies.remove('session_token')
+                    setIsAuthenticated(false)
+                    return
+                }
                 setIsAuthenticated(true)
                 console.log('USER INFO: ', decodedToken)
                 if (decodedToken.role) {
