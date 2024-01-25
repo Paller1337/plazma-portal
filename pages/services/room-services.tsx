@@ -15,6 +15,7 @@ import { DEFAULTS } from 'defaults'
 import HeaderUnder from '@/components/HeaderUndex'
 import { useFooterBottomPadding } from 'functions'
 import { withAuthServerSideProps } from 'helpers/withAuthServerSideProps'
+import axios from 'axios'
 
 const ROOM_SERVICES = [
     {
@@ -67,11 +68,15 @@ interface ServicesPageProps {
 
 export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(async (context) => {
     try {
-        const res = await fetch(`${DEFAULTS.SOCKET.URL}/api/services`)
-        if (!res.ok) {
-            throw new Error(`Failed to fetch services, received status ${res.status}`)
-        }
-        const data = await res.json()
+        const res = await axios.get(`${DEFAULTS.SOCKET.URL}/api/services`, {
+            params: {
+                'populate': 'deep,3'
+            }
+        })
+        // if (!res.data) {
+        //     throw new Error(`Failed to fetch services, received status ${res.status}`)
+        // }
+        const data = await res.data
 
         return {
             props: {

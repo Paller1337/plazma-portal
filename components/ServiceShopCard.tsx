@@ -1,6 +1,7 @@
 import { useCart } from 'context/CartContext'
 import { DEFAULTS } from 'defaults'
 import Image from 'next/image'
+import { useEffect } from 'react'
 import { ReactSVG } from 'react-svg'
 import { ServiceImage } from 'types/services'
 
@@ -19,10 +20,12 @@ export default function ServiceShopCard(props: ServiceShopCardProps) {
         url: '/images/room-services/not-found.png'
     }
 
-    const imageUrl = DEFAULTS.STRAPI.url + image.url
+    const imageUrl = DEFAULTS.STRAPI_URL.prod + image.url
     // Функция добавления товара в корзину
 
-
+    useEffect(() => {
+        console.log(props.image)
+    }, )
     const handleAdd = () => {
         dispatch({
             type: 'ADD_ITEM', category: 'services', item: {
