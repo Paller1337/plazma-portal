@@ -1,5 +1,5 @@
 import { verifyToken } from 'helpers/login';
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react'
+import React, { createContext, useContext, useState, ReactNode, useEffect, Dispatch, SetStateAction } from 'react'
 import Cookies from 'js-cookie'
 import { DEFAULTS } from 'defaults';
 import { io } from 'socket.io-client';
@@ -12,6 +12,8 @@ import { useRouter } from 'next/router';
 
 interface AuthContextType {
     isAuthenticated: boolean
+    isPwaBannerHidden: boolean
+    setIsPwaBannerHidden: Dispatch<SetStateAction<boolean>>
     login: (surname: string, roomNumber: string) => Promise<{
         status: boolean;
         message: string;
@@ -29,6 +31,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const router = useRouter()
     const [isAuthenticated, setIsAuthenticated] = useState(false)
+    const [isPwaBannerHidden, setIsPwaBannerHidden] = useState(false)
     const [currentUser, setCurrentUser] = useState({ id: 0, role: '' })
 
     const [showWelcomeScreen, setShowWelcomeScreen] = useState(false)
@@ -112,9 +115,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, login, currentUser }}>
+        <AuthContext.Provider value={{ isAuthenticated, isPwaBannerHidden, setIsPwaBannerHidden, login, currentUser }}>
             <WelcomeScreen show={showWelcomeScreen} end={endWelcomeScreen} />
-
             {children}
         </AuthContext.Provider>
     )

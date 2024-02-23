@@ -1,3 +1,4 @@
+import { useAuth } from 'context/AuthContext'
 import useIsPwa from 'helpers/frontend/pwa'
 import Link from 'next/link'
 import Router, { useRouter } from 'next/router'
@@ -40,12 +41,12 @@ const PAGES = [
 
 export default function NavBar(props: NavBarProps) {
     const isPWA = useIsPwa()
-    const [bannerIsOpen, setBannerIsOpen] = useState(true)
     const router = useRouter()
-
+    const { isPwaBannerHidden, setIsPwaBannerHidden } = useAuth()
+    
     return (<>
         <div className='navbar'>
-            {!isPWA && bannerIsOpen ?
+            {!isPWA && isPwaBannerHidden ?
                 <div className='pwa-banner'>
                     <div className='pwa-banner__wrapper'>
                         <div className='pwa-banner__text'>
@@ -56,7 +57,7 @@ export default function NavBar(props: NavBarProps) {
                             onClick={() => router.push('/install')}>
                             Установить
                         </div>
-                        <div className='pwa-banner__close' onClick={() => setBannerIsOpen(false)}>
+                        <div className='pwa-banner__close' onClick={() => setIsPwaBannerHidden(false)}>
                             X
                         </div>
                     </div>
