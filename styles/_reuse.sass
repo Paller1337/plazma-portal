@@ -108,7 +108,7 @@
     justify-content: center
     align-items: center
     gap: 10px
-    
+
     border-radius: 8px
     border: 1px solid #262626
 
@@ -128,3 +128,95 @@
     &_outline
         color: #262626
         background: #fff
+    &_disabled
+        pointer-events: none
+        cursor: not-allowed
+        color: #fff
+        background: rgb(169, 169, 169)
+        border-color: rgb(128, 128, 128)
+
+.welcome-screen
+    position: fixed
+    top: 0
+    left: 0
+    width: 100%
+    height: 100%
+    background-color: rgba(255,255,255,1)
+    color: #262626
+    display: flex
+    justify-content: center
+    align-items: center
+    z-index: 1000
+    opacity: 0
+    transition: all .4s ease-in-out
+    &.show
+        opacity: 1
+        .auth-page__logo
+            opacity: 1
+            transform: scale(1) translateY(0px)
+            transition-delay: .8s
+            transition: all .81s ease-in-out
+        .welcome-screen__text
+            opacity: 1
+            transform: scale(1) translateY(0px)
+            transition-delay: .8s
+            transition: all .81s ease-in-out
+
+    .auth-page__logo
+        opacity: 0
+        transform: scale(.4) translateY(0)
+
+    &__text
+        font-size: 24px
+        font-weight: 600
+        color: #262626
+        opacity: 0
+        transform: scale(.4) translateY(0)
+
+    &__wrapper
+        max-width: 430px
+        display: flex
+        align-items: center
+        justify-content: center
+        flex-direction: column
+        gap: 48px
+
+@keyframes fillAndMove
+    0%
+        width: 0
+        left: 0
+        opacity: .5
+
+    25%
+        width: 100%
+        left: 0
+        opacity: 1
+
+    50%
+        width: 100%
+        left: 100%
+        opacity: .5
+
+    75%
+        width: 0
+        left: 100%
+        opacity: 0
+
+    100%
+        width: 0
+        left: 0
+        opacity: .5
+
+.loading-bar
+    height: 4px
+    background-color: #262626
+    position: absolute
+    left: 0
+    &.animate
+        animation: fillAndMove 3s infinite ease-in-out forwards
+    &__container
+        margin-top: 48px
+        position: relative
+        width: 100%
+        overflow: hidden
+        height: 4px

@@ -66,3 +66,22 @@ export async function getGuestAccountByBookingId(bookingId: number) {
         throw error;
     }
 }
+
+export async function getGuestAccountById(id: number) {
+    try {
+        const response = await axios.get(`${DEFAULTS.STRAPI.url}/api/guest-accounts/${id}`, {
+            params: {
+                'populate': 'deep,3'
+            }
+        })
+        console.log('guest account res: ', response)
+        if (response.data.data) {
+            return response.data.data
+        } else {
+            return null
+        }
+    } catch (error) {
+        console.error('Ошибка при получении аккаунта гостя:', error);
+        throw error;
+    }
+}

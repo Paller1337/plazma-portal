@@ -1,7 +1,9 @@
 import IndexNavButton from '@/components/IndexNavButton'
 import NavBar from '@/components/NavBar'
 import PromoSlider from '@/components/PromoSlider'
+import WelcomeScreen from '@/components/WelcomeScreen'
 import { useAuth } from 'context/AuthContext'
+import { useOrders } from 'context/OrderContext'
 import { SECRET_KEY, decodeToken } from 'helpers/login'
 import { getServiceOrdersByGuestId, servicesFromRes } from 'helpers/order/services'
 import { withAuthServerSideProps } from 'helpers/withAuthServerSideProps'
@@ -10,7 +12,7 @@ import { GetServerSideProps } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 import { ReactSVG } from 'react-svg'
-import { IServiceOrder } from 'types/order'
+import { IServiceOrder, TOrderStatus } from 'types/order'
 
 const slides = [
     {
@@ -79,41 +81,52 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
 })
 
 export default function IndexPage(props: IndexPageProps) {
-    // const { isAuthenticated } = useAuth()
-    // const router = useRouter()
-    // useEffect(() => {
-    //     if (!isAuthenticated) router.push('/auth')
-    // }, [isAuthenticated, router])
-
-    useEffect(() => {
-        console.log('orders: ', props.orders)
-    }, [])
+    const { state } = useOrders()
+    // @ts-ignore
+    const orders: IServiceOrder[] = state.service_orders
 
     function formatOrderMessage(orderCount) {
         let orderWord = 'заказов';
         let activeWord = 'активных';
-      
+
         if (orderCount % 10 === 1 && orderCount % 100 !== 11) {
-          orderWord = 'заказ';
-          activeWord = 'активный';
+            orderWord = 'заказ';
+            activeWord = 'активный';
         } else if (orderCount % 10 >= 2 && orderCount % 10 <= 4 && (orderCount % 100 < 10 || orderCount % 100 >= 20)) {
-          orderWord = 'заказа';
-          activeWord = 'активных';
+            orderWord = 'заказа';
+            activeWord = 'активных';
         }
         return `У вас ${orderCount} ${activeWord} ${orderWord}`;
-      }
-      
+    }
 
+    const orderStatus = (s: TOrderStatus) => {
+        switch (s) {
+            case 'new':
+                return 'Ваш заказ обрабатывается'
+            case 'inwork':
+                return 'Ваш заказ в работе'
+            case 'delivered':
+                return 'Ваш заказ доставляется'
+            case 'done':
+                return 'Ваш заказ готов'
+            default:
+                return ''
+        }
+    }
+
+    console.log('orders: ', orders)
+    const workOrders = orders.filter(x => x.orderInfo.status !== 'done')
+    console.log('workOrders: ', workOrders)
     return (<>
         <main>
             <PromoSlider slides={slides} />
 
-            {props.orders.length > 0 ?
+            {workOrders.length > 0 ?
                 <div className='index-nav index-orders'>
                     <IndexNavButton
-                        title={formatOrderMessage(props.orders.length)}
-                        desc='Ваш заказ в работе'
-                        orderStatus={props.orders[0].orderInfo.status}
+                        title={formatOrderMessage(workOrders.length)}
+                        desc={orderStatus(workOrders[0].orderInfo.status)}
+                        orderStatus={workOrders[0].orderInfo.status}
                         svgName='order'
                         isOrderButton
                     />
@@ -123,17 +136,17 @@ export default function IndexPage(props: IndexPageProps) {
             }
 
             <div className='index-nav'>
-                <IndexNavButton
+                {/* <IndexNavButton
                     title='Навигация'
                     desc='Карта парк-отеля'
                     svgName='map'
-                />
+                /> */}
 
                 <IndexNavButton
                     title='Информация'
                     desc='Вопросы и ответы на них'
                     svgName='question'
-                    link='/help'
+                    link='/help#info'
                 />
 
                 <IndexNavButton

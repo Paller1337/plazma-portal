@@ -3,9 +3,9 @@ import { IServiceOrdered } from './services'
 export type TOrderStatus = 'new' | 'inwork' | 'done' | 'delivered'
 
 export interface IOrderCustomer {
-    name: string; // соединение firstName и lastName, если требуется полное имя
-    phone: string;
-    room: string;
+    name: string
+    phone: string
+    room: string
     guest_account: {
         id: number
         bnovoBookingId: string

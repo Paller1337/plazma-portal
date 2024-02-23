@@ -1,13 +1,15 @@
-
+import { GetServerSideProps } from 'next'
 
 export default function AdminIndexPage() {
-
-
-    return (
-        <>
-            <main>
-                Главная
-            </main>
-        </>
-    );
-}
+    return null
+  }
+  
+  export const getServerSideProps: GetServerSideProps = async (context) => {
+    return {
+      redirect: {
+        destination: '/admin/services',
+        permanent: true,
+      },
+    }
+  }
+  

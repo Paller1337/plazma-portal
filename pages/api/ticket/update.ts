@@ -9,15 +9,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return;
         }
 
+        console.log(req.body)
+
         const { props, status, newStatus } = req.body
-        // console.log(req.body)
-        console.log('guest: ', props.orderInfo.customer.guest_account)
         if (!props || !status || !newStatus) {
             res.status(400).json({ message: 'Недостаточно данных для обновления статуса' })
             return;
         }
 
-        const data = await updateServiceOrderStatus(props, status, newStatus);
+        const data = await updateSupportTicketStatus(props, status, newStatus);
         res.status(200).json(data)
     } catch (error) {
         res.status(500).json({ message: error.message })

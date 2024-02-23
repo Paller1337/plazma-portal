@@ -69,6 +69,7 @@ export async function getServiceOrders() {
     try {
         const response = await axios.get(`${DEFAULTS.STRAPI.url}/api/service-orders`, {
             params: {
+                'sort[id]': `desc`,
                 'populate': 'deep,4',
             }
         })
@@ -80,7 +81,7 @@ export async function getServiceOrders() {
     }
 }
 
-export async function getServiceOrdersByGuestId(id: number) {
+export async function getServiceOrdersByGuestId(id: number): Promise<IServiceOrder[]> {
     try {
         const response = await axios.get(`${DEFAULTS.STRAPI.url}/api/service-orders`, {
             params: {
@@ -133,8 +134,8 @@ export function servicesFromRes(res){
             orderInfo,
             order: orderData
         } as IServiceOrder
-    });
-    return orders
+    })
+    return orders as IServiceOrder[]
 }
 export function normalizeServiceOrderData(data) {
     const orderItems = data.order.map(item => {
@@ -169,6 +170,7 @@ export function normalizeServiceOrderData(data) {
             paymentType: data.orderInfo.paymentType,
             createAt: data.orderInfo.createAt,
             status: data.orderInfo.status,
+            description: data.orderInfo.description
         },
         // id: data.id,
         // status: data.orderInfo.status,

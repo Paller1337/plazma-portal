@@ -12,12 +12,14 @@ import { SECRET_KEY } from 'helpers/login'
 import HeaderUnder from '@/components/HeaderUndex'
 import { withAuthServerSideProps } from 'helpers/withAuthServerSideProps'
 import { useOrders } from 'context/OrderContext'
+import { ISupportTicket } from 'types/support'
+import SupportTicketItem from '@/components/SupportTicketListItem'
 
 
 
 
-interface OrderServicesProps {
-    orders?: IServiceOrder[]
+interface SupportTicketsProps {
+    tickets?: ISupportTicket[]
 }
 
 export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(async (context) => {
@@ -25,7 +27,7 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
         const token = context.req.headers.cookie?.split('; ').find(c => c.startsWith('session_token='))?.split('=')[1];
         if (!token) {
             // Обрабатываем случай, когда токен отсуствует
-            return { props: {} };
+            return { props: {} }
         }
         const decoded = jwt.verify(token, SECRET_KEY) as JwtPayload
 
@@ -41,38 +43,38 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
         return {
             props: {
                 // orders: orders,
-            } as OrderServicesProps
+            } as SupportTicketsProps
         }
     } catch (error) {
         console.error('Ошибка при получении услуг:', error)
         return {
             props: {
                 orders: []
-            } as OrderServicesProps
+            } as SupportTicketsProps
         }
     }
 })
 
 
-export default function OrderServices(props: OrderServicesProps) {
+export default function SupportTickets(props: SupportTicketsProps) {
     const { state } = useOrders()
     // @ts-ignore
-    const orders = state.service_orders
-    useEffect(() => console.log('orders: ', state))
+    const orders = state.support_tickets
+    useEffect(() => console.log('tickets: ', state))
     return (<>
-        <HeaderUnder title='Мои заказы' onClick={() => Router.back()} />
+        <HeaderUnder title='Мои заявки' onClick={() => Router.back()} />
         <main className='--gray-main'>
             <div className='page-wrapper'>
                 <div className='order-list'>
                     {orders.length > 0 ? orders.sort((a, b) => b.id - a.id).map((x, i) =>
-                        <OrderListItem key={(x.id + x.orderInfo.createAt).toString()} order={x} />
+                        <SupportTicketItem key={(x.id + x.create_at).toString()} ticket={x} />
                     )
                         :
-                        <div className='order-list__nothing'>У вас нет заказов</div>
+                        <div className='order-list__nothing'>У вас нет заявок</div>
                     }
                 </div>
             </div>
         </main>
-        <NavBar page={'order/history'} />
+        <NavBar page={'help'} />
     </>)
 }

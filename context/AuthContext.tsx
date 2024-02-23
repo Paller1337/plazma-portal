@@ -7,6 +7,8 @@ import { checkOrderStatus } from 'helpers/order/order';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { axiosInstance } from 'helpers/axiosInstance';
+import WelcomeScreen from '@/components/WelcomeScreen';
+import { useRouter } from 'next/router';
 
 interface AuthContextType {
     isAuthenticated: boolean
@@ -15,7 +17,8 @@ interface AuthContextType {
         message: string;
     }>
     currentUser?: {
-
+        id: number
+        role: string
     }
 }
 
@@ -24,7 +27,13 @@ const AuthContext = createContext<AuthContextType>(null!);
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const router = useRouter()
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
+    const [currentUser, setCurrentUser] = useState({ id: 0, role: '' })
+
+    const [showWelcomeScreen, setShowWelcomeScreen] = useState(false)
+    const [endWelcomeScreen, setEndWelcomeScreen] = useState(false)
+
 
     const login = async (surname: string, roomNumber: string) => {
         const auth = await axios.post('/api/login', {
@@ -47,70 +56,65 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     }
 
-    useEffect(() => {
-        async function initSocketAfterAuth() {
-            const token = Cookies.get('session_token')
 
-            if (!token) return
-            const res = await axios.post('/api/token/decode', {
-                token
-            })
-            if (res.status === 200) {
-                console.log('decode res: ', res)
-                const decodedToken = res.data
-                if (decodedToken.isExpired) {
-                    Cookies.remove('session_token')
-                    setIsAuthenticated(false)
-                    return
-                }
+    async function checkAuthToken() {
+        const token = Cookies.get('session_token')
+
+        if (!token) {
+            setIsAuthenticated(false)
+            return
+        }
+        const res = await axios.post('/api/token/decode', {
+            token
+        })
+        if (res.status === 200) {
+            const decodedToken = res.data
+            if (decodedToken.isExpired) {
+                Cookies.remove('session_token')
+                setIsAuthenticated(false)
+                return
+            }
+
+            if (decodedToken.role) {
+                setCurrentUser({
+                    id: decodedToken.accountId,
+                    role: decodedToken.role
+                })
                 setIsAuthenticated(true)
-                console.log('USER INFO: ', decodedToken)
-                if (decodedToken.role) {
-                    const socket = io(DEFAULTS.SOCKET.URL, {
-                        query: {
-                            userId: decodedToken.accountId,
-                            role: decodedToken.role,
-                        }
-                    })
-                    // if (isAuthenticated) {
-                    socket.on('connect', () => {
-                        console.log('Connected to Strapi WebSocket');
-                    })
-
-                    socket.on('orderStatusChange', (data) => {
-                        console.log('change status')
-                        const newStatus = data.newStatus;
-                        const textStatus = checkOrderStatus(newStatus)
-                        toast.success(
-                            <span>
-                                Новый статус заказа ({textStatus})
-                            </span>
-                        );
-                    });
-                    console.log('Socket: ', socket)
-
-                    socket.on('connect_error', (error) => {
-                        console.error('Connection error:', error);
-                    })
-
-                    return () => {
-                        socket.off('connect');
-                        socket.off('orderStatusChange'); // Удалите слушателя для orderStatusChange
-                    };
-                }
             }
         }
+    }
 
-        initSocketAfterAuth()
-    }, [])
 
-    // useEffect(() => {
-    //     console.log('isAuthenticated: ', isAuthenticated)
-    // }, [isAuthenticated])
+    useEffect(() => {
+        checkAuthToken()
+        // Проверка, находится ли пользователь на странице аутентификации
+        const isAuthRoute = router.pathname.includes('auth')
+        if (isAuthenticated && isAuthRoute) {
+            setShowWelcomeScreen(true)
+
+            // Создаём промис для отсчёта минимум 2 секунд
+            const minTimePromise = new Promise(resolve => setTimeout(resolve, 2000))
+            // Выполняем переход на главную страницу
+            const routingPromise = router.push('/')
+
+            Promise.all([minTimePromise, routingPromise]).then(() => {
+                setEndWelcomeScreen(true)
+                const endAnimationTimeout = setTimeout(() => {
+                    setShowWelcomeScreen(false)
+                    setEndWelcomeScreen(false)
+                }, 1500)
+
+                return () => clearTimeout(endAnimationTimeout)
+            })
+        }
+    }, [isAuthenticated, router])
 
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, login }}>
+        <AuthContext.Provider value={{ isAuthenticated, login, currentUser }}>
+            <WelcomeScreen show={showWelcomeScreen} end={endWelcomeScreen} />
+
             {children}
         </AuthContext.Provider>
     )

@@ -47,7 +47,7 @@ export default function IndexNavButton(props: IndexNavButtonProps) {
             props.isOrderButton ? 'index-nav__button_order' : ''}`} style={props.isOrderButton ?
                 { border: `1px solid ${orderStatus}` } : {}}
             onClick={props.link ? () => Router.push(props.link) : () => { }}>
-                
+
             <div className='index-nav__logo'>
                 <ReactSVG src={`/svg/nav/${props.svgName}.svg`} />
             </div>
@@ -61,7 +61,8 @@ export default function IndexNavButton(props: IndexNavButtonProps) {
             </div>
 
             {props.isHelpButton ?
-                <div className='index-nav__inner-btn'>
+                <div className='index-nav__inner-btn'
+                    onClick={() => router.push('/help')}>
                     Новая заявка
                 </div>
 

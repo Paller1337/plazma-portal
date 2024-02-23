@@ -1,15 +1,16 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Container, Group, Burger } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { ReactSVG } from 'react-svg'
 import Link from 'next/link'
+import Router from 'next/router'
 
 const links = [
-    { link: '/admin', label: 'Главная' },
-    { link: '/admin/eat', label: 'Заказы еды' },
+    // { link: '/admin', label: 'Главная' },
+    // { link: '/admin/eat', label: 'Заказы еды' },
     { link: '/admin/services', label: 'Заказы услуг' },
     { link: '/admin/support', label: 'Запросы на поддержку' },
-    { link: '/admin/settings', label: 'Настройки' },
+    // { link: '/admin/settings', label: 'Настройки' },
 ];
 
 export default function AdminHeader() {
@@ -30,6 +31,10 @@ export default function AdminHeader() {
         </Link>
     ))
 
+    useEffect(() => {
+        console.log(Router.pathname)
+        setActive(Router.pathname)
+    }, [])
     return (
         <header className={'admin-header'}>
             <div className={'admin-header__inner'}>

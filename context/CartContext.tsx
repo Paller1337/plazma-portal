@@ -50,7 +50,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
                     quantity: updatedItems[existingItemIndex].quantity + 1,
                 };
             } else {
-                updatedItems = [...updatedItems, { ...item, quantity: 1 }];
+                updatedItems = [...updatedItems, { ...item, quantity: item.quantity }];
             }
 
             return {

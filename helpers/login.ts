@@ -173,3 +173,42 @@ export default async function authenticationPortal(surname: string, roomId: stri
     }
 }
 
+
+export async function authenticationAdminPortal(username: string, pass: string, token?: string) {
+    const nowDate = DateTime.now()
+    console.log(SECRET_KEY)
+    if (!SECRET_KEY) return { status: false, message: 'Нет ключа SECRET_KEY' }
+
+    if (token) {
+        const isToken = verifyToken(token)
+        if (isToken) {
+            const decoded = decodeToken(token)
+            console.log('decoded: ', decoded)
+        }
+    }
+
+    const ADMINS = [
+        {
+            username: 'admin',
+            pass: '12345'
+        },
+    ]
+
+    const isAdmin = ADMINS.find(x => x.username === username && x.pass === pass)
+    if (isAdmin) {
+        return {
+            status: true, message: 'Добро пожаловать!', data: {
+                id: 0,
+                bnovoBookingId: 0,
+                checkOutDate: nowDate.plus({ days: 1 }).toISO({ includeOffset: false }),
+                role: 'admin'
+            }
+        }
+    }
+    else {
+        return {
+            status: false, message: 'Неверные данные', data: {}
+        }
+    }
+}
+

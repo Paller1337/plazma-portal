@@ -10,12 +10,15 @@ import { useAuth } from 'context/AuthContext'
 import { createServiceOrder } from 'helpers/order/services'
 import { DateTime } from 'luxon'
 import { decodeToken } from 'helpers/login'
-import { getGuestAccountByBookingId } from 'helpers/session/guestAccount'
+import { getGuestAccountByBookingId, getGuestAccountById } from 'helpers/session/guestAccount'
 import OrderSendModal from '@/components/OrderSendModal'
 import { GetServerSideProps } from 'next'
 import { withAuthServerSideProps } from 'helpers/withAuthServerSideProps'
 import { axiosInstance } from 'helpers/axiosInstance'
 import Cookies from 'js-cookie'
+import { Input, InputBase, LoadingOverlay, Select, Textarea } from '@mantine/core'
+import { IMaskInput } from 'react-imask'
+import { IGuestAccount } from 'types/session'
 
 
 export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(async (context) => {
@@ -36,6 +39,16 @@ export default function OrderServices(props) {
     const [modalIsOpen, setModalIsOpen] = useState(false)
     const { state, dispatch } = useCart()
     const { services } = state
+    const [visibleLoadingOverlay, setVisibleLoadingOverlay] = useState(false)
+
+    const [guestAccount, setGuestAccount] = useState<{
+        id: number,
+        attributes: IGuestAccount
+    }>(null)
+
+    const [orderComment, setOrderComment] = useState('')
+    const [orderPhone, setOrderPhone] = useState('')
+    const [orderPayment, setOrderPayment] = useState('bank-card')
 
     const sendOrderToTelegram = async (order) => {
         try {
@@ -58,7 +71,36 @@ export default function OrderServices(props) {
         }
     }
 
+    useEffect(() => {
+        const initGuestInfo = async () => {
+            const token = Cookies.get('session_token')
+            const res = await axiosInstance.post('/api/token/decode', {
+                token
+            })
+
+            if (res.status === 200) {
+                const decoded = res.data
+                const resGuestAccount = await getGuestAccountById(decoded.accountId)
+                
+                console.log('resGuestAccount: ', resGuestAccount)
+                setOrderPhone(resGuestAccount.attributes.phone)
+                setGuestAccount(resGuestAccount)
+                console.log('guestAccount: ', resGuestAccount)
+            }
+        }
+        initGuestInfo()
+    }, [])
+
+    useEffect(() => {
+        console.log('orderComment: ', orderComment)
+        console.log('\orderPhone: ', orderPhone)
+        console.log('\orderPayment: ', orderPayment)
+    }, [orderComment, orderPhone, orderPayment])
+
     const handleCheckout = async () => {
+        setVisibleLoadingOverlay(true)
+
+        if (services.items.length === 0) return
         const token = Cookies.get('session_token')
         const res = await axiosInstance.post('/api/token/decode', {
             token
@@ -66,7 +108,7 @@ export default function OrderServices(props) {
         if (res.status === 200) {
             const decoded = res.data
 
-            const guestAccount = await getGuestAccountByBookingId(decoded.bnovoBookingId)
+            const guestAccount = await getGuestAccountById(decoded.accountId)
 
             const serviceOrder = state.services.items.map(x => ({ service: parseInt(x.id), quantity: x.quantity }))
             const nowTime = DateTime.now().toISO()
@@ -82,15 +124,15 @@ export default function OrderServices(props) {
                     order: serviceOrder,
                     orderInfo: {
                         create_at: nowTime,
-                        description: 'Тестовый комментарий',
+                        description: orderComment,
                         status: 'new',
                         customer: {
                             name: guestAccount.attributes.firstName,
-                            phone: guestAccount.attributes.phone,
+                            phone: orderPhone,
                             room: guestAccount.attributes.roomId,
                             guest_account: guestAccount.id,
                         },
-                        paymentType: 'bank-card',
+                        paymentType: orderPayment,
                         previous_status: 'new',
                     }
                 })
@@ -99,6 +141,7 @@ export default function OrderServices(props) {
                     // toast.success('Заказ успешно отправлен!')
                     console.log(state)
                     console.log('serviceOrder: ', serviceOrder)
+
                     dispatch({ type: 'CLEAR_CART', category: 'services' }); // Очистить корзину услуг
                     dispatch({ type: 'CLEAR_CART', category: 'food' });    // Очистить корзину еды
                 }
@@ -106,6 +149,8 @@ export default function OrderServices(props) {
                 if (responseStrapi) {
                     // toast.success('Успешный заказ!')
                     setModalIsOpen(true)
+                    setVisibleLoadingOverlay(false)
+
                     console.log('responseStrapi: ', responseStrapi)
                     dispatch({ type: 'CLEAR_CART', category: 'services' }); // Очистить корзину услуг
                     dispatch({ type: 'CLEAR_CART', category: 'food' });    // Очистить корзину еды
@@ -117,11 +162,24 @@ export default function OrderServices(props) {
     }
 
     const closeModal = () => {
-        setModalIsOpen(false);
-    };
+        setModalIsOpen(false)
+    }
 
+    const formatNumber = (n: string) => {
+        if (!n) return
+        n = n.replace(/[\(\)\-]/g, "")
+        console.log(n)
+        if (n[0] === '8') {
+            return "+7" + n.slice(1)
+        } else return n
+    }
     return (<>
-
+        <LoadingOverlay
+            visible={visibleLoadingOverlay}
+            zIndex={1000}
+            overlayProps={{ radius: 'sm', blur: 2 }}
+            loaderProps={{ color: 'gray', type: 'oval' }}
+        />
         <OrderSendModal isOpen={modalIsOpen} onClose={closeModal} />
         <main>
             <div className='page-wrapper'>
@@ -172,14 +230,62 @@ export default function OrderServices(props) {
                         }
 
                     </div>
-                    <div className='order-score'>
-                        <div className='order-score__amount'>
-                            <span className='order-score__title'>Сумма заказа</span>
-                            <span className='order-score__sum'>{services.total} ₽</span>
-                        </div>
-                        <div className='order-score__button' onClick={handleCheckout}>
-                            <ReactSVG src='/svg/cart-white.svg' />
-                            Оформить заказ
+                    <div className='order-footer'>
+                        <InputBase
+                            label='Номер для связи'
+                            component={IMaskInput}
+                            mask="+7 (000) 000-00-00"
+                            placeholder="Ваш номер"
+                            size='md'
+                            radius='md'
+                            onInput={e => {
+                                // @ts-ignore
+                                let value = e.target.value
+                                if (value[4] === '8') {
+                                    value = '+7'
+                                }
+                            }}
+                            defaultValue={formatNumber(orderPhone)}
+                            disabled={services.items.length === 0}
+                        />
+
+                        <Select
+                            label='Способ оплаты'
+                            size='md'
+                            radius='md'
+                            data={[
+                                { value: 'cash', label: 'Наличные' },
+                                { value: 'bank-card', label: 'Банковская карта' },
+                            ]}
+                            onChange={(v) => setOrderPayment(v)}
+                            defaultValue={orderPayment}
+                            disabled={services.items.length === 0}
+                        />
+
+                        <Textarea
+                            size="md"
+                            radius="md"
+                            label="Комментарий к заказу"
+                            placeholder='Ваш комментарий'
+                            // @ts-ignore
+                            onInput={(v) => setOrderComment(v.target.value)}
+                            disabled={services.items.length === 0}
+                        />
+
+                        <div className='order-score'>
+                            <div className='order-score__amount'>
+                                <span className='order-score__title'>Сумма заказа</span>
+                                <span className='order-score__sum'>{services.total} ₽</span>
+                            </div>
+                            <div className='order-score__button' onClick={handleCheckout}
+                                style={services.items.length === 0 ? {
+                                    pointerEvents: 'none',
+                                    background: '#aaa'
+                                } : {}}
+                            >
+                                <ReactSVG src='/svg/cart-white.svg' />
+                                Оформить заказ
+                            </div>
                         </div>
                     </div>
                 </div>

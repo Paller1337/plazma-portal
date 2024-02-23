@@ -76,7 +76,7 @@ export async function getAllBookings(dfrom?: string, dto?: string) {
         });
 
         const bookings = await response.data.result as TBooking[]
-        await cacheToRedis(`bookingBnovoAll_from-${dfrom ? dfrom : 'min'}_to-${dto ? dto : 'max'}`, JSON.stringify(bookings), 3600)
+        await cacheToRedis(`bookingBnovoAll_from-${dfrom ? dfrom : 'min'}_to-${dto ? dto : 'max'}`, JSON.stringify(bookings), 300)
 
         return bookings
     } catch (error) {
@@ -87,7 +87,7 @@ export async function getAllBookings(dfrom?: string, dto?: string) {
 
 
 export function getBookingCustomers(bookingData: TBookingExtra) {
-    console.log('getBookingCustomers: ', bookingData)
+    // console.log('getBookingCustomers: ', bookingData)
     if (!bookingData) return
     if (bookingData.customers && bookingData.customers.length > 0) {
         const customers = bookingData.customers?.map(x => {

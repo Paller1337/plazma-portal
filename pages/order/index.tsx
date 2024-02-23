@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next'
 
 export default function OrderPage() {
-  return null;
+  return null
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
@@ -10,5 +10,5 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       destination: '/order/services',
       permanent: true,
     },
-  };
-};
+  }
+}

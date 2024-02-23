@@ -1,27 +1,16 @@
 import Button from '@/components/Button'
-import { Select, TextInput } from '@mantine/core'
+import { LoadingOverlay, Select, TextInput } from '@mantine/core'
 import { useAuth } from 'context/AuthContext'
 import { getRooms } from 'helpers/bnovo/getRooms'
 import authenticationPortal, { verifyToken } from 'helpers/login'
 import { GetServerSideProps } from 'next'
 import { Router, useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { ReactSVG } from 'react-svg'
 import { TBnovoRoom } from 'types/bnovo'
 import { debounce } from 'lodash'
-
-// interface TBnovoRoom {
-//     id: string
-//     hotel_id: string
-//     room_type_id: string
-//     room_type_name: string
-//     name: string
-//     tags: string
-//     sort_order: string
-//     clean_status: string
-//     room_type: string
-// }
+import WelcomeScreen from '@/components/WelcomeScreen'
 
 interface AuthPageProps {
     rooms: TBnovoRoom[]
@@ -63,6 +52,10 @@ export default function AuthPage(props: AuthPageProps) {
     const [roomId, setRoomId] = useState('')
     const [surname, setSurname] = useState('')
     const router = useRouter()
+    const [visibleLoadingOverlay, setVisibleLoadingOverlay] = useState(false)
+    const successToastShownRef = useRef(false)
+
+    const [showWelcomeScreen, setShowWelcomeScreen] = useState(false)
 
     const { isAuthenticated, login } = useAuth()
     const rooms = props.rooms.filter(x => x.tags !== '').map(room => ({
@@ -70,14 +63,10 @@ export default function AuthPage(props: AuthPageProps) {
         label: room.tags
     }))
 
-    useEffect(() => {
-        console.log('auth.tsx isAuthenticated: ', isAuthenticated)
-        if (isAuthenticated) router.push('/')
-    }, [isAuthenticated, router])
-
     // useEffect(() => {
-    //     console.log('ROOMS: ', '\\n', rooms)
-    // }, [])
+    //     console.log('auth.tsx isAuthenticated: ', isAuthenticated)
+    //     if (isAuthenticated) router.push('/')
+    // }, [isAuthenticated, router])
 
     useEffect(() => {
         console.log(roomId,)
@@ -88,17 +77,40 @@ export default function AuthPage(props: AuthPageProps) {
     }, [surname])
 
     const onLogin = debounce(async () => {
+        setVisibleLoadingOverlay(true)
+
         const isAuth = await login(surname, roomId)
         if (isAuth.status) {
-            toast.success(isAuth.message)
+            setVisibleLoadingOverlay(false)
         } else {
-            toast.error(isAuth.message)
+            setVisibleLoadingOverlay(false)
         }
     }, 300)
 
 
+    useEffect(() => {
+        if (isAuthenticated) {
+            setShowWelcomeScreen(true);
+            const timer = setTimeout(() => {
+                // После 2 секунд проверяем, готова ли страница к переходу
+                router.push('/home').then(() => {
+                    // Закрываем экран приветствия после завершения загрузки страницы
+                    setShowWelcomeScreen(false)
+                })
+            }, 2000)
+
+            return () => clearTimeout(timer)
+        }
+    }, [isAuthenticated, router])
     
     return (<>
+        <LoadingOverlay
+            visible={visibleLoadingOverlay}
+            zIndex={1000}
+            overlayProps={{ radius: 'sm', blur: 2 }}
+            loaderProps={{ color: 'gray', type: 'oval' }}
+        />
+        
         <main className='auth-page'>
             <div className='auth-page__wrapper'>
                 <div className='auth-page__logo'>
@@ -124,8 +136,9 @@ export default function AuthPage(props: AuthPageProps) {
                         searchable
                         onChange={value => setRoomId(value)}
                     />
+
+                    <Button onClick={onLogin} text='Войти' stretch />
                 </div>
-                <Button onClick={onLogin} text='Войти' stretch />
             </div>
         </main>
     </>)

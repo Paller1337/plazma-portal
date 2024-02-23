@@ -4,7 +4,9 @@ import { IServiceOrdered } from 'types/services'
 import { useEffect, useMemo, useState } from 'react'
 import { DEFAULTS } from 'defaults'
 import { DateTime, Settings } from 'luxon'
-import { Flex } from '@mantine/core'
+import { Flex, LoadingOverlay } from '@mantine/core'
+import { useCart } from 'context/CartContext'
+import Router from 'next/router'
 
 interface OrderListItemProps {
     order?: IServiceOrder
@@ -16,7 +18,7 @@ const OrderLine = (props: { order: IServiceOrdered }) => {
     return (
         <div className='guest-order__part'>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={DEFAULTS.STRAPI.url + props.order.service.attributes.images.data[0].attributes.url} alt='Халат'
+            <img src={'https://strapi.kplazma.ru' + props.order.service.attributes.images.data[0].attributes.url} alt='Халат'
                 className='guest-order__image' />
             <span className='guest-order__item'>{props.order.service.attributes.title}</span>
             <div className='guest-order__part-amount'>
@@ -27,6 +29,8 @@ const OrderLine = (props: { order: IServiceOrdered }) => {
     )
 }
 export default function OrderListItem(props: OrderListItemProps) {
+    const [visibleLoadingOverlay, setVisibleLoadingOverlay] = useState(false)
+    const { dispatch } = useCart()
     const [statusStyle, setStatusStyle] = useState({
         '--status-color': '#000'
     } as React.CSSProperties)
@@ -67,11 +71,37 @@ export default function OrderListItem(props: OrderListItemProps) {
         } as React.CSSProperties);
     }, [status])
 
+    useEffect(() => console.log(`order ${props.order.id}`, props.order))
     Settings.defaultLocale = 'ru';
     const createAt = DateTime.fromISO(props.order.orderInfo.createAt).toFormat('dd MMMM, HH:mm');
 
+    const orderServiceRepeat = () => {
+        setVisibleLoadingOverlay(true)
+        dispatch({ type: 'CLEAR_CART', category: 'services' })
+        for (let service of props.order.order) {
+            console.log(`in ${service.service.id.toString()} amount ${service.quantity}`)
+            dispatch({
+                type: 'ADD_ITEM', category: 'services', item: {
+                    id: service.service.id.toString(),
+                    title: service.service.attributes.title,
+                    price: service.service.attributes.price,
+                    imageUrl: service.service.attributes.images.data[0].attributes.url,
+                    quantity: service.quantity,
+                }
+            })
+        }
+        Router.push('/order/services')
+    }
+
     return (
         <div className='guest-order'>
+            <LoadingOverlay
+                visible={visibleLoadingOverlay}
+                zIndex={1000}
+                overlayProps={{ radius: 'sm', blur: 2 }}
+                loaderProps={{ color: 'gray', type: 'oval' }}
+            />
+
             <div className='guest-order__header'>
                 <span className='guest-order__date'>{createAt}</span>
                 <span className='guest-order__status guest-order__status--active' style={statusStyle}>{status.text}</span>
@@ -101,7 +131,7 @@ export default function OrderListItem(props: OrderListItemProps) {
                 </div>
             </div>
 
-            <div className='guest-order__buttons'>
+            <div className='guest-order__buttons' onClick={() => orderServiceRepeat()}>
                 <Button text='Повторить заказ' stretch />
             </div>
         </div>

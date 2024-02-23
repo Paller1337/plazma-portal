@@ -6,8 +6,8 @@ import toast from 'react-hot-toast'
 import { io } from 'socket.io-client'
 import { useAuth } from './AuthContext'
 import { DEFAULTS } from 'defaults'
-import { getServiceOrdersByGuestId, servicesFromRes } from 'helpers/order/services'
-import { getSupportTicketsByGuestId, supportTicketsFromRes, ticketStatus } from 'helpers/support/tickets'
+import { getServiceOrders, getServiceOrdersByGuestId, servicesFromRes } from 'helpers/order/services'
+import { getSupportTickets, getSupportTicketsByGuestId, supportTicketsFromRes, ticketStatus } from 'helpers/support/tickets'
 import { IServiceOrder } from 'types/order'
 import { IServiceOrdered } from 'types/services'
 import { ISupportTicket, TSupportTicketMessageSender } from 'types/support'
@@ -160,27 +160,29 @@ const orderReducer = (state, action) => {
             }
 
         default:
-            return state;
+            return state
     }
 };
 
 // Провайдер контекста
 export const OrderProvider = ({ children }) => {
     const [state, dispatch] = useReducer(orderReducer, initialState)
-    const { isAuthenticated, currentUser } = useAuth()
+    const { isAdminAuthenticated, currentUser } = useAuth()
     const [ordersIsInit, setOrdersIsInit] = useState(false)
     const socketRef = useRef(null)
 
     useEffect(() => {
         async function fetchAndInitializeOrders() {
-            if (!isAuthenticated || currentUser.id === 0 || ordersIsInit || state.service_orders.length > 0) return
+            console.log('debug 1: ', isAdminAuthenticated)
+            if (!isAdminAuthenticated || currentUser.id !== 0 || ordersIsInit || state.service_orders.length > 0) return
+            console.log('debug 2')
 
             try {
-                const ordersRes = await getServiceOrdersByGuestId(currentUser.id)
+                const ordersRes = await getServiceOrders()
                 const orders = servicesFromRes(ordersRes)
                 console.log('GET ORDERS: ', orders)
 
-                const supportTicketsRes = await getSupportTicketsByGuestId(currentUser.id)
+                const supportTicketsRes = await getSupportTickets()
                 console.log('GET SUPPORT TICKETS RES: ', supportTicketsRes)
                 const supportTickets = supportTicketsFromRes(supportTicketsRes)
                 console.log('GET SUPPORT TICKETS: ', supportTickets)
@@ -197,17 +199,18 @@ export const OrderProvider = ({ children }) => {
             }
         }
         fetchAndInitializeOrders();
-    }, [isAuthenticated, currentUser.id, ordersIsInit, state.service_orders.length]);
+    }, [isAdminAuthenticated, currentUser.id, ordersIsInit, state.service_orders.length]);
 
     useEffect(() => {
         console.log('Orders State: ', state)
     }, [state])
+    
 
     useEffect(() => {
-        console.log('socket isAuth: ', isAuthenticated)
+        console.log('socket isAuth: ', isAdminAuthenticated)
         console.log('socket currentUser: ', currentUser)
         async function initOrderSocketAfterAuth() {
-            if (!isAuthenticated || currentUser.id === 0) return
+            if (!isAdminAuthenticated || currentUser.id !== 0) return
 
             if (currentUser.role && !socketRef.current) {
                 socketRef.current = io(DEFAULTS.SOCKET.URL, {
@@ -251,14 +254,14 @@ export const OrderProvider = ({ children }) => {
 
                     toast.success(
                         <span>
-                            Новый заказ услуг
+                            Новый заказ
                         </span>
                     )
                 })
 
 
                 socket.on('supportTicketStatusChange', (data) => {
-                    console.log('change status: ', data)
+                    // console.log('change status: ', data)
                     const newStatus = data.newStatus;
                     const orderId = data.orderId;
 
@@ -269,9 +272,9 @@ export const OrderProvider = ({ children }) => {
 
                     const textStatus = ticketStatus(newStatus)
                     toast.success(
-                        <span>
-                            Новый статус заявки ({textStatus})
-                        </span>
+                        <div>
+                            Новый статус заявки <br/> ({textStatus})
+                        </div>
                     )
                 })
 
@@ -283,8 +286,6 @@ export const OrderProvider = ({ children }) => {
                         payload: { newTicket }
                     })
 
-                    const tempTickets = formatSupportTicket(newTicket)
-                    // console.log('NEW TICKET FORMAT: ', tempTickets)
                     toast.success(
                         <span>
                             Новая заявка на поддержку
@@ -298,7 +299,6 @@ export const OrderProvider = ({ children }) => {
 
                 return () => {
                     console.log('Компонент размонтируется')
-                    // Удалите слушателя для orderStatusChange
                     if (socketRef.current) {
                         socket.off('connect')
                         socket.off('orderStatusChange')
@@ -312,21 +312,21 @@ export const OrderProvider = ({ children }) => {
         }
 
         initOrderSocketAfterAuth()
-    }, [isAuthenticated, currentUser])
+    }, [isAdminAuthenticated, currentUser])
 
     return (
         <OrderContext.Provider value={{ state }}>
             {children}
         </OrderContext.Provider>
-    );
-};
+    )
+}
 
 // Хук для доступа к заказам и их изменению
-export const useOrders = () => {
+export const useAdminOrders = () => {
     const context = useContext(OrderContext);
     if (!context) throw new Error('useOrders must be used within an OrderProvider');
-    return context;
-};
+    return context
+}
 
 // Использование в компоненте
 // const { state: { service_orders }, dispatch } = useOrders();

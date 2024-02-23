@@ -1,5 +1,6 @@
 import { Card, Image, Text, Group, Badge, Button, ActionIcon, Stack, Flex } from '@mantine/core'
 import { DEFAULTS } from 'defaults';
+import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react'
 import { IOrderInfo, TOrderPaymentType } from 'types/order'
 import { IServiceOrdered, TServiceOrderStatus } from 'types/services'
@@ -48,7 +49,7 @@ const ServiceOrderItem = (props: ServiceOrderItemProps) => {
     )
 }
 
-const ServiceOrderBadge = (props: { status: TServiceOrderStatus, id: number }) => {
+const ServiceOrderBadge = (props: { status: TServiceOrderStatus, id: number, date: string }) => {
     const checkOrderStatus = (status) => {
         // if (!props.status) return
         switch (props.status) {
@@ -87,9 +88,11 @@ const ServiceOrderBadge = (props: { status: TServiceOrderStatus, id: number }) =
     }
 
     const badge = checkOrderStatus(props.status)
+    const date = DateTime.fromISO(props.date).toLocaleString({ weekday: 'short', month: 'long', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 
     return (
         <Flex direction={'row'} justify={'space-between'}>
+            <span className='admin-serviceCard__date'>{date}</span>
             <span className='admin-serviceCard__id'>ID:{props.id}</span>
             <Badge autoContrast variant="light" color={badge.color} className='admin-serviceCard__badge' >
                 {badge.name}
@@ -125,12 +128,12 @@ export default function ServiceOrder(props: ICServiceOrderProps) {
         }
     }
 
-    useEffect(() => {
-        console.log('ServiceOrder: ', props.orderInfo.customer.name, ': ', props)
-    }, [props])
+    // useEffect(() => {
+    //     console.log('ServiceOrder: ', props.orderInfo.customer.name, ': ', props)
+    // }, [props])
     return (
         <div className='admin-serviceCard'>
-            <ServiceOrderBadge status={props.orderInfo.status} id={props.id} />
+            <ServiceOrderBadge status={props.orderInfo.status} id={props.id} date={props.orderInfo.createAt} />
 
             <div className='admin-serviceCard__header'>
                 <div className='admin-serviceCard__status'>
@@ -152,18 +155,18 @@ export default function ServiceOrder(props: ICServiceOrderProps) {
                 <div className='admin-serviceCard__orderList'>
                     {props.order.map((x, i) => {
                         return (
-                            <>
+                            <div key={x.service.id + '-' + i} className='admin-serviceCard__orderItemWrap'>
                                 <ServiceOrderItem
                                     key={i}
                                     name={x.service.attributes.title}
                                     amount={x.quantity}
-                                    image={DEFAULTS.STRAPI.url + x.service.attributes.images.data[0].attributes.url}
+                                    image={DEFAULTS.SOCKET_URL.prod + x.service.attributes.images.data[0].attributes.url}
                                 />
                                 {i < props.order.length - 1 ?
                                     <div className='admin-serviceCard__orderDivider' />
                                     : <></>
                                 }
-                            </>
+                            </div>
                         )
                     })}
                 </div>
@@ -184,7 +187,9 @@ export default function ServiceOrder(props: ICServiceOrderProps) {
             <div className='admin-serviceCard__result'>
                 <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
                     <span className='admin-serviceCard__blockText'>Сумма заказа:</span>
-                    <span className='admin-serviceCard__blockTitle'>{1000} руб.</span>
+                    <span className='admin-serviceCard__blockTitle'>{props.order.reduce(
+                        (total, service) => total + service.service.attributes.price * service.quantity, 0)
+                    } руб.</span>
                 </Flex>
 
                 <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
@@ -193,9 +198,12 @@ export default function ServiceOrder(props: ICServiceOrderProps) {
                 </Flex>
             </div>
             <div className='admin-serviceCard__action'>
-                <Button onClick={() => updateStatus(props.orderInfo.status, 'inwork')} variant="filled" color="blue" size='md' radius={'md'}>Принять</Button>
-                <Button onClick={() => updateStatus(props.orderInfo.status, 'delivered')} variant="filled" color="orange" size='md' radius={'md'}>На доставку</Button>
-                <Button onClick={() => updateStatus(props.orderInfo.status, 'done')} variant="filled" color={'green'} size='md' radius={'md'}>Выполнен</Button>
+                <Button onClick={() => updateStatus(props.orderInfo.status, 'inwork')} variant="filled" color="blue" size='md' radius={'md'}
+                    style={{ fontSize: 14, fontWeight: 500 }}>Принять</Button>
+                <Button onClick={() => updateStatus(props.orderInfo.status, 'delivered')} variant="filled" color="orange" size='md' radius={'md'}
+                    style={{ fontSize: 14, fontWeight: 500 }}>Доставка</Button>
+                <Button onClick={() => updateStatus(props.orderInfo.status, 'done')} variant="filled" color={'green'} size='md' radius={'md'}
+                    style={{ fontSize: 14, fontWeight: 500 }}>Выполнен</Button>
             </div>
         </div>
     )
