@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { DEFAULTS } from 'defaults';
+import { DEFAULTS } from 'defaults'
 
 // Создание экземпляра axios с базовым URL для стороны сервера
 export const axiosInstance = axios.create({
