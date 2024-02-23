@@ -4,6 +4,7 @@ import PromoSlider from '@/components/PromoSlider'
 import WelcomeScreen from '@/components/WelcomeScreen'
 import { useAuth } from 'context/AuthContext'
 import { useOrders } from 'context/OrderContext'
+import useIsPwa from 'helpers/frontend/pwa'
 import { SECRET_KEY, decodeToken } from 'helpers/login'
 import { getServiceOrdersByGuestId, servicesFromRes } from 'helpers/order/services'
 import { withAuthServerSideProps } from 'helpers/withAuthServerSideProps'
@@ -117,6 +118,7 @@ export default function IndexPage(props: IndexPageProps) {
     console.log('orders: ', orders)
     const workOrders = orders.filter(x => x.orderInfo.status !== 'done')
     console.log('workOrders: ', workOrders)
+
     return (<>
         <main>
             <PromoSlider slides={slides} />

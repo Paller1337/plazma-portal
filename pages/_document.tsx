@@ -16,6 +16,7 @@ export default function Document() {
                 <Head>
                     <link rel='preconnect' href='https://fonts.googleapis.com' />
                     <link rel='preconnect' href='https://fonts.gstatic.com' crossOrigin='anonymous' />
+                    <link rel='manifest' href='/manifest.json' />
                 </Head>
                 <body className='body'>
                     <Main />

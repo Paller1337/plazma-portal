@@ -1,34 +1,29 @@
-const webpack = require('webpack')
+const webpack = require('webpack');
 const withPlugins = require('next-compose-plugins');
+const withPWA = require('next-pwa');
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
-    enabled: process.env.ANALYZE === 'true',
+  enabled: process.env.ANALYZE === 'true',
 });
 
-/** @type {import('next').NextConfig} */
 const nextConfig = {
-    images: {
-        domains: ['strapi.kplazma.ru', '192.168.1.19'],
-    },
-    // webpack: (config, { isServer }) => {
-    //     // Добавьте плагин webpack-remove-debug только для продакшн-сборки и клиентской части
-    //     if (!isServer) { // Это для клиентской части
-    //         config.resolve.alias['debug'] = false; // Исключить debug
-    //         config.plugins.push(
-    //             new webpack.DefinePlugin({
-    //                 'process.env.DEBUG': JSON.stringify(false),
-    //             })
-    //         );
-    //     }
-    //     return config; // Важно возвращать измененную конфигурацию
-    // },
-    // Удалите experimental, если они не поддерживаются в вашей версии Next.js
-    experimental: {
-        optimizePackageImports: ['@mantine/core'],
-        // fallbackNodePolyfills: false,
-    },
+  images: {
+    domains: ['strapi.kplazma.ru', '192.168.1.19'],
+  },
+  experimental: {
+    optimizePackageImports: ['@mantine/core'],
+  },
+  webpack: (config, { isServer }) => {
+    // Ваши настройки webpack
+    return config;
+  },
 };
 
 module.exports = withPlugins([
-    withBundleAnalyzer,
-    // Можно добавлять другие плагины сюда
+  [withPWA, {
+    pwa: {
+      dest: 'public',
+    //   disable: process.env.NODE_ENV === 'development',
+    },
+  }],
+  withBundleAnalyzer,
 ], nextConfig);

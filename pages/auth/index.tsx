@@ -11,6 +11,7 @@ import { ReactSVG } from 'react-svg'
 import { TBnovoRoom } from 'types/bnovo'
 import { debounce } from 'lodash'
 import WelcomeScreen from '@/components/WelcomeScreen'
+import useIsPwa from 'helpers/frontend/pwa'
 
 interface AuthPageProps {
     rooms: TBnovoRoom[]
@@ -47,6 +48,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         }
     }
 }
+
+
 
 export default function AuthPage(props: AuthPageProps) {
     const [roomId, setRoomId] = useState('')
@@ -102,7 +105,22 @@ export default function AuthPage(props: AuthPageProps) {
             return () => clearTimeout(timer)
         }
     }, [isAuthenticated, router])
-    
+
+    const pwa = useIsPwa()
+
+    function requestNotificationPermission() {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                console.log('Разрешение на отправку уведомлений получено');
+                // Здесь вы можете запустить логику для отображения уведомлений
+            } else if (permission === 'denied') {
+                console.log('Пользователь отказал в разрешении на отправку уведомлений');
+            } else {
+                console.log('Пользователь закрыл запрос на разрешение без его выбора');
+            }
+        });
+    }
+
     return (<>
         <LoadingOverlay
             visible={visibleLoadingOverlay}
@@ -110,24 +128,24 @@ export default function AuthPage(props: AuthPageProps) {
             overlayProps={{ radius: 'sm', blur: 2 }}
             loaderProps={{ color: 'gray', type: 'oval' }}
         />
-        
+
         <main className='auth-page'>
             <div className='auth-page__wrapper'>
-                <div className='auth-page__logo'>
+                <div className='auth-page__logo' style={{ margin: 'auto 0' }}>
                     <ReactSVG src='/svg/logo-dark-x128.svg' />
                 </div>
 
-                <div className='auth-page__title'>
+                <div className='auth-page__title' style={{ margin: 'auto 0 20px 0' }}>
                     ВХОД В ГОСТЕВОЙ ПОРТАЛ
                 </div>
 
-                <div className='auth-page__form'>
+                <div className='auth-page__form' style={{ margin: '0 0 auto 0' }}>
                     <TextInput placeholder="Фамилия" className='' onChange={event => setSurname(event.currentTarget.value.toString())}
                         radius={'md'} size='lg'
                     />
 
                     <Select
-                        mt="md"
+                        mb={'md'}
                         size='lg'
                         radius={'md'}
                         comboboxProps={{ withinPortal: true }}
@@ -138,6 +156,10 @@ export default function AuthPage(props: AuthPageProps) {
                     />
 
                     <Button onClick={onLogin} text='Войти' stretch />
+
+                    {/* {pwa ? */}
+                    {/* <Button onClick={() => router.push('/auth/qr')} text='Войти по QR' stretch /> */}
+                    {/* // : <></>} */}
                 </div>
             </div>
         </main>

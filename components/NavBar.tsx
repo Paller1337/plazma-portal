@@ -1,6 +1,7 @@
+import useIsPwa from 'helpers/frontend/pwa'
 import Link from 'next/link'
-import Router from 'next/router'
-import { useEffect } from 'react'
+import Router, { useRouter } from 'next/router'
+import { useEffect, useState } from 'react'
 import { ReactSVG } from 'react-svg'
 
 type TPortalPages = 'index' | 'services' | 'help' | 'order/history'
@@ -38,14 +39,30 @@ const PAGES = [
 ]
 
 export default function NavBar(props: NavBarProps) {
-    useEffect(() => {
+    const isPWA = useIsPwa()
+    const [bannerIsOpen, setBannerIsOpen] = useState(true)
+    const router = useRouter()
 
-        console.log('        props.page: ', Router.asPath
-
-        )
-    })
     return (<>
         <div className='navbar'>
+            {!isPWA && bannerIsOpen ?
+                <div className='pwa-banner'>
+                    <div className='pwa-banner__wrapper'>
+                        <div className='pwa-banner__text'>
+                            Установите Гостевой <br />Портал на Ваш телефон
+                        </div>
+
+                        <div className='index-nav__inner-btn index-nav__inner-btn_dark'
+                            onClick={() => router.push('/install')}>
+                            Установить
+                        </div>
+                        <div className='pwa-banner__close' onClick={() => setBannerIsOpen(false)}>
+                            X
+                        </div>
+                    </div>
+                </div>
+                : <></>}
+
             <div className='navbar__wrapper'>
                 {PAGES.map(x =>
                     <Link key={'nav-' + x.logo} className={`navbar__button ${x.path === props.page ? 'active' : ''}`}

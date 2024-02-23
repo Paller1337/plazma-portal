@@ -1,11 +1,12 @@
-import { useAuth } from 'context/AuthContext';
-import { ReactSVG } from 'react-svg';
+import { useAuth } from 'context/AuthContext'
+import { ReactSVG } from 'react-svg'
 
 export default function Footer() {
     const { isAuthenticated } = useAuth()
 
     if (isAuthenticated)
         return (<>
+
             <footer className='footer'>
                 <div className='footer__wrapper'>
                     <span className='footer__title'>Контакты</span>
