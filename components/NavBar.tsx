@@ -57,7 +57,7 @@ export default function NavBar(props: NavBarProps) {
                             onClick={() => router.push('/install')}>
                             Установить
                         </div>
-                        <div className='pwa-banner__close' onClick={() => setIsPwaBannerHidden(false)}>
+                        <div className='pwa-banner__close' onClick={() => setIsPwaBannerHidden(true)}>
                             X
                         </div>
                     </div>
