@@ -43,10 +43,10 @@ export default function NavBar(props: NavBarProps) {
     const isPWA = useIsPwa()
     const router = useRouter()
     const { isPwaBannerHidden, setIsPwaBannerHidden } = useAuth()
-    
+
     return (<>
         <div className='navbar'>
-            {!isPWA && isPwaBannerHidden ?
+            {!isPWA && !isPwaBannerHidden ?
                 <div className='pwa-banner'>
                     <div className='pwa-banner__wrapper'>
                         <div className='pwa-banner__text'>
