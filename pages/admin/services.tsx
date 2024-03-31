@@ -7,6 +7,7 @@ import { IServiceOrder, TOrderStatus } from 'types/order'
 import { useAdminOrders } from 'context/admin/OrderContext'
 import { useRouter } from 'next/router'
 import { withAdminAuthServerSideProps } from 'helpers/withAdminAuthServerSideProps'
+import AdminOrderModal from '@/components/admin/OrderModal'
 
 interface AdminServicesPageProps {
     rooms?: any
@@ -64,7 +65,7 @@ export default function AdminServicesPage(props: AdminServicesPageProps) {
     const hotelRooms = props.rooms?.filter(x => x.tags !== '')
     const { state } = useAdminOrders()
     const [orders, setOrders] = useState<IServiceOrderWithEntering[]>(state.service_orders)
-    
+
     const router = useRouter()
     const query = router.query
 
@@ -115,13 +116,8 @@ export default function AdminServicesPage(props: AdminServicesPageProps) {
         loadOrders((query.status as string) as TOrderStatus)
     }, [state.service_orders, query.status])
 
-    // const socket = io(DEFAULTS.SOCKET.URL, {
-    //     query: {
-    //         userId: 100200101,
-    //         role: 'admin',
-    //     }
-    // })
 
+  
     // useEffect(() => {
     //     socket.on('connect', () => {
     //         console.log('Connected to Strapi WebSocket');

@@ -18,7 +18,7 @@ export default function Document() {
                     <link rel='preconnect' href='https://fonts.gstatic.com' crossOrigin='anonymous' />
                     <link rel='manifest' href='/manifest.json' />
                 </Head>
-                <body className='body'>
+                <body className='body no-scrollbar'>
                     <Main />
                     <NextScript />
                 </body>

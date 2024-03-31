@@ -23,9 +23,6 @@ export default function ServiceShopCard(props: ServiceShopCardProps) {
     const imageUrl = DEFAULTS.STRAPI_URL.prod + image.url
     // Функция добавления товара в корзину
 
-    useEffect(() => {
-        console.log(props.image)
-    }, )
     const handleAdd = () => {
         dispatch({
             type: 'ADD_ITEM', category: 'services', item: {

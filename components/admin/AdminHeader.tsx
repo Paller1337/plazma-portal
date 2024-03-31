@@ -4,6 +4,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { ReactSVG } from 'react-svg'
 import Link from 'next/link'
 import Router from 'next/router'
+import { useAdminOrders } from 'context/admin/OrderContext'
 
 const links = [
     // { link: '/admin', label: 'Главная' },
@@ -14,8 +15,9 @@ const links = [
 ];
 
 export default function AdminHeader() {
-    const [opened, { toggle }] = useDisclosure(false);
-    const [active, setActive] = useState(links[0].link);
+    const [opened, { toggle }] = useDisclosure(false)
+    const [active, setActive] = useState(links[0].link)
+    const { clients } = useAdminOrders()
 
     const items = links.map((link) => (
         <Link
@@ -45,6 +47,9 @@ export default function AdminHeader() {
                     {items}
                 </Group>
 
+                <div style={{fontSize: 14, fontWeight: 600, marginLeft: 'auto'}}>
+                    Онлайн: {clients.count}
+                </div>
                 {/* <Burger opened={opened} onClick={toggle} hiddenFrom="xs" size="sm" /> */}
             </div>
         </header>

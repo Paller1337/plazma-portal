@@ -94,8 +94,7 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
 })
 
 export default function ServicesPage(props: ServicesPageProps) {
-    useFooterBottomPadding(88)
-
+    useFooterBottomPadding(100)
     const { state } = useCart()
     const { services } = state
 

@@ -17,9 +17,21 @@ export module DEFAULTS {
     }
 
     export const SOCKET = {
-        URL: SOCKET_URL.prod,
+        URL: SOCKET_URL.local,
     }
     export const STRAPI = {
-        url: STRAPI_URL.prod,
+        url: STRAPI_URL.local,
+    }
+
+    export const IIKO = {
+        login: '9feaa89d-33b',
+        organizations: {
+            smash: '55535df8-0c9c-4976-a82f-6d3150afaf03'
+        }
+    }
+
+    export const PHONE_NUMBERS = {
+        reception: '+79101681761',
+        restaurant: '+79202756312',
     }
 }

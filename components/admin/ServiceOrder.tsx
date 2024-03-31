@@ -4,6 +4,7 @@ import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react'
 import { IOrderInfo, TOrderPaymentType } from 'types/order'
 import { IServiceOrdered, TServiceOrderStatus } from 'types/services'
+import AdminOrderModal from './OrderModal';
 
 const mockdata = {
     image:
@@ -35,7 +36,7 @@ interface ServiceOrderItemProps {
     amount: number
 }
 
-const ServiceOrderItem = (props: ServiceOrderItemProps) => {
+export const ServiceOrderItem = (props: ServiceOrderItemProps) => {
     return (
         <div className='admin-serviceCard__orderItem'>
             <div className='admin-serviceCard__orderItem-product'>
@@ -49,7 +50,7 @@ const ServiceOrderItem = (props: ServiceOrderItemProps) => {
     )
 }
 
-const ServiceOrderBadge = (props: { status: TServiceOrderStatus, id: number, date: string }) => {
+export const ServiceOrderBadge = (props: { status: TServiceOrderStatus, id: number, date: string }) => {
     const checkOrderStatus = (status) => {
         // if (!props.status) return
         switch (props.status) {
@@ -102,6 +103,11 @@ const ServiceOrderBadge = (props: { status: TServiceOrderStatus, id: number, dat
 }
 
 export default function ServiceOrder(props: ICServiceOrderProps) {
+    const [modalIsOpen, setModalIsOpen] = useState(false)
+
+    const openModal = (index) => {
+        setModalIsOpen(true)
+    }
     const paymentType = props.orderInfo.paymentType === 'bank-card' ? 'Банковская карта' : props.orderInfo.paymentType === 'cash' ? 'Наличные' : 'Не указан'
 
     async function updateStatus(status: TServiceOrderStatus, newStatus: TServiceOrderStatus) {
@@ -131,7 +137,9 @@ export default function ServiceOrder(props: ICServiceOrderProps) {
     // useEffect(() => {
     //     console.log('ServiceOrder: ', props.orderInfo.customer.name, ': ', props)
     // }, [props])
-    return (
+    return (<>
+        <AdminOrderModal isOpen={modalIsOpen} onClose={() => setModalIsOpen(false)} order={props} />
+
         <div className='admin-serviceCard'>
             <ServiceOrderBadge status={props.orderInfo.status} id={props.id} date={props.orderInfo.createAt} />
 
@@ -154,20 +162,33 @@ export default function ServiceOrder(props: ICServiceOrderProps) {
                 <span className='admin-serviceCard__blockTitle'>Заказ:</span>
                 <div className='admin-serviceCard__orderList'>
                     {props.order.map((x, i) => {
-                        return (
-                            <div key={x.service.id + '-' + i} className='admin-serviceCard__orderItemWrap'>
-                                <ServiceOrderItem
-                                    key={i}
-                                    name={x.service.attributes.title}
-                                    amount={x.quantity}
-                                    image={DEFAULTS.SOCKET_URL.prod + x.service.attributes.images.data[0].attributes.url}
-                                />
-                                {i < props.order.length - 1 ?
-                                    <div className='admin-serviceCard__orderDivider' />
-                                    : <></>
-                                }
-                            </div>
-                        )
+                        if (i <= 1) {
+                            return (
+                                <div key={x.service.id + '-' + i} className='admin-serviceCard__orderItemWrap'>
+                                    <ServiceOrderItem
+                                        key={i}
+                                        name={x.service.attributes.title}
+                                        amount={x.quantity}
+                                        image={DEFAULTS.SOCKET_URL.prod + x.service.attributes.images.data[0].attributes.url}
+                                    />
+                                    {i < props.order.length - 1 ?
+                                        <div className='admin-serviceCard__orderDivider' />
+                                        : <></>
+                                    }
+                                </div>
+                            )
+                        } else if ((i + 1) === props.order.length) {
+                            return (
+                                <div key={x.service.id + '-' + i} className='admin-serviceCard__orderItemWrap'>
+                                    <div className='admin-serviceCard__additional'>
+                                        и еще {props.order.length - 2} позиции
+                                        <div className='admin-serviceCard__additional-btn' onClick={openModal}>
+                                            показать всё
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        }
                     })}
                 </div>
             </div>
@@ -206,5 +227,6 @@ export default function ServiceOrder(props: ICServiceOrderProps) {
                     style={{ fontSize: 14, fontWeight: 500 }}>Выполнен</Button>
             </div>
         </div>
+    </>
     )
 }

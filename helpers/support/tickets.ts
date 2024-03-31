@@ -121,7 +121,7 @@ export function supportTicketsFromRes(res): ISupportTicket[] {
 
 
 
-export const formatTicketMessage = (ticketsCount) => {
+export const formatTicketMessage = (ticketsCount, short?: boolean) => {
     let orderWord = 'заявок';
     let activeWord = 'активных';
 
@@ -132,7 +132,7 @@ export const formatTicketMessage = (ticketsCount) => {
         orderWord = 'заявки';
         activeWord = 'активных';
     }
-    return `У вас ${ticketsCount} ${activeWord} ${orderWord}`;
+    return `${!short ? 'У вас ' : ''}${ticketsCount} ${activeWord} ${orderWord}`;
 }
 
 export const ticketStatus = (s: TSupportTicketStatus) => {
@@ -143,6 +143,19 @@ export const ticketStatus = (s: TSupportTicketStatus) => {
             return 'Заявка передана специалистам'
         case 'closed':
             return 'Заявка закрыта'
+        default:
+            return ''
+    }
+}
+
+export const ticketStatusColor = (s: TSupportTicketStatus) => {
+    switch (s) {
+        case 'new':
+            return '#228be6'
+        case 'inwork':
+            return '#40c057'
+        case 'closed':
+            return '#DCDCDC'
         default:
             return ''
     }

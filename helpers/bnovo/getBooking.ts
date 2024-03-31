@@ -32,7 +32,7 @@ export async function getBookingByRoomId(id: number) {
 
     const today = DateTime.now().toISODate()
     const bookings = await getAllBookings(today, today)
-    if (!bookings) return { status: false, message: 'Бронирований нет', data: '' }
+    if (!bookings || !id) return { status: false, message: 'Бронирований нет', data: '' }
 
     const bookingWithNeededRoom = bookings.filter(booking => booking.room_id === id.toString() && booking.status_id !== 4);
     // status_id: 1 - Новое
@@ -41,6 +41,7 @@ export async function getBookingByRoomId(id: number) {
     // status_id: 5 - Проверено
     console.log('ID бронирования по номеру комнаты: ', bookingWithNeededRoom)
     console.log('NODE_ENV: ', process.env.NODE_ENV)
+    if (bookingWithNeededRoom.length < 1) return { status: false, message: 'Гость не найден', data: '' }
     try {
         if (bookingWithNeededRoom) {
             const response = await axiosInstance(`/api/booking/${bookingWithNeededRoom[0].booking_id}`, {

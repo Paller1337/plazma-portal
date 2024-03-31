@@ -45,7 +45,9 @@ export default function IndexNavButton(props: IndexNavButtonProps) {
     return (<>
         <div className={`index-nav__button ${props.isHelpButton ? 'index-nav__button_help' :
             props.isOrderButton ? 'index-nav__button_order' : ''}`} style={props.isOrderButton ?
-                { border: `1px solid ${orderStatus}` } : {}}
+                { border: `1px solid ${orderStatus}` } : props.isHelpButton ?
+                    { border: `1px solid ${props.status}` }
+                    : {}}
             onClick={props.link ? () => Router.push(props.link) : () => { }}>
 
             <div className='index-nav__logo'>

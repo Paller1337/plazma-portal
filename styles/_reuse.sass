@@ -45,7 +45,14 @@
     max-width: 430px
     // width: 430px
     margin: 0 auto
-
+    padding: 0 8px
+    // border:
+    //     left: 1px solid #dcdcdc
+    //     right: 1px solid #dcdcdc
+    @media screen and ( max-width: 710px )
+        padding: 0
+        border: none
+        
 .promo-slider
     &__slide
         width: 382px
@@ -102,6 +109,13 @@
         font-weight: 400
         line-height: normal
 
+.no-scrollbar
+    scrollbar-width: none
+    -ms-overflow-style: none
+    &::-webkit-scrollbar
+        width: 0
+        height: 0
+        
 .portal-button
     display: flex
     padding: 12px

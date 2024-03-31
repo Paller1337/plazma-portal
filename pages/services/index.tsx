@@ -16,11 +16,12 @@ const SERVICES = [
         img: '/images/services/room-services.png',
         link: '/services/room-services'
     },
-    // {
-    //     title: 'Заказать еду',
-    //     desc: 'Доставим к вашему номеру',
-    //     img: '/images/services/eat-delivery.png',
-    // },
+    {
+        title: 'Заказать еду',
+        desc: 'Доставим к вашему номеру',
+        img: '/images/services/eat-delivery.png',
+        link: '/services/room-food'
+    },
     // {
     //     title: 'Сауны',
     //     desc: 'Три вида сауны в шаговой доступности',

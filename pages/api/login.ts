@@ -17,6 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
         const data = await authenticationPortal(surname, roomNumber);
         console.log('Auth Func Data: ', data)
+        if (!data.data) return
         const sessionToken = generateToken(
             data.data.id,
             data.data.bnovoBookingId,

@@ -1,4 +1,5 @@
 import { useAuth } from 'context/AuthContext'
+import Link from 'next/link'
 import { ReactSVG } from 'react-svg'
 
 export default function Footer() {
@@ -26,12 +27,12 @@ export default function Footer() {
                     </div>
 
                     <div className='footer__socials'>
-                        <div className='footer__social-btn'>
+                        <Link target='_blank' className='footer__social-btn' href={'https://t.me/plazmadonskoy'}>
                             <ReactSVG src='/svg/telegram-white.svg' />
-                        </div>
-                        <div className='footer__social-btn'>
+                        </Link>
+                        <Link target='_blank' className='footer__social-btn' href={'https://vk.com/park_hotel_plazma'}>
                             <ReactSVG src='/svg/vk-white.svg' />
-                        </div>
+                        </Link>
                     </div>
                 </div>
             </footer>

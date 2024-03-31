@@ -77,6 +77,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         }
 
         case 'UPDATE_QUANTITY': {
+            console.log(action.category, ' | ' ,action.id)
             const updatedItems = state[action.category].items.map(item =>
                 item.id === action.id ? { ...item, quantity: action.quantity } : item
             );

@@ -16,32 +16,34 @@ interface PromoSliderProps {
 
 export default function PromoSlider(props: PromoSliderProps) {
     return (<>
-        <Swiper
-            {...({
-                spaceBetween: 0,
-                slidesPerView: 1,
-                modules: [Pagination],
-                pagination: {
-                    clickable: true,
-                    type: 'bullets',
-                },
-                className: 'index-swiper',
-            } as SwiperProps)}
-        >
-            {props.slides.map((x, i) =>
-                <SwiperSlide key={'promo-slide-' + x.title}>
-                    <div className='promo-slider__slide'>
-                        <div className='promo-slider__dark_opacity' />
-                        <div className='promo-slider__dark_opacity-gradient' />
-                        <div className='promo-slider__content'>
-                            <span className='promo-slider__title'>{x.title}</span>
-                            <span className='promo-slider__desc'>{x.desc}</span>
-                        </div>
+        {!props.slides ? <>Загрузка</> :
+            <Swiper
+                {...({
+                    spaceBetween: 0,
+                    slidesPerView: 1,
+                    modules: [Pagination],
+                    pagination: {
+                        clickable: true,
+                        type: 'bullets',
+                    },
+                    className: 'index-swiper',
+                } as SwiperProps)}
+            >
+                {props.slides.map((x, i) =>
+                    <SwiperSlide key={'promo-slide-' + x.title}>
+                        <div className='promo-slider__slide'>
+                            <div className='promo-slider__dark_opacity' />
+                            <div className='promo-slider__dark_opacity-gradient' />
+                            <div className='promo-slider__content'>
+                                <span className='promo-slider__title'>{x.title}</span>
+                                <span className='promo-slider__desc'>{x.desc}</span>
+                            </div>
 
-                        <Image className='promo-slider__image' src={x.img} height={382} width={220} alt='' />
-                    </div>
-                </SwiperSlide>
-            )}
-        </Swiper>
+                            <img className='promo-slider__image' src={x.img} height={382} width={220} alt='' />
+                        </div>
+                    </SwiperSlide>
+                )}
+            </Swiper>
+        }
     </>)
 }

@@ -27,7 +27,7 @@ export const generateToken = (accountId, bnovoBookingId, checkOutDate, role) => 
 
 export const verifyToken = (token) => {
     // const token = Cookies.get('session_token')
-    console.log('verifieng token: ', token)
+    // console.log('verifieng token: ', token)
     if (!token) return false
     try {
         const decoded = jwt.verify(token, SECRET_KEY);
@@ -43,7 +43,7 @@ export const verifyToken = (token) => {
 
 export const decodeToken = (token) => {
     // const token = Cookies.get('session_token')
-    console.log('verifyToken: ', token)
+    // console.log('verifyToken: ', token)
     if (!token) return {} as JwtPayload
     try {
         const decoded = jwt.verify(token, SECRET_KEY)
@@ -108,7 +108,7 @@ export default async function authenticationPortal(surname: string, roomId: stri
 
     const bnovoResponse = await axiosInstance(`/api/booking-room/${roomId}`)
     if (!bnovoResponse.data?.status) {
-        return { status: true, message: 'Бронирования не существует.', data: {} }
+        return { status: false, message: 'Бронирования не существует.', data: {} }
     }
 
     const data = bnovoResponse.data.data as TBookingExtra

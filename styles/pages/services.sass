@@ -75,10 +75,11 @@
 
     &__order-wrapper
         position: fixed
-        bottom: 64px
+        bottom: 76px
         width: 100%
         padding: 24px 8px 8px 8px
         background: #F6F6F6
+        z-index: 10
     &__order
         display: flex
         padding: 8px
@@ -152,10 +153,10 @@
         font-size: 16px
         font-style: normal
         font-weight: 600
-        line-height: normal
+        line-height: 100%
 
     &__image
-        margin: 16px auto 0 auto
+        margin: 0px auto 0 auto
 
     &__price
         color: #262626
@@ -169,6 +170,7 @@
         align-items: center
         justify-content: space-between
         width: 100%
+        margin-top: auto
     &__add-btn
         width: 32px
         height: 32px
@@ -182,3 +184,143 @@
             div
                 display: flex
                 height: fit-content
+
+.dish-menu
+    // overflow: auto
+.menu-list
+    display: flex
+    flex-direction: column
+    // gap: 24px
+
+.menu-tags
+    display: flex
+    gap: 8px
+    flex-flow: row nowrap
+    align-items: center
+    padding: 12px 24px
+    position: sticky
+    top: 0
+    z-index: 10
+    height: fit-content
+    width: 100%
+    background: #fff
+    border-bottom: 1px solid #262626
+    overflow-x: scroll
+    overflow-y: visible
+    &__item
+        display: flex
+        border-radius: 16px
+        border: 1px solid #dcdcdc
+        font-size: 14px
+        font-weight: 500
+        color: #262626
+        padding: 4px 12px
+        background: #fff
+        width: fit-content
+        white-space: nowrap
+        cursor: pointer
+        &.active
+            color: #fff
+            background: #56754B
+
+.menu-category
+    display: flex
+    flex-direction: column
+    gap: 8px
+    padding-top: 64px
+    &__header
+        padding: 12px 24px 4px 24px
+        &-inner
+            color: #262626
+            font-size: 20px
+            text-transform: uppercase
+            font-weight: 600
+            border-bottom: 1px solid #979797
+            padding-bottom: 8px
+            display: flex
+            justify-content: flex-start
+    &__dishes
+        display: flex
+        gap: 24px 16px
+        flex-flow: row wrap
+        padding: 12px 24px
+        align-content: flex-start
+        position: relative
+        z-index: 1
+.menu-item
+    border-radius: 12px
+    // overflow: hidden
+    width: calc( 50% - 8px )
+    min-width: 160px
+    height: 220px
+    background: #ffffff
+    position: relative
+    outline: none
+    border: none
+    &__image
+        width: 100%
+        height: 144px
+        position: relative
+        z-index: 1
+        border-radius: 12px 8px 8px 12px
+        overflow: hidden
+        outline: none
+        border: none
+        background: url('/images/no-photo.png')
+        background-size: cover
+        background-repeat: no-repeat
+        img
+            object-fit: cover
+            outline: none
+            border: none
+            width: 100%
+            height: 100%
+
+    &__info
+        display: flex
+        flex-direction: column
+        gap: 10px
+        padding: 12px
+        border-radius: 8px 8px 12px 12px
+        position: absolute
+        left: 0
+        right: 0
+        top: 120px
+        bottom: 0
+        background: #fff
+        z-index: 2
+        box-shadow: 0px -2px 8px 0px rgba(0, 0, 0, 0.25)
+
+    &__title
+        font-size: 14px
+        font-weight: 600
+        color: #262626
+        line-height: 125%
+        -webkit-line-clamp: 2
+        display: -webkit-box
+        overflow: hidden
+        text-overflow: ellipsis
+
+    &__footer
+        width: 100%
+        display: flex
+        justify-content: space-between
+        align-items: center
+        margin-top: auto
+
+    &__price
+        font-weight: 600
+        font-size: 14px
+        color: #262626
+
+    &__btn
+        width: 32px
+        height: 32px
+        border-radius: 8px
+        background: #262626
+        display: flex
+        justify-content: center
+        align-items: center
+        cursor: pointer
+        div
+            display: flex

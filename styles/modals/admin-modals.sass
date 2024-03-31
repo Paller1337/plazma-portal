@@ -1,0 +1,68 @@
+.OrderAdmin-Modal
+    position: absolute
+    top: 50%
+    left: 50%
+    right: 0
+    background: white
+    width: 100%
+    max-width: 1200px // Чтобы оно было на всю ширину экрана
+    border-radius: 18px // Закругление верхних углов
+    padding: 48px 24px 36px 24px
+    box-sizing: border-box
+    transform: translate(-50%, -50%) // Прижимаем к нижнему краю
+    animation: fadeInUpAbsolute 0.3s ease-out forwards
+
+    .admin-serviceCard__orderList
+        height: auto
+        max-height: 400px
+        overflow-y: scroll
+    .admin-serviceCard__badge
+        top: 12px
+        right: 50px
+    &__badge
+        position: absolute
+        top: 0
+        left: 50%
+        transform: translateX(-50%)
+    &__close
+        position: absolute
+        right: 0
+        top: 0
+        cursor: pointer
+    &__title
+        color: #262626
+        text-align: center
+        font-family: Montserrat
+        font-size: 28px
+        font-style: normal
+        font-weight: 600
+        line-height: normal
+    &__text
+        color: #262626
+        text-align: center
+        font-family: Montserrat
+        font-size: 16px
+        font-style: normal
+        font-weight: 400
+        line-height: normal
+        align-self: stretch
+    &__text-group
+        display: flex
+        flex-direction: column
+        align-items: center
+        gap: 12px
+        align-self: stretch
+
+    &__content
+        display: flex
+        flex-direction: column
+        gap: 24px
+        align-items: center
+
+    &__actions
+        display: flex
+        padding: 24px 24px 0px 24px
+        flex-direction: column
+        align-items: center
+        gap: 12px
+        align-self: stretch

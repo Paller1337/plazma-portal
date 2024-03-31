@@ -39,7 +39,7 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
 export default function OrderServices(props) {
     const [modalIsOpen, setModalIsOpen] = useState(false)
     const { state, dispatch } = useCart()
-    const { services } = state
+    const { food } = state
     const [visibleLoadingOverlay, setVisibleLoadingOverlay] = useState(false)
 
     const [guestAccount, setGuestAccount] = useState<{
@@ -71,7 +71,11 @@ export default function OrderServices(props) {
             throw error;
         }
     }
-
+    
+    useEffect(() => {
+        console.log('food: ', food)
+        console.log('state: ', state)
+    }, [food,state])
     useEffect(() => {
         const initGuestInfo = async () => {
             const token = Cookies.get('session_token')
@@ -101,7 +105,7 @@ export default function OrderServices(props) {
     const handleCheckout = async () => {
         setVisibleLoadingOverlay(true)
 
-        if (services.items.length === 0) return
+        if (food.items.length === 0) return
         const token = Cookies.get('session_token')
         const res = await axiosInstance.post('/api/token/decode', {
             token
@@ -111,7 +115,7 @@ export default function OrderServices(props) {
 
             const guestAccount = await getGuestAccountById(decoded.accountId)
 
-            const serviceOrder = state.services.items.map(x => ({ service: parseInt(x.id), quantity: x.quantity }))
+            const serviceOrder = state.food.items.map(x => ({ service: parseInt(x.id), quantity: x.quantity }))
             const nowTime = DateTime.now().toISO()
             console.log('guestAccount: ', guestAccount)
 
@@ -121,38 +125,41 @@ export default function OrderServices(props) {
             }
             try {
                 const response = await sendOrderToTelegram(state); // Предполагается, что здесь вызывается функция отправки заказа
-                const responseStrapi = await createServiceOrder({
-                    order: serviceOrder,
-                    orderInfo: {
-                        create_at: nowTime,
-                        description: orderComment,
-                        status: 'new',
-                        customer: {
-                            name: guestAccount.attributes.firstName,
-                            phone: orderPhone,
-                            room: guestAccount.attributes.roomId,
-                            guest_account: guestAccount.id,
-                        },
-                        paymentType: orderPayment,
-                        previous_status: 'new',
-                    }
-                })
+                // const responseStrapi = await createServiceOrder({
+                //     order: serviceOrder,
+                //     orderInfo: {
+                //         create_at: nowTime,
+                //         description: orderComment,
+                //         status: 'new',
+                //         customer: {
+                //             name: guestAccount.attributes.firstName,
+                //             phone: orderPhone,
+                //             room: guestAccount.attributes.roomId,
+                //             guest_account: guestAccount.id,
+                //         },
+                //         paymentType: orderPayment,
+                //         previous_status: 'new',
+                //     }
+                // })
 
                 if (response.message) {
-                    // toast.success('Заказ успешно отправлен!')
+                    toast.success('Заказ успешно отправлен!')
                     console.log(state)
                     console.log('serviceOrder: ', serviceOrder)
-                    dispatch({ type: 'CLEAR_CART', category: 'services' }); // Очистить корзину услуг
-                }
-
-                if (responseStrapi) {
-                    // toast.success('Успешный заказ!')
                     setModalIsOpen(true)
                     setVisibleLoadingOverlay(false)
 
-                    console.log('responseStrapi: ', responseStrapi)
-                    dispatch({ type: 'CLEAR_CART', category: 'services' }); // Очистить корзину услуг
+                    dispatch({ type: 'CLEAR_CART', category: 'food' });    // Очистить корзину еды
                 }
+
+                // if (responseStrapi) {
+                //     // toast.success('Успешный заказ!')
+                //     setModalIsOpen(true)
+                //     setVisibleLoadingOverlay(false)
+
+                //     console.log('responseStrapi: ', responseStrapi)
+                //     dispatch({ type: 'CLEAR_CART', category: 'food' });    // Очистить корзину еды
+                // }
             } catch (error) {
                 toast.error('Ошибка при отправке заказа.')
             }
@@ -193,17 +200,17 @@ export default function OrderServices(props) {
                         </div>
                     </div>
                     <div className='order-types'>
-                        <div className='order-types__type active'>
+                        <Link className='order-types__type' href={'/order/services'}>
                             Услуги
-                        </div>
-
-                        <Link className='order-types__type' href={'/order/food'}>
-                            Еда и напитки
                         </Link>
+
+                        <div className='order-types__type active'>
+                            Еда и напитки
+                        </div>
                     </div>
                     <div className='order-body'>
-                        {services.items.length !== 0 ?
-                            services.items.map((x, i) =>
+                        {food.items.length !== 0 ?
+                            food.items.map((x, i) =>
                                 <OrderItem
                                     key={i + x.title}
                                     productId={x.id}
@@ -211,7 +218,7 @@ export default function OrderServices(props) {
                                     desc={x.price + ' ₽'}
                                     image={x.imageUrl}
                                     count={x.quantity}
-                                    category='services'
+                                    category='food'
                                 />
                             )
                             :
@@ -244,7 +251,7 @@ export default function OrderServices(props) {
                                 }
                             }}
                             defaultValue={formatNumber(orderPhone)}
-                            disabled={services.items.length === 0}
+                            disabled={food.items.length === 0}
                         />
 
                         <Select
@@ -257,7 +264,7 @@ export default function OrderServices(props) {
                             ]}
                             onChange={(v) => setOrderPayment(v)}
                             defaultValue={orderPayment}
-                            disabled={services.items.length === 0}
+                            disabled={food.items.length === 0}
                         />
 
                         <Textarea
@@ -267,16 +274,16 @@ export default function OrderServices(props) {
                             placeholder='Ваш комментарий'
                             // @ts-ignore
                             onInput={(v) => setOrderComment(v.target.value)}
-                            disabled={services.items.length === 0}
+                            disabled={food.items.length === 0}
                         />
 
                         <div className='order-score'>
                             <div className='order-score__amount'>
                                 <span className='order-score__title'>Сумма заказа</span>
-                                <span className='order-score__sum'>{services.total} ₽</span>
+                                <span className='order-score__sum'>{food.total} ₽</span>
                             </div>
                             <div className='order-score__button' onClick={handleCheckout}
-                                style={services.items.length === 0 ? {
+                                style={food.items.length === 0 ? {
                                     pointerEvents: 'none',
                                     background: '#aaa'
                                 } : {}}

@@ -81,7 +81,7 @@ export default function SupportTicketItem(props: SupportTicketItemProps) {
             </div>
 
             <div className='guest-order__buttons'>
-                <Button text='Пожаловаться' stretch />
+                <Button text='Позвонить' stretch onClick={() => window.location.href = `tel:${DEFAULTS.PHONE_NUMBERS.reception}`} />
             </div>
         </div>
     )

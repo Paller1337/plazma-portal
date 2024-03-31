@@ -4,16 +4,20 @@ import PromoSlider from '@/components/PromoSlider'
 import WelcomeScreen from '@/components/WelcomeScreen'
 import { useAuth } from 'context/AuthContext'
 import { useOrders } from 'context/OrderContext'
+import { axiosInstance } from 'helpers/axiosInstance'
 import useIsPwa from 'helpers/frontend/pwa'
 import { SECRET_KEY, decodeToken } from 'helpers/login'
 import { getServiceOrdersByGuestId, servicesFromRes } from 'helpers/order/services'
+import { formatTicketMessage, ticketStatus, ticketStatusColor } from 'helpers/support/tickets'
 import { withAuthServerSideProps } from 'helpers/withAuthServerSideProps'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import { GetServerSideProps } from 'next'
 import { useRouter } from 'next/router'
-import { useEffect } from 'react'
+import { WallWallpostFull } from 'node_modules/vk-io/lib/api/schemas/objects'
+import { useEffect, useState } from 'react'
 import { ReactSVG } from 'react-svg'
 import { IServiceOrder, TOrderStatus } from 'types/order'
+import { ISupportTicket } from 'types/support'
 
 const slides = [
     {
@@ -47,6 +51,7 @@ const slides = [
 
 interface IndexPageProps {
     orders?: IServiceOrder[]
+    slider?: WallWallpostFull[]
 }
 
 export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(async (context) => {
@@ -66,9 +71,11 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
 
         const orders: IServiceOrder[] = servicesFromRes(res)
 
+        const vkPosts = (await axiosInstance('/api/slider')).data.posts
         return {
             props: {
                 orders: orders,
+                slider: vkPosts,
             } as IndexPageProps
         }
     } catch (error) {
@@ -85,6 +92,8 @@ export default function IndexPage(props: IndexPageProps) {
     const { state } = useOrders()
     // @ts-ignore
     const orders: IServiceOrder[] = state.service_orders
+    const supportTicks: ISupportTicket[] = state.support_tickets
+    const [sliderData, setSliderData] = useState(null)
 
     function formatOrderMessage(orderCount) {
         let orderWord = 'заказов';
@@ -115,13 +124,47 @@ export default function IndexPage(props: IndexPageProps) {
         }
     }
 
-    console.log('orders: ', orders)
+    console.log('SLIDER POSTS: ', props.slider)
+
+    function parseWallText(text) {
+        const headPattern = /H: (.*?)(?=\n|$)/
+        const bodyPattern = /B: (.*?)(?=\n|$)/
+        const linkPattern = /L: (\S+)/
+
+        const headMatch = text.match(headPattern)
+        const bodyMatch = text.match(bodyPattern)
+        const linkMatch = text.match(linkPattern)
+
+        return {
+            head: headMatch ? headMatch[1] : '',
+            body: bodyMatch ? bodyMatch[1] : '',
+            link: linkMatch ? linkMatch[1] : ''
+        }
+    }
+
+    const findSlides = (wall: WallWallpostFull[]) => {
+        if(!wall) return
+        return wall.map(post => ({
+            img: post.attachments.filter(att => att.type == 'photo')[0].photo.sizes.filter(size => size.height > 300 && size.width > 600)[0].url,
+            // text: post.text,
+            title: parseWallText(post.text).head,
+            desc: parseWallText(post.text).body,
+            btn: {
+                name: 'Открыть',
+                link: parseWallText(post.text).link
+            },
+        }))
+    }
+    useEffect(() => setSliderData(() => findSlides(props.slider)), [])
+
+    console.log('state: ', state)
     const workOrders = orders.filter(x => x.orderInfo.status !== 'done')
     console.log('workOrders: ', workOrders)
 
+    const openedTicks = supportTicks.filter(x => x.status !== 'closed')
     return (<>
         <main>
-            <PromoSlider slides={slides} />
+            <PromoSlider slides={sliderData} />
 
             {workOrders.length > 0 ?
                 <div className='index-nav index-orders'>
@@ -152,9 +195,9 @@ export default function IndexPage(props: IndexPageProps) {
                 />
 
                 <IndexNavButton
-                    title='Помощь'
-                    desc='Ваша заявка в очереди'
-                    status='#f23'
+                    title={openedTicks.length > 0 ? formatTicketMessage(openedTicks.length, true) : 'Помощь'}
+                    desc={openedTicks.length > 0 ? ticketStatus(openedTicks[0]?.status) : 'Нет открытых заявок'}
+                    status={openedTicks.length > 0 ? ticketStatusColor(openedTicks[0]?.status) : '#fff'}
                     svgName='help'
                     isHelpButton
                 />

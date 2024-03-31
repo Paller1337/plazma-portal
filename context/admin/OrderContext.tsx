@@ -32,7 +32,11 @@ type GlobalStateType = {
 };
 
 type CacheContextType = {
-    state: GlobalStateType
+    state: GlobalStateType,
+    clients?: {
+        count: number
+        list: any
+    }
 }
 // Создаем контекст для заказов
 const OrderContext = createContext<CacheContextType>({ state: initialState })
@@ -170,6 +174,8 @@ export const OrderProvider = ({ children }) => {
     const { isAdminAuthenticated, currentUser } = useAuth()
     const [ordersIsInit, setOrdersIsInit] = useState(false)
     const socketRef = useRef(null)
+    const [online, setOnline] = useState(0)
+    const [clientsList, setClientsList] = useState([])
 
     useEffect(() => {
         async function fetchAndInitializeOrders() {
@@ -204,7 +210,7 @@ export const OrderProvider = ({ children }) => {
     useEffect(() => {
         console.log('Orders State: ', state)
     }, [state])
-    
+
 
     useEffect(() => {
         console.log('socket isAuth: ', isAdminAuthenticated)
@@ -224,6 +230,12 @@ export const OrderProvider = ({ children }) => {
 
                 socket.on('connect', () => {
                     console.log('Connected to Strapi WebSocket');
+                })
+
+                socket.on('portalOnline', (data) => {
+                    console.log('portalOnline: ', data)
+                    setOnline(data.online as number)
+                    setClientsList(data.clients)
                 })
 
                 socket.on('orderStatusChange', (data) => {
@@ -273,7 +285,7 @@ export const OrderProvider = ({ children }) => {
                     const textStatus = ticketStatus(newStatus)
                     toast.success(
                         <div>
-                            Новый статус заявки <br/> ({textStatus})
+                            Новый статус заявки <br /> ({textStatus})
                         </div>
                     )
                 })
@@ -315,7 +327,7 @@ export const OrderProvider = ({ children }) => {
     }, [isAdminAuthenticated, currentUser])
 
     return (
-        <OrderContext.Provider value={{ state }}>
+        <OrderContext.Provider value={{ state, clients: { count: online, list: clientsList } }}>
             {children}
         </OrderContext.Provider>
     )

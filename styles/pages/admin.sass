@@ -45,7 +45,8 @@
         gap: 12px
         @media screen and ( max-width: 1000px )
             overflow-x: scroll
-            
+            overflow-y: hidden
+
         &__item
             height: 40px
             padding: 0 12px 0 18px
@@ -144,6 +145,25 @@
     border: 1px solid rgba(0, 0, 0, 0.05)
     background: #FFF
     position: relative
+    &__additional
+        display: flex
+        justify-content: center
+        align-items: center
+        padding: 4px 0
+        font-size: 14px
+        font-weight: 500
+        gap: 8px
+        &-btn
+            padding: 4px 12px
+            font-size: 14px
+            font-weight: 500
+            color: #fff
+            background: var(--mantine-color-green-filled)
+            border-radius: 8px
+            cursor: pointer
+            &:hover
+                background: var(--mantine-color-green-filled-hover)
+
     &__badge
         position: absolute
         right: 8px
@@ -248,6 +268,7 @@
             align-items: flex-start
             gap: 8px
             align-self: stretch
+            height: 150px
         &ItemWrap
             display: flex
             flex-direction: column

@@ -20,21 +20,27 @@ export default function OrderItem(props: OrderItemPorps) {
     }
 
     const incrementQuantity = () => {
-        dispatch({ type: 'UPDATE_QUANTITY', category: 'services', id: props.productId, quantity: props.count + 1 })
+        dispatch({ type: 'UPDATE_QUANTITY', category: props.category, id: props.productId, quantity: props.count + 1 })
     };
 
     const decrementQuantity = () => {
         if (props.count > 1) {
-            dispatch({ type: 'UPDATE_QUANTITY', category: 'services', id: props.productId, quantity: props.count - 1 })
+            dispatch({ type: 'UPDATE_QUANTITY', category: props.category, id: props.productId, quantity: props.count - 1 })
         }
     }
 
     return (
         <div className='order-item'>
             <div className='order-item__meta'>
-                <Image className='order-item__image' width={60} height={60}
-                    src={props.image} alt=''
-                />
+                {props.image ?
+                    <Image className='order-item__image' width={60} height={60}
+                        src={props.image} alt=''
+                    />
+                    :
+                    <Image className='order-item__image' width={60} height={60}
+                        src={'/images/no-photo-60x60.png'} alt=''
+                    />
+                }
                 <div className='order-item__col'>
                     <span className='order-item__title'>{props.title}</span>
                     <span className='order-item__desc'>{props.desc}</span>

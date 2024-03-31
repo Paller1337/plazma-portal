@@ -141,10 +141,10 @@ export default function SupportTicket(props: ICSupportTicketProps) {
             </div>
 
             <div className='admin-serviceCard__action'>
-                <Button onClick={() => updateStatus(props.ticket.status, 'inwork')} variant="filled" color="blue" size='md' radius={'md'}
-                    style={{ fontSize: 14, fontWeight: 500 }}>В работу</Button>
-                <Button onClick={() => updateStatus(props.ticket.status, 'closed')} variant="filled" color="orange" size='md' radius={'md'}
-                    style={{ fontSize: 14, fontWeight: 500 }}>Завершить</Button>
+                {props.ticket.status !== 'inwork' && <Button onClick={() => updateStatus(props.ticket.status, 'inwork')} variant="filled" color="blue" size='md' radius={'md'}
+                    style={{ fontSize: 14, fontWeight: 500 }}>В работу</Button>}
+                {props.ticket.status !== 'closed' && <Button onClick={() => updateStatus(props.ticket.status, 'closed')} variant="filled" color="orange" size='md' radius={'md'}
+                    style={{ fontSize: 14, fontWeight: 500 }}>Завершить</Button>}
             </div>
         </div>
     )

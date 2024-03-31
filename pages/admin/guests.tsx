@@ -1,5 +1,5 @@
 import ServiceOrder from '@/components/admin/ServiceOrder'
-import { Flex } from '@mantine/core'
+import { Flex, Table } from '@mantine/core'
 import { getRooms } from 'helpers/bnovo/getRooms'
 import { GetServerSideProps } from 'next'
 import { useEffect, useState } from 'react'
@@ -59,7 +59,7 @@ const PageNavItem = (props: PageNavItemProps) => {
     )
 }
 
-export default function AdminServicesPage(props: AdminSupportPageProps) {
+export default function AdminGuestsPage(props: AdminSupportPageProps) {
     const [currentNav, setCurrentNav] = useState<TSupportTicketStatus>('new')
     const hotelRooms = props.rooms?.filter(x => x.tags !== '')
     const { state } = useAdminOrders()
@@ -108,6 +108,25 @@ export default function AdminServicesPage(props: AdminSupportPageProps) {
         loadTickets((query.status as string) as TSupportTicketStatus)
     }, [state.support_tickets, query.status])
 
+    // const rows = elements.map((element) => (
+    //     <Table.Tr key={element.name}>
+    //         <Table.Td>{element.position}</Table.Td>
+    //         <Table.Td>{element.name}</Table.Td>
+    //         <Table.Td>{element.symbol}</Table.Td>
+    //         <Table.Td>{element.mass}</Table.Td>
+    //     </Table.Tr>
+    // ));
+
+    // const ths = (
+    //     <Table.Tr>
+    //         <Table.Th>Element position</Table.Th>
+    //         <Table.Th>Element name</Table.Th>
+    //         <Table.Th>Symbol</Table.Th>
+    //         <Table.Th>Atomic mass</Table.Th>
+    //     </Table.Tr>
+    // )
+
+
     return (
         <>
             <main className='admin-page'>
@@ -128,21 +147,12 @@ export default function AdminServicesPage(props: AdminSupportPageProps) {
                     </div>
 
                     <div className='admin-serviceCards'>
-                        {tickets.length > 0 ? tickets.map((ticket, i) => {
-                            const serviceRoom = hotelRooms.find(x => x.id === ticket.customer?.room)?.tags
-                            const orderClass = `service-order ${ticket.isEntering ? 'service-order-enter' : ''}`
-                            // console.log('Заказ ', service.orderInfo.customer.name, 'Комната: ', serviceRoom)
-                            return (
-                                <div className={`service-order ${orderClass}`} key={ticket.id}>
-                                    <SupportTicket
-                                        key={`sprt-${ticket.id}`}
-                                        id={ticket.id}
-                                        ticket={ticket}
-                                        roomName={serviceRoom}
-                                    />
-                                </div>
-                            )
-                        }) : <>Нет заявок</>}
+                        {/* <Table captionSide="bottom">
+                            <Table.Caption>Some elements from periodic table</Table.Caption>
+                            <Table.Thead>{ths}</Table.Thead>
+                            <Table.Tbody>{rows}</Table.Tbody>
+                            <Table.Tfoot>{ths}</Table.Tfoot>
+                        </Table> */}
                     </div>
                 </Flex>
             </main>

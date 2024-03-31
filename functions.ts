@@ -14,7 +14,6 @@ export const getWordEnding = (count) => {
 export const useFooterBottomPadding = (pb: number) => {
     useEffect(() => {
         const footer = document.getElementsByClassName('footer')[0] as HTMLDivElement
-        
         if (footer) {
             footer.style.marginBottom = `${pb}px`;
         }
