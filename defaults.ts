@@ -17,10 +17,10 @@ export module DEFAULTS {
     }
 
     export const SOCKET = {
-        URL: SOCKET_URL.local,
+        URL: SOCKET_URL.prod,
     }
     export const STRAPI = {
-        url: STRAPI_URL.local,
+        url: STRAPI_URL.prod,
     }
 
     export const IIKO = {
