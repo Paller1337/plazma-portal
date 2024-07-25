@@ -36,6 +36,7 @@ export async function getBookingByRoomId(id: number) {
 
     const bookingWithNeededRoom = bookings.filter(booking => booking.room_id === id.toString() && booking.status_id !== 4);
     // status_id: 1 - Новое
+    // status_id: 2 - Отменен
     // status_id: 3 - Заселен
     // status_id: 4 - Выехал
     // status_id: 5 - Проверено

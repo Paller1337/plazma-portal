@@ -1,0 +1,114 @@
+.Overlay
+    position: fixed
+    top: 0
+    left: 0
+    right: 0
+    bottom: 0
+    background-color: rgba(0, 0, 0, 0.75)
+    display: flex
+    align-items: flex-end // Это позволяет прижать модальное окно к нижнему краю
+    justify-content: center
+    z-index: 9999
+    animation: fadeInBackground 0.3s ease-out forwards // Используйте эту анимацию для фона
+
+.Auth-Modal
+    position: relative
+    bottom: 0
+    left: 0
+    right: 0
+    background: white
+    width: 100%
+    max-width: 650px // Чтобы оно было на всю ширину экрана
+    border-radius: 18px 18px 0 0 // Закругление верхних углов
+    padding: 0px 0px 0px 0
+    box-sizing: border-box
+    transform: translateY(0) // Прижимаем к нижнему краю
+    animation: fadeInUp 0.3s ease-out forwards
+    overflow: hidden
+
+    &__close
+        position: absolute
+        right: 0
+        top: 0
+        cursor: pointer
+    &__image
+        height: 220px
+        width: 100%
+        img
+            width: 100%
+            height: 100%
+            object-fit: cover
+
+    &__content
+        display: flex
+        flex-direction: row
+
+    &__slides
+        display: flex
+        flex-direction: row
+        transition: all .24s ease-in-out
+        width: 100%
+
+    &__slide
+        display: flex
+        flex-direction: column
+        align-items: center
+        min-width: 100%
+
+    &__heading
+        display: flex
+        flex-direction: column
+        gap: 4px
+        width: 100%
+        align-items: center
+        padding: 24px 0
+        .title
+            font-size: 24px
+            font-weight: 600
+            color: #262626
+        .description
+            font-size: 14px
+            font-weight: 400
+            color: #8C8DA8
+    &__form
+        display: flex
+        align-items: center
+        flex-direction: column
+        gap: 8px
+        width: 100%
+        max-width: 430px
+        margin: 0 auto
+        padding: 12px 0 24px 0
+
+        &-hidden
+            display: flex
+            flex-direction: column
+            align-items: center
+            gap: 4px
+            margin: 18px 0
+            .error
+                color: #f23
+                opacity: 0
+                transition: all .14s ease-in-out
+                font-size: 13px
+                font-weight: 400
+                &.visible
+                    opacity: 1
+            span
+                font-size: 15px
+                font-weight: 500
+                color: #262626
+    &__actions
+        display: flex
+        padding: 24px 24px 24px 24px
+        flex-direction: row
+        align-items: center
+        gap: 12px
+        align-self: stretch
+        flex-wrap: nowrap
+        background: #fff
+        border-radius: 12px 12px 12px 0
+        box-shadow: rgba(0, 0, 0, 0.2) 0px 0px 11px
+        margin-top: auto
+.modal-button
+  // Ваши стили для кнопки

@@ -11,6 +11,8 @@ import { useAuth } from 'context/AuthContext'
 import { checkOrderStatus } from 'helpers/order/order'
 import { GetServerSideProps } from 'next'
 import useIsPwa from 'helpers/frontend/pwa'
+import AuthModal from './AuthModal'
+import Button from './Button'
 
 interface AppLayoutProps {
     children: React.ReactNode | React.ReactPortal
@@ -22,14 +24,13 @@ interface AppLayoutProps {
 
 
 export default function AppLayout(props: AppLayoutProps): JSX.Element {
-    const { isAuthenticated } = useAuth()
     const isPWA = useIsPwa()
 
     return (<>
         <div className='wrapper' data-barba="wrapper">
-            <Header />
+            {/* <Header /> */}
             {props.children}
             <Footer />
         </div >
     </>)
-}
+} 

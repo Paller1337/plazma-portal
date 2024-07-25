@@ -1,9 +1,13 @@
 import IndexNavButton from '@/components/IndexNavButton'
 import NavBar from '@/components/NavBar'
 import PromoSlider from '@/components/PromoSlider'
+import StoriesModal from '@/components/Story'
 import WelcomeScreen from '@/components/WelcomeScreen'
+import { CardProps } from '@mantine/core'
+import axios from 'axios'
 import { useAuth } from 'context/AuthContext'
 import { useOrders } from 'context/OrderContext'
+import { DEFAULTS } from 'defaults'
 import { axiosInstance } from 'helpers/axiosInstance'
 import useIsPwa from 'helpers/frontend/pwa'
 import { SECRET_KEY, decodeToken } from 'helpers/login'
@@ -12,9 +16,10 @@ import { formatTicketMessage, ticketStatus, ticketStatusColor } from 'helpers/su
 import { withAuthServerSideProps } from 'helpers/withAuthServerSideProps'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import { GetServerSideProps } from 'next'
+import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { WallWallpostFull } from 'node_modules/vk-io/lib/api/schemas/objects'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { ReactSVG } from 'react-svg'
 import { IServiceOrder, TOrderStatus } from 'types/order'
 import { ISupportTicket } from 'types/support'
@@ -52,30 +57,76 @@ const slides = [
 interface IndexPageProps {
     orders?: IServiceOrder[]
     slider?: WallWallpostFull[]
+    categories?: {
+        name: string,
+        description: string,
+        priorirty: number,
+        articles: {
+            id: number,
+            title: string,
+            description: string,
+            content: string,
+            image: string,
+            preview_size: 'big' | 'std' | 'min',
+            tag: string,
+            short_desc: string,
+        }[]
+        stores: {
+            id: number,
+            title: string,
+            description: string,
+            image: string,
+            preview_size: 'big' | 'std' | 'min',
+            tag: string,
+            short_desc: string,
+        }[]
+    }[]
+
 }
+
 
 export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(async (context) => {
     try {
 
-        const token = context.req.headers.cookie?.split('; ').find(c => c.startsWith('session_token='))?.split('=')[1];
+        const token = context.req.headers.cookie?.split('; ').find(c => c.startsWith('session_token='))?.split('=')[1]
 
-        if (!token) {
-            return { props: {} };
-        }
-        const decoded = jwt.verify(token, SECRET_KEY) as JwtPayload
-        const res = await getServiceOrdersByGuestId(decoded.accountId)
+        const cat = await axios.get(`${DEFAULTS.STRAPI.url}/api/categories`, {
+            params: {
+                'populate': 'deep,3',
+            }
+        })
 
-        if (!res) {
-            throw new Error(`Заказов нет`);
-        }
-
-        const orders: IServiceOrder[] = servicesFromRes(res)
+        const categories = cat.data.data.map(c => ({
+            name: c.attributes.name,
+            description: c.attributes.description,
+            priorirty: c.attributes.priority,
+            articles: c.attributes.articles.data ? c.attributes.articles.data.map(a => ({
+                id: a.id,
+                title: a.attributes.title,
+                description: a.attributes.description,
+                content: a.attributes.content,
+                image: a.attributes.image.data[0].attributes.url,
+                preview_size: a.attributes.preview_size || 'min',
+                tag: a.attributes.tag || '',
+                short_desc: a.attributes.short_desc || '',
+            })) : [],
+            stores: c.attributes?.stores.data ? c.attributes?.stores.data.map(s => ({
+                id: s.id,
+                title: s.attributes.title,
+                description: s.attributes?.description,
+                image: s.attributes?.image.data.attributes.url,
+                preview_size: s.attributes?.preview_size || 'min',
+                tag: s.attributes?.tag || '',
+                short_desc: s.attributes?.short_desc || '',
+            })) : [],
+        }))
 
         const vkPosts = (await axiosInstance('/api/slider')).data.posts
         return {
             props: {
-                orders: orders,
+                // orders: orders,
                 slider: vkPosts,
+                categories: categories,
             } as IndexPageProps
         }
     } catch (error) {
@@ -88,11 +139,39 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
     }
 })
 
+interface MainCardProps {
+    href?: string
+    size: 'std' | 'min' | 'big'
+    image: string
+    title: string
+    subtitle?: string
+    tag?: string
+}
+
+
+export function MainCard(props: MainCardProps) {
+    return (
+        <Link href={props.href} className={`card-${props.size}`}>
+            <div className='main-cards__item'>
+                <div className='main-cards__item-image'>
+                    {props.tag ? <span className='main-cards__item-tag'>{props.tag}</span> : <></>}
+                    <img src={props.image} alt='' />
+                </div>
+                <div className='main-cards__item-text'>
+                    <div className='main-cards__item-title'>{props.title}</div>
+                    {props.subtitle ? <div className='main-cards__item-subtitle'>{props.subtitle}</div> : <></>}
+                </div>
+            </div>
+        </Link>
+    )
+}
+
 export default function IndexPage(props: IndexPageProps) {
+    const [modalIsOpen, setModalIsOpen] = useState(false)
     const { state } = useOrders()
     // @ts-ignore
-    const orders: IServiceOrder[] = state.service_orders
-    const supportTicks: ISupportTicket[] = state.support_tickets
+    const orders: IServiceOrder[] = []
+    const supportTicks: ISupportTicket[] = []
     const [sliderData, setSliderData] = useState(null)
 
     function formatOrderMessage(orderCount) {
@@ -124,7 +203,9 @@ export default function IndexPage(props: IndexPageProps) {
         }
     }
 
-    console.log('SLIDER POSTS: ', props.slider)
+    const closeModal = () => {
+        setModalIsOpen(false)
+    }
 
     function parseWallText(text) {
         const headPattern = /H: (.*?)(?=\n|$)/
@@ -143,7 +224,7 @@ export default function IndexPage(props: IndexPageProps) {
     }
 
     const findSlides = (wall: WallWallpostFull[]) => {
-        if(!wall) return
+        if (!wall) return
         return wall.map(post => ({
             img: post.attachments.filter(att => att.type == 'photo')[0].photo.sizes.filter(size => size.height > 300 && size.width > 600)[0].url,
             // text: post.text,
@@ -156,14 +237,39 @@ export default function IndexPage(props: IndexPageProps) {
         }))
     }
     useEffect(() => setSliderData(() => findSlides(props.slider)), [])
+    // useEffect(() => console.log('categories ', props.categories), [])
+    // useEffect(() => console.log('props ', props), [])
 
-    console.log('state: ', state)
+    // useEffect(() => {
+    //     const fetch = async () => {
+
+    //     }
+    //     fetch()
+    // }, [])
+    // console.log('state: ', state)
     const workOrders = orders.filter(x => x.orderInfo.status !== 'done')
-    console.log('workOrders: ', workOrders)
+    // console.log('workOrders: ', workOrders)
 
     const openedTicks = supportTicks.filter(x => x.status !== 'closed')
     return (<>
-        <main>
+        <div className='index-preview'>
+            <img src='/images/welcome.png' alt='' />
+        </div>
+
+        <StoriesModal isOpen={modalIsOpen} onClose={closeModal} />
+
+        <main className='swing-main'>
+            <div className='index-header'>
+                <div className='index-header__content'>
+                    <span className='index-header__title'>Парк-отель Plazma</span>
+                    <div className='index-header__avatar' onClick={() => setModalIsOpen(true)}>
+                        <div className='index-header__avatar-gr' />
+                        <div className='index-header__avatar-image'>
+                            <img src='/images/logo.png' alt='' />
+                        </div>
+                    </div>
+                </div>
+            </div>
             <PromoSlider slides={sliderData} />
 
             {workOrders.length > 0 ?
@@ -187,12 +293,12 @@ export default function IndexPage(props: IndexPageProps) {
                     svgName='map'
                 /> */}
 
-                <IndexNavButton
+                {/* <IndexNavButton
                     title='Информация'
                     desc='Вопросы и ответы на них'
                     svgName='question'
                     link='/help#info'
-                />
+                /> */}
 
                 <IndexNavButton
                     title={openedTicks.length > 0 ? formatTicketMessage(openedTicks.length, true) : 'Помощь'}
@@ -201,8 +307,62 @@ export default function IndexPage(props: IndexPageProps) {
                     svgName='help'
                     isHelpButton
                 />
+                <div className='index-nav__button-group'>
+                    <div className='index-nav__button-cust'>
+                        <ReactSVG src='/svg/vk.svg' />
+                    </div>
+                    <div className='index-nav__button-cust'>
+                        <ReactSVG src='/svg/tg.svg' />
+                    </div>
+                    <div className='index-nav__button-cust'>
+                        <ReactSVG src='/svg/star.svg' />
+                        Оставить отзыв
+                    </div>
+                </div>
             </div>
-        </main>
+
+            <div className='index-content'>
+                {props.categories ? props.categories.sort((a, b) => a.priorirty - b.priorirty).map((category, i) => {
+                    if (category?.articles?.length > 0 || category?.stores?.length > 0)
+                        return (
+                            <div key={category.name + i} className='index-content__category'>
+                                {category.name && category.priorirty !== 0 ?
+                                    <span className='index-content__category-title'>
+                                        <span className='title'>{category.name}</span>
+                                        {category.description ? <span className='description'>{category.description}</span> : <></>}
+                                    </span>
+                                    : <></>}
+                                <div className='main-cards__wrapper'>
+                                    {category.articles ? category.articles.map((article, j) =>
+                                        <MainCard
+                                            key={article.title + j}
+                                            image={DEFAULTS.STRAPI.url + article.image}
+                                            size={article.preview_size}
+                                            title={article.title}
+                                            subtitle={article.short_desc}
+                                            tag={article.tag}
+                                            href={`/article/${article.id}`}
+                                        />
+                                    ) : <></>}
+
+                                    {category.stores ? category.stores.map((store, j) =>
+                                        <MainCard
+                                            key={store.title + j}
+                                            image={DEFAULTS.STRAPI.url + store.image}
+                                            size={store.preview_size}
+                                            title={store.title}
+                                            subtitle={store.short_desc}
+                                            tag={store.tag}
+                                            href={`/store/${store.id}`}
+                                        />
+                                    ) : <></>}
+                                </div>
+                            </div>
+                        )
+                }) : <></>}
+
+            </div>
+        </main >
 
 
         <NavBar page='index' />

@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const token = req.body.token;
-    console.log('token ', token)
+    // console.log('token ', token)
 
     try {
         if (token) {

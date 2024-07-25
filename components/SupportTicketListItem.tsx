@@ -22,7 +22,7 @@ export default function SupportTicketItem(props: SupportTicketItemProps) {
         switch (props.ticket.status) {
             case 'new':
                 return {
-                    text: 'Новый',
+                    text: 'Новая',
                     color: '#228be6'
                 };
             case 'inwork':
@@ -32,7 +32,7 @@ export default function SupportTicketItem(props: SupportTicketItemProps) {
                 };
             case 'closed':
                 return {
-                    text: 'Готов',
+                    text: 'Готова',
                     color: '#868e96',
                 };
             default:

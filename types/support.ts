@@ -1,4 +1,6 @@
-import { IOrderCustomer } from './order'
+// import { IOrderCustomer } from './order'
+
+import { IGuestAccount } from './session'
 
 export interface ISupportTicket {
     id?: number
@@ -7,7 +9,8 @@ export interface ISupportTicket {
     close_at?: string
     status?: TSupportTicketStatus
     previous_status?: TSupportTicketStatus
-    customer?: IOrderCustomer
+    // customer?: IOrderCustomer
+    guest?: IGuestAccount
     messages?: ISupportTicketMessage[]
 }
 

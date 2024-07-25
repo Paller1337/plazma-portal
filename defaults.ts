@@ -16,11 +16,13 @@ export module DEFAULTS {
         }
     }
 
+    export const MAIN_URL = PORTAL.url.dev
+
     export const SOCKET = {
-        URL: SOCKET_URL.prod,
+        URL: SOCKET_URL.local,
     }
     export const STRAPI = {
-        url: STRAPI_URL.prod,
+        url: STRAPI_URL.local,
     }
 
     export const IIKO = {

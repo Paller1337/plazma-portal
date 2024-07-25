@@ -73,7 +73,7 @@ export default function IndexNavButton(props: IndexNavButtonProps) {
 
             {props.isOrderButton ?
                 <div className='index-nav__inner-btn index-nav__inner-btn_dark'
-                    onClick={() => router.push('/order/history')}>
+                    onClick={() => router.push('/basket/history')}>
                     Мои заказы
                 </div>
 

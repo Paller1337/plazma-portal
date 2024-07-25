@@ -8,10 +8,10 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { ReactSVG } from 'react-svg'
 import { BlocksRenderer } from '@strapi/blocks-react-renderer'
-import { LoadingOverlay, Textarea } from '@mantine/core'
+import { LoadingOverlay, Select, Textarea } from '@mantine/core'
 import Button from '@/components/Button'
 import toast from 'react-hot-toast'
-import { createSupportTicket, formatTicketMessage, ticketStatus } from 'helpers/support/tickets'
+import { formatTicketMessage, ticketStatus } from 'helpers/support/tickets'
 import { DateTime } from 'luxon'
 import { getGuestAccountByBookingId, getGuestAccountById } from 'helpers/session/guestAccount'
 import Cookies from 'js-cookie'
@@ -19,6 +19,7 @@ import { axiosInstance } from 'helpers/axiosInstance'
 import SupportTicketSendModal from '@/components/SupportTicketSendModal'
 import { ISupportTicket, TSupportTicketStatus } from 'types/support'
 import { useOrders } from 'context/OrderContext'
+import { useCart } from 'context/CartContext'
 
 
 interface HelpPageProps {
@@ -65,6 +66,8 @@ const FAQCard = (props: FAQCardProps) => {
 }
 
 export default function HelpPage(props: HelpPageProps) {
+    const { currentUser, isAuthenticated } = useAuth()
+    const { hotelRooms } = useCart()
     const [supportComment, setSupportComment] = useState('')
     const [supportFormClicked, setSupportFormClicked] = useState(false)
     const [visibleLoadingOverlay, setVisibleLoadingOverlay] = useState(false)
@@ -76,10 +79,46 @@ export default function HelpPage(props: HelpPageProps) {
     // @ts-ignore
     const tickets: ISupportTicket[] = state.support_tickets
 
+    const rooms = hotelRooms?.filter(x => x.tags !== '').map(room => ({
+        value: room.id.toString(),
+        label: room.tags
+    }))
+
+    const placeTicket = async (ticketData) => {
+        try {
+            const response = await axiosInstance.post('/api/ticket/create', ticketData)
+            if (response.status === 200) {
+                console.log('Ticket placed successfully:', response.data)
+                return { data: response.data, status: true }
+            } else {
+                console.error('Error placing ticket:', response.data)
+                return { data: response.data, status: false }
+            }
+        } catch (error) {
+            console.error('Error placing ticket:', error)
+            return { data: null, status: false }
+        }
+    }
+
+    const [room, setRoom] = useState({
+        value: '',
+        label: '',
+        error: '',
+    })
 
     const sendSupportTicket = async () => {
         setSupportFormClicked(true)
         if (supportComment.length < 10 || visibleLoadingOverlay) return
+
+        if (!room.label || !room.value) {
+            setRoom(p => ({
+                ...p,
+                error: 'Выберите комнату'
+            }))
+        }
+
+        if (!room.label || !room.value) return
+
 
         setVisibleLoadingOverlay(true)
         const token = Cookies.get('session_token')
@@ -99,38 +138,68 @@ export default function HelpPage(props: HelpPageProps) {
 
             try {
                 // const response = await sendOrderToTelegram(state); // Предполагается, что здесь вызывается функция отправки заказа
-                const responseStrapi = await createSupportTicket({
+                // const responseStrapi = await createSupportTicket({
+                //     // create_at: nowTime,
+                //     // update_at: nowTime,
+                //     // status: 'new',
+                //     // previous_status: 'new',
+                //     customer: {
+                //         name: guestAccount.attributes.firstName,
+                //         phone: guestAccount.attributes.phone,
+                //         room: guestAccount.attributes.roomId,
+                //         guest_account: guestAccount.id,
+                //     },
+                //     // messages: [{
+                //     //     create_at: nowTime,
+                //     //     sender: guestAccount.attributes.firstName,
+                //     //     sender_type: 'guest',
+                //     //     message: supportComment
+                //     // }]
+
+                // })
+
+                const ticketIsPlace = await placeTicket({
+                    guest: currentUser.id, // ID гостя
                     create_at: nowTime,
                     update_at: nowTime,
                     status: 'new',
                     previous_status: 'new',
-                    customer: {
-                        name: guestAccount.attributes.firstName,
-                        phone: guestAccount.attributes.phone,
-                        room: guestAccount.attributes.roomId,
-                        guest_account: guestAccount.id,
-                    },
                     messages: [{
                         create_at: nowTime,
-                        sender: guestAccount.attributes.firstName,
+                        sender: guestAccount.attributes.name,
                         sender_type: 'guest',
                         message: supportComment
-                    }]
-
+                    }],
+                    room: {
+                        label: room.label,
+                        roomId: room.value,
+                    },
                 })
 
-                // if (response.message) {
-                //     console.log('serviceOrder: ', serviceOrder)
-                // }
+                if (!ticketIsPlace.status) return
 
-                if (responseStrapi) {
-                    toast.success('Заявка отправлена!')
-                    setModalIsOpen(true)
-                    setVisibleLoadingOverlay(false)
-                    setSupportComment('')
-                    setSupportFormClicked(false)
-                    console.log('responseStrapi: ', responseStrapi)
+
+                const ticketToTelegram = {
+                    id: ticketIsPlace.data.data.id,
+                    time: DateTime.fromISO(nowTime).toLocaleString(DateTime.DATETIME_MED),
+                    messages: [{
+                        create_at: nowTime,
+                        sender: guestAccount.attributes.name,
+                        sender_type: 'guest',
+                        message: supportComment
+                    }],
+                    guest: guestAccount?.attributes.name
                 }
+
+                // const response = await sendOrderToTelegram(orderToTelegram) // Предполагается, что здесь вызывается функция отправки заказа
+                // if (response.message && ticketIsPlace) {
+                toast.success('Заявка отправлена!')
+                setModalIsOpen(true)
+                setVisibleLoadingOverlay(false)
+                setSupportComment('')
+                setSupportFormClicked(false)
+                // console.log('responseStrapi: ', responseStrapi)
+                // }
             } catch (error) {
                 toast.error('Ошибка при отправке заказа.')
             }
@@ -201,12 +270,28 @@ export default function HelpPage(props: HelpPageProps) {
                                 <span className='support-form__length-alert'>Минимальная длина обращения 10 символов</span>
                                 : <></>
                             }
+                            <Select
+                                label='Номер проживания'
+                                mb={'md'}
+                                size='md'
+                                radius={'md'}
+                                comboboxProps={{ withinPortal: true }}
+                                data={rooms}
+                                placeholder="Комната"
+                                searchable
+                                onChange={value => setRoom(() => ({
+                                    value: value,
+                                    label: rooms.find(x => x.value === value)?.label,
+                                    error: '',
+                                }))}
+                                error={room.error}
+                            />
                             <Button text='Отправить заявку' stretch onClick={sendSupportTicket} />
                         </div>
                     </div>
                     <span id='info' className='faq-title'>Часто задаваемые вопросы</span>
                     <div className='faq-list'>
-                        {props.faqs.length ? props.faqs.map((x, i) => (
+                        {props.faqs?.length ? props.faqs?.map((x, i) => (
                             <FAQCard key={x.attributes.question + i} question={x.attributes.question} answer={x.attributes.answer} />
                         )) : <></>}
                     </div>

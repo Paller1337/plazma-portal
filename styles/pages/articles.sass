@@ -1,0 +1,33 @@
+.article-content
+    padding: 24px
+    p:not(:first-child)
+        margin-top: 24px
+    
+    .image
+        display: flex
+        align-items: center
+        justify-content: center
+        img
+            border-radius: 12px
+            width: 100%
+            object-fit: cover
+    ul
+        padding-left: 24px
+    li  
+        list-style: disc
+
+
+.article    
+    &-preview
+        max-height: 310px
+
+    &-header
+        padding: 0 24px 24px 24px
+        &__content
+            display: flex
+            justify-content: flex-start
+            position: relative
+        &__title
+            font-size: 24px
+            font-weight: 600
+            color: #252525

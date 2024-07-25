@@ -27,7 +27,7 @@ const OrderSendModal = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="OrderSend-Modal__actions">
-                    <Button text='Мои заказы' outlined stretch onClick={() => router.push('/order/history')} />
+                    <Button text='Мои заказы' outlined stretch onClick={() => router.push('/basket/history')} />
                     <Button text='Хорошо!' stretch onClick={onClose} />
                 </div>
             </div>

@@ -1,0 +1,186 @@
+.admin
+    &-wrapper
+        padding: 24px
+        background-image: none !important
+        height: 100vh
+    &-main
+        border-radius: 48px
+        height: 100%
+        background: #fff
+        // min-height: calc( 100vh - 64px )
+        padding: 0
+        display: flex
+        flex-flow: row nowrap
+        overflow: hidden
+        
+    &-nav
+        width: 0
+        min-width: 410px
+        height: 100%
+        border-radius: 48px
+        background: #262E4A
+        display: flex
+        flex-direction: column
+        gap: 10px
+        transition: all .24s ease-in-out
+        overflow: hidden
+        &.min
+            width: 0
+            min-width: 96px
+        &__vs
+            width: 100%
+            height: 1px
+            border-radius: 2px
+            background: #4B5576
+        &__header
+            // background: #ff22343b
+            padding: 24px
+            display: flex
+            flex-direction: column
+            gap: 24px
+            &-content
+                display: flex
+                flex-flow: row nowrap
+                gap: 12px
+                align-items: center
+            &-logo
+                div
+                    display: flex
+            &-info
+                display: flex
+                flex-flow: column nowrap
+            &-title
+                color: #FFF
+                font-family: Montserrat
+                font-size: 20px
+                font-style: normal
+                font-weight: 600
+                line-height: normal
+                white-space: nowrap
+            &-partition
+                color: #FFF
+                font-family: Montserrat
+                font-size: 14px
+                font-style: normal
+                font-weight: 400
+                line-height: normal
+                white-space: nowrap
+            &-hs
+                width: 1px
+                height: 12px
+                border-radius: 2px
+                background: #4B5576
+
+        &__menu
+            display: flex
+            padding: 10px 24px
+            flex-direction: column
+            justify-content: center
+            align-items: flex-start
+            gap: 8px
+            align-self: stretch
+            color: #EEF0F5
+            font-weight: 500
+            width: fit-content
+            min-width: 100%
+            &-link
+                display: flex
+                padding: 12px 0
+                color: #AAAEBA
+                &.active
+                    color: #EEF0F5
+            &-item
+                display: flex
+                flex-flow: row nowrap
+                align-items: center
+                gap: 8px
+                padding: 12px
+                width: 100%
+                border-radius: 8px
+                cursor: pointer
+                white-space: nowrap
+                &-icon
+                    div
+                        display: flex
+                &-badge
+                    border-radius: 24px
+                    width: 24px
+                    height: 24px
+                    display: flex
+                    align-items: center
+                    justify-content: center
+                    background: #FF7F22
+                    color: #fff
+                    max-width: 24px
+                    max-height: 24px
+                    font-size: 12px
+                    font-weight: 500
+                span
+                    width: 100%
+                &.active
+                    background: #EEF0F5
+                    color: #262E4A
+            &-section
+                display: flex
+                flex-flow: column nowrap
+                justify-content: center
+                // gap: 12px
+                align-self: stretch
+                width: fit-content
+                min-width: 100%
+                &-toggle
+                    transition: all .24s ease-in-out
+                    transform: rotate(0deg)
+                    div
+                        display: flex
+                    &.open
+                        transform: rotate(180deg)
+
+                &-header
+                    display: flex
+                    flex-flow: row nowrap
+                    gap: 8px
+                    align-items: center
+                    padding: 12px
+                    border-radius: 8px
+                    width: fit-content
+                    min-width: 100%
+                    white-space: nowrap
+                    &.active
+                        background: #EEF0F5
+                        span
+                            color: #262E4A
+                    span
+                        width: 100%
+                &-logo
+                    div
+                        display: flex
+                &-links
+                    padding: 0px 12px 0px 48px
+        
+        &__footer
+            margin-top: auto
+            // background: #ff22343b
+            padding: 24px
+            display: flex
+            flex-direction: column
+            gap: 24px
+            &-content
+                display: flex
+                flex-flow: row nowrap
+                gap: 12px
+                align-items: center
+            &-item
+                display: flex
+                flex-flow: row nowrap
+                gap: 12px
+                align-items: center
+                color: #EEF0F5
+                font-weight: 500
+                cursor: pointer
+                &-icon
+                    div
+                        display: flex
+.admin-page
+    height: 100%
+    width: 100%

@@ -35,7 +35,7 @@ const PAGES = [
     {
         title: 'Мои заказы',
         logo: 'cart',
-        path: 'order/history',
+        path: 'basket/history',
     },
 ]
 
@@ -46,7 +46,7 @@ export default function NavBar(props: NavBarProps) {
 
     return (<>
         <div className='navbar'>
-            {!isPWA && !isPwaBannerHidden ?
+            {/* {!isPWA && !isPwaBannerHidden ?
                 <div className='pwa-banner'>
                     <div className='pwa-banner__wrapper'>
                         <div className='pwa-banner__text'>
@@ -62,7 +62,7 @@ export default function NavBar(props: NavBarProps) {
                         </div>
                     </div>
                 </div>
-                : <></>}
+                : <></>} */}
 
             <div className='navbar__wrapper'>
                 {PAGES.map(x =>

@@ -7,7 +7,7 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 const nextConfig = {
   images: {
-    // domains: ['strapi.kplazma.ru', '192.168.1.19', 'userapi.com'],
+    domains: ['strapi.kplazma.ru', '192.168.1.19', 'userapi.com'],
     remotePatterns: [
       {
         protocol: "https",

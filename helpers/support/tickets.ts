@@ -1,30 +1,30 @@
 import { ICSupportTicketProps } from '@/components/admin/SupportTicketCard';
 import axios from 'axios'
 import { DEFAULTS } from 'defaults'
-import { IOrderCustomer } from 'types/order'
+// import { IOrderCustomer } from 'types/order'
 import { ISupportTicket, ISupportTicketMessage, TSupportTicketMessageSender, TSupportTicketStatus } from 'types/support';
 
-export async function createSupportTicket(ticket: ISupportTicket) {
-    console.log(ticket)
+// export async function createSupportTicket(ticket: ISupportTicket) {
+//     console.log(ticket)
 
-    try {
-        const response = await axios.post(`${DEFAULTS.STRAPI.url}/api/support-tickets`, {
-            data: {
-                create_at: ticket.create_at || '',
-                update_at: ticket.update_at || '',
-                status: ticket.status || null as TSupportTicketStatus,
-                previous_status: ticket.previous_status || null as TSupportTicketStatus,
-                customer: ticket.customer || null as IOrderCustomer,
-                messages: ticket.messages || null as ISupportTicketMessage[],
-            } as ISupportTicket
-        })
+//     try {
+//         const response = await axios.post(`${DEFAULTS.STRAPI.url}/api/support-tickets`, {
+//             data: {
+//                 create_at: ticket.create_at || '',
+//                 update_at: ticket.update_at || '',
+//                 status: ticket.status || null as TSupportTicketStatus,
+//                 previous_status: ticket.previous_status || null as TSupportTicketStatus,
+//                 customer: ticket.customer || null as IOrderCustomer,
+//                 messages: ticket.messages || null as ISupportTicketMessage[],
+//             } as ISupportTicket
+//         })
 
-        return response.data
-    } catch (error) {
-        console.error('Ошибка во время создания заказа:', error)
-        throw error // Переброс ошибки для дальнейшей обработки
-    }
-}
+//         return response.data
+//     } catch (error) {
+//         console.error('Ошибка во время создания заказа:', error)
+//         throw error // Переброс ошибки для дальнейшей обработки
+//     }
+// }
 
 export async function getSupportTickets(): Promise<ISupportTicket[]> {
     try {

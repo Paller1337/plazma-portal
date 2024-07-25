@@ -1,5 +1,10 @@
 //<Основная адаптивная сетка брэкпоинты
-
+#__next
+    background: #d6dae5
+    background-image: url(/images/pattern.png)
+    background-repeat: repeat
+    background-size: 25%
+    padding-top: 24px
 .container
     max-width: $maxWidthContainer + px
     margin: 0 auto
@@ -26,7 +31,7 @@
         // padding: 0px 26px
 
     &.ny-container
-        @media (max-width: $md2)    
+        @media (max-width: $md2)
             margin-right: 24px
 
 //<Основная адаптивная сетка
@@ -34,7 +39,11 @@
 .wrapper
     width: 100%
     min-height: 100vh
-    // overflow: hidden
+    overflow: hidden
     display: flex
     flex-direction: column
     position: relative
+    max-width: 650px
+    margin: 0 auto
+    // background: #fff
+    border-radius: 24px 24px 0 0

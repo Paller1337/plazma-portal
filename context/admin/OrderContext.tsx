@@ -1,345 +1,343 @@
 import axios from 'axios'
-import { checkOrderStatus } from 'helpers/order/order'
-import Cookies from 'node_modules/@types/js-cookie'
 import React, { createContext, useContext, useReducer, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { io } from 'socket.io-client'
 import { useAuth } from './AuthContext'
 import { DEFAULTS } from 'defaults'
-import { getServiceOrders, getServiceOrdersByGuestId, servicesFromRes } from 'helpers/order/services'
-import { getSupportTickets, getSupportTicketsByGuestId, supportTicketsFromRes, ticketStatus } from 'helpers/support/tickets'
-import { IServiceOrder } from 'types/order'
-import { IServiceOrdered } from 'types/services'
-import { ISupportTicket, TSupportTicketMessageSender } from 'types/support'
+import { ISupportTicket } from 'types/support'
+import { checkOrderStatus } from 'helpers/order/order'
+import { ticketStatus } from 'helpers/support/tickets'
+import { axiosInstance } from 'helpers/axiosInstance'
+import { IOrder, IProduct, IRoomInfo, IStore, IStoreType, TOrderStatus } from 'types/order'
+import { IGuestAccount } from 'types/session'
 
-enum ORDER_TYPES {
-    SERVICE = 'service_orders',
-    FOOD = 'food_orders',
-    SUPPORT = 'support_tickets',
+interface IOrderProduct {
+    id: string;
+    quantity: number;
 }
 
-// Начальное состояние
+// interface IOrderContext {
+//     id: string;
+//     order: IOrderProduct[]
+//     status: TOrderStatus
+//     comment: string
+//     description: string
+//     create_at: string
+//     guest: IGuestAccount
+//     paymentType: string
+//     phone: string
+//     previous_status: TOrderStatus
+//     room: IRoomInfo
+//     store: IStore
+//     type: IStoreType
+// }
+
+type ITicketContext = ISupportTicket;
+
+interface GlobalStateType {
+    orders: IOrder[];
+    tickets: ITicketContext[];
+}
+
 const initialState: GlobalStateType = {
-    [ORDER_TYPES.SERVICE]: [],
-    [ORDER_TYPES.FOOD]: [],
-    [ORDER_TYPES.SUPPORT]: [],
-}
-
-type GlobalStateType = {
-    [ORDER_TYPES.SERVICE]: IServiceOrder[]
-    [ORDER_TYPES.FOOD]: any
-    [ORDER_TYPES.SUPPORT]: ISupportTicket[]
+    orders: [],
+    tickets: [],
 };
 
-type CacheContextType = {
-    state: GlobalStateType,
-    clients?: {
-        count: number
-        list: any
-    }
-}
-// Создаем контекст для заказов
-const OrderContext = createContext<CacheContextType>({ state: initialState })
-
-function formatServiceOrder(data) {
-    return {
-        id: data.id,
-        orderInfo: {
-            status: data.orderInfo.status,
-            createAt: data.orderInfo.create_at,
-            completedAt: data.orderInfo.completed_at,
-            description: data.orderInfo.description,
-            customer: {
-                name: data.orderInfo.customer.name,
-                room: data.orderInfo.customer.room,
-                phone: data.orderInfo.customer.phone,
-                guest_account: {
-                    ...data.orderInfo.customer.guest_account
-                }
-            },
-            paymentType: data.orderInfo.paymentType
-        },
-        order: data.order.map(item => ({
-            service: {
-                id: item.service.id,
-                attributes: {
-                    title: item.service.title,
-                    price: item.service.price,
-                    createdAt: item.service.createdAt,
-                    updatedAt: item.service.updatedAt,
-                    publishedAt: item.service.publishedAt,
-                    images: {
-                        data: item.service.images.map(image => ({
-                            id: image.id,
-                            attributes: {
-                                name: image.name,
-                                alternativeText: image.alternativeText,
-                                caption: image.caption,
-                                width: image.width,
-                                height: image.height,
-                                formats: image.formats,
-                                hash: image.hash,
-                                ext: image.ext,
-                                mime: image.mime,
-                                size: image.size,
-                                url: image.url,
-                                previewUrl: image.previewUrl,
-                                provider: image.provider,
-                                provider_metadata: image.provider_metadata,
-                                createdAt: image.createdAt,
-                                updatedAt: image.updatedAt
-                            }
-                        }))
-                    }
-                }
-            },
-            quantity: item.quantity,
-        } as IServiceOrdered
-        ))
-    } as IServiceOrder
-}
-
-function formatSupportTicket(data) {
-    return {
-        id: data.id,
-        close_at: data.close_at,
-        create_at: data.create_at,
-        previous_status: data.previous_status,
-        status: data.status,
-        update_at: data.update_at,
-        messages: data.messages?.map(msg => ({
-            message: msg.message,
-            create_at: msg.createdAt,
-            sender: msg.sender,
-            sender_type: msg.sender_type as TSupportTicketMessageSender,
-        })).filter(msg => msg !== null) || [],
-
-        customer: data.customer ? {
-            name: data.customer?.name,
-            room: data.customer?.room,
-            phone: data.customer?.phone,
-            guest_account: data.customer.guest_account
-        } : undefined,
-    } as ISupportTicket
-}
-
-// Редьюсер для обработки действий связанных с заказами
-const orderReducer = (state, action) => {
+const orderReducer = (state: GlobalStateType, action: any) => {
     switch (action.type) {
         case 'INITIALIZE_ORDERS':
             return {
                 ...state,
-                [ORDER_TYPES.SERVICE]: action.payload[ORDER_TYPES.SERVICE],
-                [ORDER_TYPES.FOOD]: action.payload[ORDER_TYPES.FOOD],
-                [ORDER_TYPES.SUPPORT]: action.payload[ORDER_TYPES.SUPPORT],
-            }
+                orders: action.payload.orders,
+            };
 
-        case 'SERVICE_ORDER_STATUS_CHANGE':
+        case 'UPDATE_ORDER_STATUS':
             return {
                 ...state,
-                [ORDER_TYPES.SERVICE]: state[ORDER_TYPES.SERVICE].map(order =>
-                    order.id === action.payload.orderId ? { ...order, orderInfo: { ...order.orderInfo, status: action.payload.newStatus } } : order
+                orders: state.orders.map(order =>
+                    order.id === action.payload.orderId
+                        ? { ...order, status: action.payload.status }
+                        : order
                 ),
-            }
+            };
 
-        case 'PUSH_NEW_SERVICE_ORDER':
+        case 'CREATE_ORDER':
             return {
                 ...state,
-                [ORDER_TYPES.SERVICE]: [formatServiceOrder(action.payload.newOrder), ...state[ORDER_TYPES.SERVICE]]
-            }
+                orders: [action.payload.order, ...state.orders],
+            };
 
-        case 'SUPPORT_TICKET_STATUS_CHANGE':
-            console.log('newStatus: ', action.payload.newStatus)
-            console.log('ticket.id: ', action.payload.orderId)
+        case 'INITIALIZE_TICKETS':
             return {
                 ...state,
-                [ORDER_TYPES.SUPPORT]: state[ORDER_TYPES.SUPPORT].map(ticket =>
-                    ticket.id === action.payload.orderId ? { ...ticket, status: action.payload.newStatus } : ticket
+                tickets: action.payload.tickets,
+            };
+
+        case 'UPDATE_TICKET_STATUS':
+            return {
+                ...state,
+                tickets: state.tickets.map(ticket =>
+                    ticket.id === action.payload.ticketId
+                        ? { ...ticket, status: action.payload.status }
+                        : ticket
                 ),
-            }
-        case 'PUSH_NEW_SUPPORT_TICKET':
+            };
+
+        case 'CREATE_TICKET':
             return {
                 ...state,
-                [ORDER_TYPES.SUPPORT]: [formatSupportTicket(action.payload.newTicket), ...state[ORDER_TYPES.SUPPORT]]
-            }
+                tickets: [action.payload.ticket, ...state.tickets],
+            };
 
         default:
-            return state
+            return state;
     }
 };
 
-// Провайдер контекста
+const OrderContext = createContext<{
+    state: GlobalStateType
+    dispatch: React.Dispatch<any>
+    ordersIsLoading: boolean
+    ticketsIsLoading: boolean
+    productsList: IProduct[]
+    clients?: {
+        count: number
+        list: any[]
+    }
+}>({ state: initialState, dispatch: () => null, ordersIsLoading: true, ticketsIsLoading: true, productsList: [] })
+
 export const OrderProvider = ({ children }) => {
     const [state, dispatch] = useReducer(orderReducer, initialState)
-    const { isAdminAuthenticated, currentUser } = useAuth()
-    const [ordersIsInit, setOrdersIsInit] = useState(false)
+    const { isAuthenticated, currentUser } = useAuth()
+    const [ordersIsLoading, setOrdersIsLoading] = useState(true)
+    const [ticketsIsLoading, setTicketsIsLoading] = useState(true)
     const socketRef = useRef(null)
     const [online, setOnline] = useState(0)
     const [clientsList, setClientsList] = useState([])
 
+    const [productsList, setProductsList] = useState<IProduct[]>([])
+
     useEffect(() => {
-        async function fetchAndInitializeOrders() {
-            console.log('debug 1: ', isAdminAuthenticated)
-            if (!isAdminAuthenticated || currentUser.id !== 0 || ordersIsInit || state.service_orders.length > 0) return
-            console.log('debug 2')
-
+        async function fetchProducts() {
+            if (!isAuthenticated || !currentUser.id) return
             try {
-                const ordersRes = await getServiceOrders()
-                const orders = servicesFromRes(ordersRes)
-                console.log('GET ORDERS: ', orders)
+                const productsRes = await axiosInstance.post(`/api/store/product/fetch`)
 
-                const supportTicketsRes = await getSupportTickets()
-                console.log('GET SUPPORT TICKETS RES: ', supportTicketsRes)
-                const supportTickets = supportTicketsFromRes(supportTicketsRes)
-                console.log('GET SUPPORT TICKETS: ', supportTickets)
+                // console.log('products: ', productsRes.data)
+                const products = productsRes.data.data.map(product => ({
+                    id: product.id,
+                    description: product.attributes.description,
+                    for_sale: product.attributes.for_sale,
+                    image: product.attributes.image.data.attributes.url, //
+                    memo_text: product.attributes.memo_text,
+                    name: product.attributes.name,
+                    price: product.attributes.price,
+                    store: product.attributes.store.data.id,//
+                    warning_text: product.attributes.warning_text,
+                }) as IProduct)
+                setProductsList(products)
+                console.log('products: ', products)
 
-                const categorizedOrders = {
-                    [ORDER_TYPES.SERVICE]: orders,
-                    [ORDER_TYPES.FOOD]: [],
-                    [ORDER_TYPES.SUPPORT]: supportTickets
-                };
-                dispatch({ type: 'INITIALIZE_ORDERS', payload: categorizedOrders })
-                setOrdersIsInit(true)
             } catch (error) {
-                console.error('Ошибка при получении заказов: ', error);
+                console.error('Ошибка при загрузке продуктов: ', error);
             }
         }
-        fetchAndInitializeOrders();
-    }, [isAdminAuthenticated, currentUser.id, ordersIsInit, state.service_orders.length]);
+
+        fetchProducts()
+    }, [isAuthenticated, currentUser.id])
 
     useEffect(() => {
-        console.log('Orders State: ', state)
-    }, [state])
+        async function fetchOrdersAndTickets() {
+            if (!isAuthenticated || !currentUser.id) return
+
+            try {
+                const ordersRes = await axiosInstance.post(`/api/admin/order/fetch`)
+
+                console.log(ordersRes.data)
+                const orders = ordersRes.data.orders.data.map(ord => ({
+                    id: ord.id,
+                    status: ord?.attributes.status,
+                    products: ord?.attributes.products.map(product => ({
+                        id: product.product.data.id,
+                        quantity: product.quantity,
+                    })),
+                    comment: ord?.attributes.comment,
+                    create_at: ord?.attributes.create_at,
+                    description: ord?.attributes.description,
+                    paymentType: ord?.attributes.paymentType,
+                    phone: ord?.attributes.phone,
+                    previous_status: ord?.attributes.previous_status,
+                    room: ord?.attributes.room,
+                    guest: {
+                        id: ord?.attributes.guest.data.id,
+                        name: ord?.attributes.guest.data?.attributes.name,
+                        phone: ord?.attributes.guest.data?.attributes.phone,
+                        email: ord?.attributes.guest.data?.attributes.email,
+                        role: ord?.attributes.guest.data?.attributes.role,
+                        mailing: ord?.attributes.guest.data?.attributes.mailing,
+                        approved: ord?.attributes.guest.data?.attributes.approved,
+                    },
+                    store: {
+                        id: ord?.attributes.store.data?.id,
+                        description: ord?.attributes.store.data?.attributes.description,
+                        isActive: ord?.attributes.store.data?.attributes.isActive,
+                        preview_size: ord?.attributes.store.data?.attributes.preview_size,
+                        title: ord?.attributes.store.data?.attributes.title,
+                        short_desc: ord?.attributes.store.data?.attributes.short_desc,
+                        tag: ord?.attributes.store.data?.attributes.tag,
+                        image: ord?.attributes.store.data?.attributes.image.data?.attributes.url,
+                        store_type: {
+                            id: ord?.attributes.store.data?.attributes.store_type.data?.id,
+                            label: ord?.attributes.store.data?.attributes.store_type.data?.attributes.label,
+                            value: ord?.attributes.store.data?.attributes.store_type.data?.attributes.value
+                        },
+                        category: ord?.attributes.store.data?.attributes.category.data?.attributes.name,
+                    }
+                }) as IOrder)
+
+                console.log(orders)
+
+                const ticketsRes = await axiosInstance.post(`/api/admin/ticket/fetch`, {
+                    headers: {
+                        Authorization: `Bearer ${process.env.STRAPI_API_TOKEN}`,
+                    },
+                })
+
+
+                console.log(ticketsRes.data)
+                const tickets = ticketsRes.data.tickets.data.map(ticket => ({
+                    id: ticket.id,
+                    status: ticket.attributes.status,
+                    create_at: ticket.attributes.create_at,
+                    close_at: ticket.attributes.close_at,
+                    messages: ticket.attributes.messages.map(message => ({
+                        id: message.id,
+                        message: message.message,
+                        sender: message.sender,
+                        sender_type: message.sender_type,
+                    })),
+                }));
+
+                dispatch({
+                    type: 'INITIALIZE_ORDERS',
+                    payload: { orders },
+                });
+
+                dispatch({
+                    type: 'INITIALIZE_TICKETS',
+                    payload: { tickets },
+                });
+
+                setOrdersIsLoading(false);
+                setTicketsIsLoading(false);
+            } catch (error) {
+                console.error('Ошибка при загрузке заказов и заявок: ', error);
+            }
+        }
+
+        if (isAuthenticated) {
+            fetchOrdersAndTickets();
+        }
+    }, [isAuthenticated, currentUser.id]);
+
+
+    //НЕ ПОЛУЧАЮТСЯ ЗАКАЗЫ 
+    //НЕ ПОЛУЧАЮТСЯ ЗАКАЗЫ 
+    //НЕ ПОЛУЧАЮТСЯ ЗАКАЗЫ 
 
 
     useEffect(() => {
-        console.log('socket isAuth: ', isAdminAuthenticated)
-        console.log('socket currentUser: ', currentUser)
-        async function initOrderSocketAfterAuth() {
-            if (!isAdminAuthenticated || currentUser.id !== 0) return
-
-            if (currentUser.role && !socketRef.current) {
+        if (isAuthenticated && currentUser.id) {
+            if (!socketRef.current) {
                 socketRef.current = io(DEFAULTS.SOCKET.URL, {
                     query: {
                         userId: currentUser.id,
                         role: currentUser.role,
                     }
-                })
+                });
 
-                const socket = socketRef.current
+                const socket = socketRef.current;
 
                 socket.on('connect', () => {
                     console.log('Connected to Strapi WebSocket');
-                })
+                });
 
                 socket.on('portalOnline', (data) => {
-                    console.log('portalOnline: ', data)
-                    setOnline(data.online as number)
-                    setClientsList(data.clients)
-                })
+                    setOnline(data.online);
+                    setClientsList(data.clients);
+                });
 
                 socket.on('orderStatusChange', (data) => {
-                    console.log('change status: ', data)
-                    const newStatus = data.newStatus;
-                    const orderId = data.orderId;
-
+                    const { newStatus, orderId } = data;
                     dispatch({
-                        type: 'SERVICE_ORDER_STATUS_CHANGE',
-                        payload: { orderId, newStatus, orderType: ORDER_TYPES.SERVICE }
+                        type: 'UPDATE_ORDER_STATUS',
+                        payload: { orderId, status: newStatus },
                     });
-
-                    const textStatus = checkOrderStatus(newStatus)
-                    toast.success(
-                        <span>
-                            Новый статус заказа ({textStatus})
-                        </span>
-                    )
-                })
+                    toast.success(`Новый статус заказа (${checkOrderStatus(newStatus)})`)
+                });
 
                 socket.on('orderCreate', (data) => {
-                    console.log('NEW ORDER WEBSOCKET: ', data)
-                    const newOrder = data.newOrder
+                    const newOrder = data.newOrder;
                     dispatch({
-                        type: 'PUSH_NEW_SERVICE_ORDER',
-                        payload: { newOrder }
-                    })
-
-                    toast.success(
-                        <span>
-                            Новый заказ
-                        </span>
-                    )
-                })
-
+                        type: 'CREATE_ORDER',
+                        payload: { order: newOrder },
+                    });
+                    toast.success('Новый заказ');
+                });
 
                 socket.on('supportTicketStatusChange', (data) => {
-                    // console.log('change status: ', data)
-                    const newStatus = data.newStatus;
-                    const orderId = data.orderId;
-
+                    const { newStatus, ticketId } = data
                     dispatch({
-                        type: 'SUPPORT_TICKET_STATUS_CHANGE',
-                        payload: { orderId, newStatus, orderType: ORDER_TYPES.SUPPORT }
+                        type: 'UPDATE_TICKET_STATUS',
+                        payload: { ticketId, status: newStatus },
                     });
-
-                    const textStatus = ticketStatus(newStatus)
-                    toast.success(
-                        <div>
-                            Новый статус заявки <br /> ({textStatus})
-                        </div>
-                    )
-                })
+                    toast.success(`Новый статус заявки (${ticketStatus(newStatus)})`)
+                });
 
                 socket.on('supportTicketCreate', (data) => {
-                    console.log('NEW TICKET WEBSOCKET: ', data)
-                    const newTicket = data.newTicket
+                    const newTicket = data.newTicket;
                     dispatch({
-                        type: 'PUSH_NEW_SUPPORT_TICKET',
-                        payload: { newTicket }
-                    })
-
-                    toast.success(
-                        <span>
-                            Новая заявка на поддержку
-                        </span>
-                    )
-                })
+                        type: 'CREATE_TICKET',
+                        payload: { ticket: newTicket },
+                    });
+                    toast.success('Новая заявка на поддержку');
+                });
 
                 socket.on('connect_error', (error) => {
-                    console.error('Connection error:', error)
-                })
+                    console.error('Connection error:', error);
+                });
 
                 return () => {
-                    console.log('Компонент размонтируется')
                     if (socketRef.current) {
-                        socket.off('connect')
-                        socket.off('orderStatusChange')
-                        socket.off('orderCreate')
-                        socket.off('supportTicketCreate')
-                        socketRef.current.disconnect()
-                        socketRef.current = null
+                        socket.off('connect');
+                        socket.off('orderStatusChange');
+                        socket.off('orderCreate');
+                        socket.off('supportTicketCreate');
+                        socketRef.current.disconnect();
+                        socketRef.current = null;
                     }
                 };
             }
         }
-
-        initOrderSocketAfterAuth()
-    }, [isAdminAuthenticated, currentUser])
+    }, [isAuthenticated, currentUser])
 
     return (
-        <OrderContext.Provider value={{ state, clients: { count: online, list: clientsList } }}>
+        <OrderContext.Provider value={{
+            state,
+            dispatch,
+            ordersIsLoading,
+            ticketsIsLoading,
+            productsList,
+            clients: { count: online, list: clientsList }
+        }}>
             {children}
         </OrderContext.Provider>
-    )
-}
+    );
+};
 
-// Хук для доступа к заказам и их изменению
 export const useAdminOrders = () => {
     const context = useContext(OrderContext);
-    if (!context) throw new Error('useOrders must be used within an OrderProvider');
-    return context
-}
-
-// Использование в компоненте
-// const { state: { service_orders }, dispatch } = useOrders();
-// service_orders будет содержать заказы услуг
+    if (!context) throw new Error('useAdminOrders must be used within an OrderProvider');
+    return context;
+};

@@ -16,8 +16,9 @@ import { AuthProvider as AdminAuthProvider } from 'context/admin/AuthContext'
 import { Button, MantineProvider, createTheme } from '@mantine/core'
 import AdminHeader from '@/components/admin/AdminHeader'
 import { Toaster } from 'react-hot-toast'
-import { OrderProvider } from 'context/OrderContext'
 import { OrderProvider as AdminOrderProvider } from 'context/admin/OrderContext'
+import { OrderProvider } from 'context/OrderContext'
+import AdminWrapper from '@/components/admin/AdminWrapper'
 
 
 const theme = createTheme({
@@ -57,8 +58,10 @@ export default function App({ Component, pageProps }) {
                 <AdminAuthProvider>
                     <AdminOrderProvider>
                         <Toaster />
-                        <AdminHeader />
-                        <Component {...pageProps} />
+                        {/* <AdminHeader /> */}
+                        <AdminWrapper navIsVisible={!router.asPath.includes('/login')}>
+                            <Component {...pageProps} />
+                        </AdminWrapper>
                     </AdminOrderProvider>
                 </AdminAuthProvider>
             </MantineProvider>

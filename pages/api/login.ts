@@ -21,8 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const sessionToken = generateToken(
             data.data.id,
             data.data.bnovoBookingId,
-            data.data.checkOutDate,
-            data.data.role
+            data.data.checkOutDate
         )
 
         console.log({ data, sessionToken })
