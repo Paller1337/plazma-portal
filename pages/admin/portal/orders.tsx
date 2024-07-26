@@ -1,5 +1,6 @@
 import AdminWrapper from '@/components/admin/AdminWrapper'
 import ServiceOrder from '@/components/admin/ServiceOrder'
+import { Input, Loader, SegmentedControl } from '@mantine/core'
 import { useAdminOrders } from 'context/admin/OrderContext'
 import { getRooms } from 'helpers/bnovo/getRooms'
 import { withAdminAuthServerSideProps } from 'helpers/withAdminAuthServerSideProps'
@@ -7,6 +8,8 @@ import { useRouter } from 'next/router'
 import { GetServerSideProps } from 'next/types'
 import { useEffect, useState } from 'react'
 import { TOrderStatus } from 'types/order'
+import { IconSearch } from '@tabler/icons-react'
+import { DateTime } from 'luxon'
 
 
 interface AdminOrdersPageProps {
@@ -43,7 +46,7 @@ interface PageNavItemProps {
 }
 
 type TNavItem = {
-    status: TOrderStatus,
+    status?: TOrderStatus,
     name: string,
     count: number
 }
@@ -61,26 +64,40 @@ const PageNavItem = (props: PageNavItemProps) => {
 }
 
 
-
+const groupOrdersByDate = (orders) => {
+    return orders.reduce((groups, order) => {
+        // Преобразуем дату создания заказа в объект DateTime и форматируем в строку 'yyyy-MM-dd'
+        const date = DateTime.fromISO(order.create_at).toFormat('yyyy-MM-dd')
+        if (!groups[date]) {
+            groups[date] = []
+        }
+        groups[date].push(order)
+        return groups
+    }, {})
+}
 
 export default function OrdersPage(props: AdminOrdersPageProps) {
     const [currentNav, setCurrentNav] = useState<TOrderStatus>('new')
     const hotelRooms = props.rooms?.filter(x => x.tags !== '')
     const { state, productsList } = useAdminOrders()
     const [orders, setOrders] = useState(state.orders)
+    const [orderFetchTime, setOrderFetchTime] = useState(null)
 
     const router = useRouter()
     const query = router.query
 
+    const groupedOrders = groupOrdersByDate(orders)
+
 
     const navItems: TNavItem[] = [
+        { status: 'null', name: 'Все', count: state.orders.length },
         { status: 'new', name: 'Новые', count: state.orders.filter(x => x.status === 'new').length },
         { status: 'inwork', name: 'В работе', count: state.orders.filter(x => x.status === 'inwork').length },
         { status: 'delivered', name: 'Ожидают', count: state.orders.filter(x => x.status === 'delivered').length },
-        { status: 'done', name: 'Завершенные', count: state.orders.filter(x => x.status === 'done').length }
+        { status: 'done', name: 'Завершенные', count: state.orders.filter(x => x.status === 'done').length },
     ]
 
-    const loadOrders = (status: TOrderStatus) => {
+    const loadOrders = (status?: TOrderStatus) => {
         let tmporders
         switch (status) {
             case 'done':
@@ -102,8 +119,14 @@ export default function OrdersPage(props: AdminOrdersPageProps) {
                 tmporders = state.orders.filter(x => x.status === 'new')
                 setOrders(tmporders)
                 break
+
+            case 'null':
+                tmporders = state.orders
+                setOrders(tmporders)
+                break
+
             default:
-                tmporders = state.orders.filter(x => x.status === 'new')
+                tmporders = state.orders
                 setOrders(tmporders)
                 break
         }
@@ -111,7 +134,7 @@ export default function OrdersPage(props: AdminOrdersPageProps) {
 
     const changeTab = (newStatus: TOrderStatus) => {
         setCurrentNav(newStatus)
-        router.push(`/admin/services?status=${newStatus}`, undefined, { shallow: true });
+        router.push(`/admin/portal/orders?status=${newStatus}`, undefined, { shallow: true });
     }
 
     useEffect(() => {
@@ -123,11 +146,12 @@ export default function OrdersPage(props: AdminOrdersPageProps) {
         console.log('state.orders ', state.orders)
     }, [state.orders])
 
+    const nowDate = DateTime.now()
 
     return (
         <>
             <div className='admin--order'>
-                <div className='admin-page--pageNav'>
+                {/* <div className='admin-page--pageNav'>
                     {navItems.map(x =>
                         <PageNavItem
                             key={x.name}
@@ -137,26 +161,109 @@ export default function OrdersPage(props: AdminOrdersPageProps) {
                             onClick={() => changeTab(x.status)}
                         />
                     )}
+                </div> */}
+                <div className='admin--order__header'>
+                    <div className='admin--order__header-content'>
+                        <span className='admin--order__header-title'>Показаны заказы за сегодня</span>
+                        <div className='admin--order__header-filters'>
+                            <SegmentedControl
+                                color="#262E4A"
+                                data={navItems.map(x => ({ value: x.status, label: `${x.name} ${x.count}` }))}
+                                radius={'md'}
+                                size='md'
+                                onChange={changeTab}
+                            />
+                            <Input
+                                placeholder="Поиск..."
+                                rightSection={<IconSearch size={16} />}
+                                radius={'md'}
+                                size='md'
+                            />
+                        </div>
+                    </div>
+                    <div className='admin-main__vs' />
                 </div>
-
-                <div className='admin-serviceCards'>
-                    {orders.map((order, i) => {
-                        // const serviceRoom = hotelRooms.find(x => x.id === service.orderInfo.customer.room)?.tags
-                        // const orderClass = `service-order ${service.isEntering ? 'service-order-enter' : ''}`
-                        // console.log('Заказ ', service.orderInfo.customer.name, 'Комната: ', serviceRoom)
+                {orders.length > 0 ?
+                    <div className='admin--order__opd-wrapper'>
+                        {/* {orders.map((order, i) => {
+                        const dateTime = order.create_at
                         return (
-                            <div
-                                // className={`${orderClass}`} 
-                                key={'order-in-list-' + order.id}
-                            >
-                                <ServiceOrder
-                                    order={order}
-                                    products={productsList}
-                                />
+                            <div key={i} className='admin--order__opd'>
+                                <div className='admin--order__opd-header'>
+                                    <div className='admin--order__opd-content'>
+                                        <span className='admin--order__opd-title'>Заказы за сегодня</span>
+                                    </div>
+                                    <div className='admin-main__vs' />
+                                </div>
+                                <div className='admin-serviceCards'>
+                                    {orders.map((order, i) => {
+                                        return (
+                                            <ServiceOrder
+                                                key={'order-in-list-' + order.id}
+                                                order={order}
+                                                products={productsList}
+                                            />
+                                        )
+                                    })}
+                                </div>
                             </div>
                         )
-                    })}
-                </div>
+                    })} */}
+                        {Object.keys(groupedOrders).map((date, i) => (
+                            <div key={i} className='admin--order__opd'>
+                                <div className='admin--order__opd-header'>
+                                    <div className='admin--order__opd-content'>
+                                        <span className='admin--order__opd-title'>Заказы за
+                                            <span className='date'>
+                                                {nowDate.toSQLDate().toString() === date ? ' сегодня' :
+                                                    nowDate.minus({ day: 1 }).toSQLDate().toString() === date ? ' вчера' :
+                                                        ' ' + DateTime.fromSQL(date).toLocaleString(DateTime.DATE_HUGE)}
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <div className='admin-main__vs' />
+                                </div>
+                                <div className='admin-serviceCards'>
+                                    {groupedOrders[date].map((order) => (
+                                        <ServiceOrder
+                                            key={'order-in-list-' + order.id}
+                                            order={order}
+                                            products={productsList}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                        {/* <div className='admin--order__opd'>
+                        <div className='admin--order__opd-header'>
+                            <div className='admin--order__opd-content'>
+                                <span className='admin--order__opd-title'>Заказы за сегодня</span>
+                            </div>
+                            <div className='admin-main__vs' />
+                        </div>
+                        <div className='admin-serviceCards'>
+                            {orders.map((order, i) => {
+                                // const serviceRoom = hotelRooms.find(x => x.id === service.orderInfo.customer.room)?.tags
+                                // const orderClass = `service-order ${service.isEntering ? 'service-order-enter' : ''}`
+                                // console.log('Заказ ', service.orderInfo.customer.name, 'Комната: ', serviceRoom)
+                                return (
+                                    // <div
+                                    // // className={`${orderClass}`} 
+                                    // >
+                                    <ServiceOrder
+                                        key={'order-in-list-' + order.id}
+                                        order={order}
+                                        products={productsList}
+                                    />
+                                    // </div>
+                                )
+                            })}
+                        </div>
+                    </div> */}
+                    </div>
+                    :
+                    <div className='admin--order__loader'><Loader size={48} color={'#485066'} /></div>
+                }
             </div>
         </>
     )

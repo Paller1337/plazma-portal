@@ -6,16 +6,17 @@ import { checkOrderStatus } from 'helpers/order/order';
 import toast from 'react-hot-toast';
 import { DEFAULTS } from 'defaults';
 import { ISupportTicket } from 'types/support'
+import { TOrderStatus } from 'types/order';
 
 interface IOrderProduct {
     id: string;
     quantity: number;
 }
 
-interface IOrderContext {
-    id: string;
-    order: IOrderProduct[];
-    status: string;
+export interface IOrderContext {
+    id: string
+    order: IOrderProduct[]
+    status: TOrderStatus
 }
 
 type ITicketContext = ISupportTicket

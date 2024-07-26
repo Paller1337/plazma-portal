@@ -29,7 +29,6 @@
     @mixin hover
         background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6))
 
-
 .admin-sideNav
     &__title
         font-weight: 600
@@ -56,7 +55,13 @@
 .admin-serviceCards
     display: flex
     flex-flow: row wrap
-    gap: 24px
+    padding: 12px
+    // overflow: scroll
+    // gap: 24px
+    // display: grid
+    // grid-template-columns: repeat(3, 1fr)
+    // @media screen and ( max-width: 1820px )
+    //     grid-template-columns: repeat(2, 1fr)
 
     .service-order
         width: 100%
@@ -88,6 +93,20 @@
     border: 1px solid rgba(0, 0, 0, 0.05)
     background: #EEF0F5
     position: relative
+    transition: all .24s ease-in-out
+    cursor: pointer
+    &:hover
+        background: #fafafa
+    &__outer
+        width: 33.33%
+        max-width: 33.33%
+        min-width: 33.33%
+        padding: 12px
+        @media screen and ( max-width: 1770px )
+            width: 50%
+            max-width: 50%
+            min-width: 50%
+
     &__additional
         display: flex
         justify-content: center
@@ -153,7 +172,7 @@
         align-items: center
         gap: 10px
         border-radius: 16px
-        background: #EDF0F4
+        background: #fff
         div
             width: 16px
             height: 16px
@@ -167,7 +186,7 @@
         font-weight: 600
         line-height: normal
     &__customer
-        color: #262626
+        color: #485066
         font-family: Montserrat
         font-size: 15px
         font-style: normal
@@ -178,7 +197,7 @@
             font-family: Montserrat
             font-size: 15px
             font-style: normal
-            font-weight: 400
+            font-weight: 600
             line-height: normal
 
     &__blockTitle
@@ -190,11 +209,11 @@
         line-height: normal
 
     &__blockText
-        color: #262626
+        color: #485066
         font-family: Montserrat
         font-size: 16px
         font-style: normal
-        font-weight: 400
+        font-weight: 500
         line-height: normal
 
     &__order
@@ -204,6 +223,8 @@
         align-items: flex-start
         gap: 6px
         align-self: stretch
+        &-type
+            color: #FF7F22
         &List
             display: flex
             padding: 6px 0px
@@ -278,7 +299,7 @@
 
     &__feedback
         display: flex
-        padding: 0px 24px
+        padding: 12px 24px 0 24px
         flex-direction: column
         align-items: flex-start
         gap: 6px

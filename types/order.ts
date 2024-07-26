@@ -1,7 +1,7 @@
 import { IServiceOrdered } from './services'
 import { IGuestAccount } from './session'
 
-export type TOrderStatus = 'new' | 'inwork' | 'done' | 'delivered' | 'none'
+export type TOrderStatus = 'new' | 'inwork' | 'done' | 'delivered' | 'none' | 'null'
 
 // export interface IOrderCustomer {
 //     name: string

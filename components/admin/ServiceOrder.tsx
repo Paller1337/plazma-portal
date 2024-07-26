@@ -108,124 +108,111 @@ export default function ServiceOrder(props: ICServiceOrderProps) {
     }
     const paymentType = props.order.paymentType === 'bank-card' ? 'Банковская карта' : props.order.paymentType === 'cash' ? 'Наличные' : 'Не указан'
 
-    async function updateStatus(status: TOrderStatus, newStatus: TOrderStatus) {
-        try {
-            const response = await fetch('/api/order/service/update', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ props, status, newStatus })
-            });
-
-            if (!response.ok) {
-                throw new Error('Ошибка при обновлении статуса заказа');
-            }
-
-            // const data = await response.json();
-            // console.log('Status update: ', data)
-            // return data;
-            return
-        } catch (error) {
-            console.error('Ошибка:', error);
-            throw error;
-        }
-    }
 
     // useEffect(() => {
     //     console.log('ServiceOrder: ', props.orderInfo.customer.name, ': ', props)
     // }, [props])
     return (<>
-        {/* <AdminOrderModal isOpen={modalIsOpen} onClose={() => setModalIsOpen(false)} order={props} /> */}
+        <AdminOrderModal isOpen={modalIsOpen} onClose={() => setModalIsOpen(false)} order={props} />
 
-        <div className='admin-serviceCard'>
-            <ServiceOrderBadge status={props.order.status} id={props.order.id} date={props.order.create_at} />
+        <div className='admin-serviceCard__outer'>
+            <div className='admin-serviceCard' onClick={() => openModal(props.order.id)}>
+                <ServiceOrderBadge status={props.order.status} id={props.order.id} date={props.order.create_at} />
 
-            <div className='admin-serviceCard__header'>
-                <div className='admin-serviceCard__status'>
-                    <div />
+                <div className='admin-serviceCard__header'>
+                    <div className='admin-serviceCard__status'>
+                        <div />
+                    </div>
+                    <Flex direction={'column'} gap={2}>
+                        <Flex direction={'row'} gap={8} align={'center'}>
+                            <span className='admin-serviceCard__room'>{props.order.room?.label ? props.order.room?.label : 'Не указано'}</span>
+                        </Flex>
+                        <Flex direction={'row'} gap={8}>
+                            <span className='admin-serviceCard__customer'>Заказчик </span>
+                            <span className='admin-serviceCard__customer-name'>{` ${props.order.guest.name} `}</span>
+                        </Flex>
+                    </Flex>
                 </div>
-                <Flex direction={'column'} gap={2}>
-                    <Flex direction={'row'} gap={8} align={'center'}>
-                        <span className='admin-serviceCard__room'>{props.order.room?.label}</span>
-                    </Flex>
-                    <Flex direction={'row'} gap={2}>
-                        <span className='admin-serviceCard__customer'>Заказчик:</span>
-                        <span className='admin-serviceCard__customer-name'>{props.order.guest.name}</span>
-                    </Flex>
-                </Flex>
-            </div>
 
-            <div className='admin-serviceCard__order'>
-                <span className='admin-serviceCard__blockTitle'>Заказ:</span>
-                <div className='admin-serviceCard__orderList'>
-                    {props.order.products.map((x, i) => {
-                        const product = props.products.find(p => parseInt(p.id) === x.id)
-                        if (i <= 1) {
-                            return (
-                                <div key={x.id + '-' + i} className='admin-serviceCard__orderItemWrap'>
-                                    <ServiceOrderItem
-                                        key={i}
-                                        name={product.name}
-                                        amount={x.quantity}
-                                        image={DEFAULTS.STRAPI.url + product.image}
-                                    />
-                                    {i < props.order.products.length - 1 ?
-                                        <div className='admin-serviceCard__orderDivider' />
-                                        : <></>
-                                    }
-                                </div>
-                            )
-                        } else if ((i + 1) === props.order.products.length) {
-                            return (
-                                <div key={x.id + '-' + i} className='admin-serviceCard__orderItemWrap'>
-                                    <div className='admin-serviceCard__additional'>
-                                        и еще {props.order.products.length - 2} позиции
-                                        <div className='admin-serviceCard__additional-btn' onClick={openModal}>
-                                            показать всё
+                {/* <div className='admin-serviceCard__order'>
+                    <span className='admin-serviceCard__blockTitle'>
+                        Заказ <span className='admin-serviceCard__order-type'> {props.order?.store.store_type.label}</span>
+                    </span>
+                    <div className='admin-serviceCard__orderList'>
+                        {props.order.products.map((x, i) => {
+                            const product = props.products.find(p => parseInt(p.id) === x.id)
+                            if (i <= 1) {
+                                return (
+                                    <div key={x.id + '-' + i} className='admin-serviceCard__orderItemWrap'>
+                                        <ServiceOrderItem
+                                            key={i}
+                                            name={product.name}
+                                            amount={x.quantity}
+                                            image={DEFAULTS.STRAPI.url + product.image}
+                                        />
+                                        {i < props.order.products.length - 1 ?
+                                            <div className='admin-serviceCard__orderDivider' />
+                                            : <></>
+                                        }
+                                    </div>
+                                )
+                            } else if ((i + 1) === props.order.products.length) {
+                                return (
+                                    <div key={x.id + '-' + i} className='admin-serviceCard__orderItemWrap'>
+                                        <div className='admin-serviceCard__additional'>
+                                            и еще {props.order.products.length - 2} позиции
+                                            <div className='admin-serviceCard__additional-btn' onClick={openModal}>
+                                                показать всё
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            )
-                        }
-                    })}
+                                )
+                            }
+                        })}
+                    </div>
+                </div> */}
+
+                {/* <div className='admin-serviceCard__comment'>
+                    <span className='admin-serviceCard__blockTitle'>Комментарий:</span>
+                    <span className='admin-serviceCard__comment-text'>
+                        {props.order.comment ? props.order.comment : 'Комментарий не указан'}
+                    </span>
+                </div> */}
+                <div className='admin-serviceCard__feedback'>
+                    <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
+                        <span className='admin-serviceCard__blockText'>Тип заказа</span>
+                        <span className='admin-serviceCard__blockTitle'>
+                            {props.order?.store.store_type.label ? props.order?.store.store_type.label : 'Не указан'}
+                        </span>
+                    </Flex>
+                    <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
+                        <span className='admin-serviceCard__blockText'>Телефон для связи</span>
+                        <span className='admin-serviceCard__blockTitle'>{props.order.phone ? props.order.phone : 'Не указан'}</span>
+                    </Flex>
                 </div>
-            </div>
+                {/* <div className='admin-serviceCard__result'>
+                    <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
+                        <span className='admin-serviceCard__blockText'>Сумма заказа</span>
+                        <span className='admin-serviceCard__blockTitle'>{props.order.products.reduce((total, x) => {
+                            const product = props.products.find(p => parseInt(p.id) === x.id)
+                            return total + product.price * x.quantity
+                        }, 0)
+                        } руб.</span>
+                    </Flex>
 
-            <div className='admin-serviceCard__comment'>
-                <span className='admin-serviceCard__blockTitle'>Комментарий:</span>
-                <span className='admin-serviceCard__comment-text'>
-                    {props.order.comment ? props.order.comment : 'Комментарий не указан'}
-                </span>
-            </div>
-            <div className='admin-serviceCard__feedback'>
-                <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
-                    <span className='admin-serviceCard__blockTitle'>Телефон для связи:</span>
-                    <span className='admin-serviceCard__blockTitle'>{props.order.phone ? props.order.phone : 'Не указан'}</span>
-                </Flex>
-            </div>
-            <div className='admin-serviceCard__result'>
-                <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
-                    <span className='admin-serviceCard__blockText'>Сумма заказа:</span>
-                    <span className='admin-serviceCard__blockTitle'>{props.order.products.reduce((total, x) => {
-                        const product = props.products.find(p => parseInt(p.id) === x.id)
-                        return total + product.price * x.quantity
-                    }, 0)
-                    } руб.</span>
-                </Flex>
-
-                <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
-                    <span className='admin-serviceCard__blockText'>Способ оплаты:</span>
-                    <span className='admin-serviceCard__blockTitle'>{paymentType}</span>
-                </Flex>
-            </div>
-            <div className='admin-serviceCard__action'>
-                <Button onClick={() => updateStatus(props.order.status, 'inwork')} variant="filled" color="blue" size='md' radius={'md'}
-                    style={{ fontSize: 14, fontWeight: 500 }}>Принять</Button>
-                <Button onClick={() => updateStatus(props.order.status, 'delivered')} variant="filled" color="orange" size='md' radius={'md'}
-                    style={{ fontSize: 14, fontWeight: 500 }}>Доставка</Button>
-                <Button onClick={() => updateStatus(props.order.status, 'done')} variant="filled" color={'green'} size='md' radius={'md'}
-                    style={{ fontSize: 14, fontWeight: 500 }}>Выполнен</Button>
+                    <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
+                        <span className='admin-serviceCard__blockText'>Способ оплаты:</span>
+                        <span className='admin-serviceCard__blockTitle'>{paymentType}</span>
+                    </Flex>
+                </div> */}
+                {/* <div className='admin-serviceCard__action'>
+                    <Button onClick={() => updateStatus(props.order.status, 'inwork')} variant="filled" color="blue" size='md' radius={'md'}
+                        style={{ fontSize: 14, fontWeight: 500 }}>Принять</Button>
+                    <Button onClick={() => updateStatus(props.order.status, 'delivered')} variant="filled" color="orange" size='md' radius={'md'}
+                        style={{ fontSize: 14, fontWeight: 500 }}>Доставка</Button>
+                    <Button onClick={() => updateStatus(props.order.status, 'done')} variant="filled" color={'green'} size='md' radius={'md'}
+                        style={{ fontSize: 14, fontWeight: 500 }}>Выполнен</Button>
+                </div> */}
             </div>
         </div>
     </>

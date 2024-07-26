@@ -1,68 +1,126 @@
-.OrderAdmin-Modal
-    position: absolute
-    top: 50%
-    left: 50%
-    right: 0
-    background: white
-    width: 100%
-    max-width: 1200px // Чтобы оно было на всю ширину экрана
-    border-radius: 18px // Закругление верхних углов
-    padding: 48px 24px 36px 24px
-    box-sizing: border-box
-    transform: translate(-50%, -50%) // Прижимаем к нижнему краю
-    animation: fadeInUpAbsolute 0.3s ease-out forwards
-
-    .admin-serviceCard__orderList
-        height: auto
-        max-height: 400px
-        overflow-y: scroll
-    .admin-serviceCard__badge
-        top: 12px
-        right: 50px
-    &__badge
-        position: absolute
-        top: 0
-        left: 50%
-        transform: translateX(-50%)
-    &__close
-        position: absolute
-        right: 0
-        top: 0
-        cursor: pointer
-    &__title
-        color: #262626
-        text-align: center
-        font-family: Montserrat
-        font-size: 28px
-        font-style: normal
-        font-weight: 600
-        line-height: normal
-    &__text
-        color: #262626
-        text-align: center
-        font-family: Montserrat
-        font-size: 16px
-        font-style: normal
-        font-weight: 400
-        line-height: normal
-        align-self: stretch
-    &__text-group
+.AdminModal-block
+    background: #EEF0F5
+    border-radius: 12px
+    padding: 24px
+    &__header
         display: flex
         flex-direction: column
-        align-items: center
-        gap: 12px
-        align-self: stretch
+        &-title
+            font-size: 20px
+            color: #262E4A
+            font-weight: 600
+            line-height: 125%
 
-    &__content
+        &-subtitle
+            font-size: 15px
+            color: #8C8DA8
+            font-weight: 600
+            line-height: 125%
+
+.OrderAdmin-Modal
+    position: absolute
+    // top: 50%
+    left: 50%
+    bottom: 0
+    background: white
+    width: 100%
+    max-width: 1384px // Чтобы оно было на всю ширину экрана
+    border-radius: 24px 24px 0 0 // Закругление верхних углов
+    // padding: 48px 24px 36px 24px
+    box-sizing: border-box
+    transform: translate(-50%, 0%) // Прижимаем к нижнему краю
+    // animation: fadeInUpAbsolute 0.3s ease-out forwards
+    &__close
+        div
+            display: flex
+    &__header
+        padding: 0 24px
+        width: 100%
+        &-content
+            padding: 12px 0
+            display: flex
+            justify-content: space-between
+            flex-flow: row nowrap
+            color: #262E4A
+            font-size: 24px
+            font-weight: 600
+            width: 100%
+            border-bottom: 1px solid #BCC5DD
+
+    &__main
+        display: flex
+        flex-flow: row wrap
+        padding: 24px 12px
+        &-section
+            display: flex
+            flex-direction: column
+            gap: 24px
+            padding: 0 12px
+            &.left-section
+                width: 40%
+            &.right-section
+                width: 60%
+                max-height: 500px
+        .row
+            display: flex
+            flex-direction: row
+            justify-content: space-between
+            align-items: center
+
+        .column
+            display: flex
+            flex-direction: column
+            gap: 2px
+
+        .title
+            font-weight: 500
+            font-size: 16px
+            color: #8C8DA8
+            line-height: 125%
+
+        .value
+            font-weight: 600
+            font-size: 16px
+            color: #262E4A
+            line-height: 125%
+
+    &__info
         display: flex
         flex-direction: column
         gap: 24px
-        align-items: center
+        &-header
+            display: flex
+            flex-direction: column
+        &-title
+            font-size: 20px
+            color: #262E4A
+            font-weight: 600
+            line-height: 125%
+
+        &-subtitle
+            font-size: 15px
+            color: #8C8DA8
+            font-weight: 600
+            line-height: 125%
+
+        &-section
+            display: flex
+            flex-flow: column nowrap
+            gap: 6px
 
     &__actions
-        display: flex
-        padding: 24px 24px 0px 24px
-        flex-direction: column
-        align-items: center
-        gap: 12px
-        align-self: stretch
+        &-content
+            padding-top: 12px
+            display: flex
+            flex-flow: row wrap
+            gap: 8px
+
+    &__table
+        width: 100%
+        &-content
+            padding-top: 24px
+        &-wrapper
+            overflow-y: scroll
+            max-height: 400px
+            border-radius: 12px
+            border: 1px solid #E2E4E9

@@ -21,7 +21,7 @@ import { useRouter } from 'next/router'
 import { WallWallpostFull } from 'node_modules/vk-io/lib/api/schemas/objects'
 import React, { useEffect, useState } from 'react'
 import { ReactSVG } from 'react-svg'
-import { IServiceOrder, TOrderStatus } from 'types/order'
+import { IOrder, TOrderStatus } from 'types/order'
 import { ISupportTicket } from 'types/support'
 
 const slides = [
@@ -55,7 +55,7 @@ const slides = [
 ]
 
 interface IndexPageProps {
-    orders?: IServiceOrder[]
+    // orders?: IOrder[]
     slider?: WallWallpostFull[]
     categories?: {
         name: string,
@@ -133,7 +133,7 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
         console.error('Ошибка при получении услуг:', error)
         return {
             props: {
-                orders: []
+                // orders: []
             } as IndexPageProps
         }
     }
@@ -170,8 +170,8 @@ export default function IndexPage(props: IndexPageProps) {
     const [modalIsOpen, setModalIsOpen] = useState(false)
     const { state } = useOrders()
     // @ts-ignore
-    const orders: IServiceOrder[] = []
-    const supportTicks: ISupportTicket[] = []
+    const orders = state.orders
+    const supportTicks = state.tickets
     const [sliderData, setSliderData] = useState(null)
 
     function formatOrderMessage(orderCount) {
@@ -247,8 +247,8 @@ export default function IndexPage(props: IndexPageProps) {
     //     fetch()
     // }, [])
     // console.log('state: ', state)
-    const workOrders = orders.filter(x => x.orderInfo.status !== 'done')
-    // console.log('workOrders: ', workOrders)
+    const workOrders = orders.filter(x => x.status !== 'done')
+    console.log('workOrders: ', workOrders)
 
     const openedTicks = supportTicks.filter(x => x.status !== 'closed')
     return (<>
@@ -276,8 +276,8 @@ export default function IndexPage(props: IndexPageProps) {
                 <div className='index-nav index-orders'>
                     <IndexNavButton
                         title={formatOrderMessage(workOrders.length)}
-                        desc={orderStatus(workOrders[0].orderInfo.status)}
-                        orderStatus={workOrders[0].orderInfo.status}
+                        desc={orderStatus(workOrders[0].status)}
+                        orderStatus={workOrders[0].status}
                         svgName='order'
                         isOrderButton
                     />
