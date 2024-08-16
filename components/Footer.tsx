@@ -1,11 +1,16 @@
 import { useAuth } from 'context/AuthContext'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
+import { useEffect } from 'react'
 import { ReactSVG } from 'react-svg'
 
 export default function Footer() {
-    const { isAuthenticated } = useAuth()
-
-    if (isAuthenticated)
+    // const { isAuthenticated } = useAuth()
+    const router = useRouter()
+    useEffect(() => {
+        console.log('router: ', router)
+    }, [router])
+    if (!router.pathname.includes('store'))
         return (<>
 
             <footer className='footer'>

@@ -2,7 +2,7 @@ interface ButtonProps {
     text: string
     outlined?: boolean
     stretch?: boolean
-    onClick?: () => void
+    onClick?: (e?: any) => void
     disabled?: boolean
     color?: string
     bgColor?: string

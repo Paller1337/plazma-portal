@@ -18,11 +18,6 @@ const PAGES = [
         path: 'index',
     },
     {
-        title: 'Услуги',
-        logo: 'services',
-        path: 'services',
-    },
-    {
         title: 'Помощь',
         logo: 'help',
         path: 'help',

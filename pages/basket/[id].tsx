@@ -144,6 +144,10 @@ export default function OrderServices(props) {
         // console.log('currentStoreState: ', currentStoreState)
         // console.log('orderPhone: ', orderPhone)
         // if (currentStoreState) return
+        if(!currentUser.approved) {
+            toast.error('Ваш аккаунт заблокирован. Вы не можете оформлять заказы')
+            return
+        }
         if (!room.label || !room.value) {
             setRoom(p => ({
                 ...p,

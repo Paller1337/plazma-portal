@@ -1,36 +1,60 @@
 // OrderSendModal.tsx
-import React from 'react'
+import React, { useState } from 'react'
 import ReactModal from 'react-modal'
 import { ReactSVG } from 'react-svg'
 import { useRouter } from 'next/router'
 import { ICServiceOrderProps, ServiceOrderBadge, ServiceOrderItem } from './ServiceOrder'
-import { Button, Flex, Table } from '@mantine/core'
+import { Button, Flex, LoadingOverlay, Table } from '@mantine/core'
 import { DEFAULTS } from 'defaults'
 import { TOrderStatus } from 'types/order'
+import { axiosInstance } from 'helpers/axiosInstance'
+import { useAdminOrders } from 'context/admin/OrderContext'
+import toast from 'react-hot-toast'
 
 ReactModal.setAppElement('#__next') // Для Next.js обычно это #__next, для create-react-app это #root
 
-const AdminOrderModal = ({ isOpen, onClose, order }: { isOpen: boolean, onClose: () => void, order: ICServiceOrderProps }) => {
-    const router = useRouter()
-    const paymentType = order.order?.paymentType === 'bank-card' ? 'Банковская карта' : order.order?.paymentType === 'cash' ? 'Наличные' : 'Не указан'
+interface AdminOrderModalProps {
+    isOpen: boolean,
+    onClose: () => void,
+    order: ICServiceOrderProps
+}
 
+const AdminOrderModal = (props: AdminOrderModalProps) => {
+    const router = useRouter()
+    const paymentType = props.order.order?.paymentType === 'bank-card' ? 'Банковская карта' : props.order.order?.paymentType === 'cash' ? 'Наличные' : 'Не указан'
+    const { dispatch } = useAdminOrders()
+    const [visibleLoadingOverlay, setVisibleLoadingOverlay] = useState(false)
 
     async function updateStatus(status: TOrderStatus, newStatus: TOrderStatus) {
+        setVisibleLoadingOverlay(true)
         try {
-            const response = await fetch('/api/order/service/update', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
+            const response = await axiosInstance.put('/api/order/update',
+                {
+                    data: { order: props.order.order, status, newStatus }
                 },
-                body: JSON.stringify({ order, status, newStatus })
-            });
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                })
 
-            if (!response.ok) {
-                throw new Error('Ошибка при обновлении статуса заказа');
+            if (response.status !== 200) {
+                toast.error('Ошибка при обновлении статуса заказа')
+                setVisibleLoadingOverlay(false)
+                throw new Error('Ошибка при обновлении статуса заказа')
             }
 
+            setVisibleLoadingOverlay(false)
             // const data = await response.json();
-            // console.log('Status update: ', data)
+            console.log('Status update: ', response.data)
+            dispatch({
+                type: 'UPDATE_ORDER_STATUS',
+                payload: {
+                    orderId: props.order.order.id,
+                    status: response.data.newData.data.attributes.status,
+                    previous_status: response.data.newData.data.attributes.previous_status,
+                }
+            })
             // return data;
             return
         } catch (error) {
@@ -39,8 +63,8 @@ const AdminOrderModal = ({ isOpen, onClose, order }: { isOpen: boolean, onClose:
         }
     }
 
-    const rows = order.order.products.map((x, i) => {
-        const product = order.products.find(p => parseInt(p.id) === x.id)
+    const rows = props.order.order.products.map((x, i) => {
+        const product = props.order.products.find(p => parseInt(p.id) === x.id)
         return (
             <Table.Tr key={product.name + i + x.quantity * product.price}>
                 <Table.Td>{product.name}</Table.Td>
@@ -53,56 +77,63 @@ const AdminOrderModal = ({ isOpen, onClose, order }: { isOpen: boolean, onClose:
 
     return (
         <ReactModal
-            isOpen={isOpen}
-            onRequestClose={onClose}
+            isOpen={props.isOpen}
+            onRequestClose={props.onClose}
             className="OrderAdmin-Modal"
             overlayClassName="Overlay"
         // shouldCloseOnOverlayClick={false}
         >
+            <LoadingOverlay
+                visible={visibleLoadingOverlay}
+                zIndex={1000}
+                overlayProps={{ radius: 'md', blur: 2 }}
+                loaderProps={{ color: 'gray', type: 'oval' }}
+            />
             <div className='OrderAdmin-Modal__header'>
                 <div className='OrderAdmin-Modal__header-content'>
                     Управление заказом
-                    <ReactSVG className='OrderAdmin-Modal__close' src='/svg/admin/admin_modal-close.svg' onClick={onClose} />
+                    <ReactSVG className='OrderAdmin-Modal__close' src='/svg/admin/admin_modal-close.svg' onClick={props.onClose} />
                 </div>
             </div>
 
             <div className='OrderAdmin-Modal__main'>
                 <div className='OrderAdmin-Modal__main-section left-section'>
                     <div className='OrderAdmin-Modal__info AdminModal-block'>
+                        {props.order.order.status + ' ' + props.order.order.id}
                         <div className='OrderAdmin-Modal__info-header'>
-                            <span className='OrderAdmin-Modal__info-title'>Заказ от {order.order.guest?.name ? order.order.guest?.name : 'гостя'}</span>
+                            <span className='OrderAdmin-Modal__info-title'>Заказ от {props.order.order.guest?.name ? props.order.order.guest?.name : 'гостя'}</span>
                             <span className='OrderAdmin-Modal__info-subtitle'>
-                                {order.order.room?.label ? order.order.room?.label : 'Свяжитесь с гостем для уточнения'}
+                                {props.order.order.room?.label ? props.order.order.room?.label : 'Свяжитесь с гостем для уточнения'}
                             </span>
                         </div>
                         <div className='OrderAdmin-Modal__info-section'>
                             <div className='column'>
                                 <span className='title'>Комментарий</span>
-                                <span className='value'>{order.order.comment ? order.order.comment : 'Нет комментария'}</span>
+                                <span className='value'>{props.order.order.comment ? props.order.order.comment : 'Нет комментария'}</span>
                             </div>
                         </div>
                         <div className='OrderAdmin-Modal__info-section'>
                             <div className='row'>
                                 <span className='title'>Телефон для связи</span>
-                                <span className='value'>{order.order.guest.phone}</span>
+                                <span className='value'>{props.order.order.guest.phone}</span>
                             </div>
                         </div>
                         <div className='OrderAdmin-Modal__info-section'>
                             <div className='row'>
                                 <span className='title'>Сумма заказа</span>
-                                <span className='value'>{order.order.products.reduce((total, x) => {
-                                    const product = order.products.find(p => parseInt(p.id) === x.id)
+                                <span className='value'>{props.order.order.products.reduce((total, x) => {
+                                    const product = props.order.products.find(p => parseInt(p.id) === x.id)
                                     return total + product.price * x.quantity
                                 }, 0)
                                 } руб.</span>
                             </div>
                             <div className='row'>
                                 <span className='title'>Способ оплаты</span>
-                                <span className='value'>{order.order.guest.phone}</span>
+                                <span className='value'>{props.order.order.guest.phone}</span>
                             </div>
                             <div className='row'>
                                 <span className='title'>Способ оплаты</span>
-                                <span className='value'>{order.order.guest.phone}</span>
+                                <span className='value'>{props.order.order.guest.phone}</span>
                             </div>
                         </div>
                     </div>
@@ -111,11 +142,11 @@ const AdminOrderModal = ({ isOpen, onClose, order }: { isOpen: boolean, onClose:
                             <span className='AdminModal-block__header-title'>Действия</span>
                         </div>
                         <div className='OrderAdmin-Modal__actions-content'>
-                            <Button onClick={() => updateStatus(order.order.status, 'inwork')} variant="filled" color="blue" size='md' radius={'md'}
+                            <Button onClick={() => updateStatus(props.order.order.status, 'inwork')} variant="filled" color="blue" size='md' radius={'md'}
                                 style={{ fontSize: 14, fontWeight: 500 }}>Принять</Button>
-                            <Button onClick={() => updateStatus(order.order.status, 'delivered')} variant="filled" color="orange" size='md' radius={'md'}
+                            <Button onClick={() => updateStatus(props.order.order.status, 'delivered')} variant="filled" color="orange" size='md' radius={'md'}
                                 style={{ fontSize: 14, fontWeight: 500 }}>Доставка</Button>
-                            <Button onClick={() => updateStatus(order.order.status, 'done')} variant="filled" color={'green'} size='md' radius={'md'}
+                            <Button onClick={() => updateStatus(props.order.order.status, 'done')} variant="filled" color={'green'} size='md' radius={'md'}
                                 style={{ fontSize: 14, fontWeight: 500 }}>Выполнен</Button>
                         </div>
                     </div>
@@ -157,8 +188,8 @@ const AdminOrderModal = ({ isOpen, onClose, order }: { isOpen: boolean, onClose:
                                                     fontWeight: 600,
                                                     fontSize: 18
                                                 }}>
-                                                    Итого {order.order.products.reduce((total, x) => {
-                                                        const product = order.products.find(p => parseInt(p.id) === x.id)
+                                                    Итого {props.order.order.products.reduce((total, x) => {
+                                                        const product = props.order.products.find(p => parseInt(p.id) === x.id)
                                                         return total + product.price * x.quantity
                                                     }, 0)
                                                     } руб.</Table.Td>

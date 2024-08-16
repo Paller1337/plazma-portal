@@ -7,7 +7,7 @@ import { useRouter } from 'next/router'
 import axios from 'axios'
 import { DEFAULTS } from 'defaults'
 
-ReactModal.setAppElement('#__next'); // Для Next.js обычно это #__next, для create-react-app это #root
+ReactModal.setAppElement('#__next') // Для Next.js обычно это #__next, для create-react-app это #root
 
 const ProgressLine = ({ duration, index, current }) => {
     const [width, setWidth] = useState('0%');

@@ -22,6 +22,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     },
                 },
             },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${STRAPI_API_TOKEN}`
+            }
         })
         if (isGuest.data && isGuest.data.data.length > 0) {
             console.log('Гость уже зарегистрирован')

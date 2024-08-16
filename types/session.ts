@@ -16,6 +16,7 @@ export type TGuestAccountStatus = 'active' | 'expired'
 export interface IGuestAccount {
     id?: number
     name: string
+    createdAt?: string
     phone?: string
     email?: string
     approved?: boolean

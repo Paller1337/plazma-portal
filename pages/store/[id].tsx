@@ -3,6 +3,7 @@ import ProductModal from '@/components/ProductModal'
 import axios from 'axios'
 import { useCart } from 'context/CartContext'
 import { DEFAULTS } from 'defaults'
+import { axiosInstance } from 'helpers/axiosInstance'
 import { getStoreById } from 'helpers/cartContext'
 import { withAuthServerSideProps } from 'helpers/withAuthServerSideProps'
 import { GetServerSideProps } from 'next'
@@ -38,11 +39,7 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
     const { id } = context.params
     console.log('id ', id)
     try {
-        const store = await axios.get(`${DEFAULTS.STRAPI.url}/api/stores/${id}`, {
-            params: {
-                'populate': 'deep,3',
-            }
-        })
+        const store = await axiosInstance.get(`/api/store/${id}`)
 
         console.log('store  ', store.data)
 
@@ -165,5 +162,6 @@ export default function StorePage(props: StorePageProps) {
                 </div>
                 : <></>}
         </main >
+
     </>)
 }

@@ -142,9 +142,9 @@ export default function OrdersPage(props: AdminOrdersPageProps) {
         loadOrders((query.status as string) as TOrderStatus)
     }, [state.orders, query.status])
 
-    useEffect(() => {
-        console.log('state.orders ', state.orders)
-    }, [state.orders])
+    // useEffect(() => {
+    //     console.log('state.orders ', state.orders)
+    // }, [state.orders])
 
     const nowDate = DateTime.now()
 

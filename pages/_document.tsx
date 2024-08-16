@@ -1,5 +1,5 @@
 import { Html, Head, Main, NextScript } from 'next/document'
-import { useEffect } from 'react';
+import { useEffect } from 'react'
 declare global {
     interface Window {
         travelline: any
@@ -21,6 +21,22 @@ export default function Document() {
                 <body className='body no-scrollbar'>
                     <Main />
                     <NextScript />
+                    {/* <script dangerouslySetInnerHTML={{
+                        __html:
+                            `
+                        if ('serviceWorker' in navigator) {
+                            navigator.serviceWorker.register('/worker.js')
+                                .then(function (registration) {
+                                    console.log('Service Worker зарегистрирован с областью:', registration.scope);
+                                })
+                                .catch(function (error) {
+                                    console.log('Ошибка регистрации Service Worker:', error);
+                                });
+                        }
+                        `
+                    }}>
+
+                    </script> */}
                 </body>
             </Html >
         </>

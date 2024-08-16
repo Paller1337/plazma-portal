@@ -66,7 +66,7 @@ const FAQCard = (props: FAQCardProps) => {
 }
 
 export default function HelpPage(props: HelpPageProps) {
-    const { currentUser, isAuthenticated } = useAuth()
+    const { currentUser, isAuthenticated, openAuthModal } = useAuth()
     const { hotelRooms } = useCart()
     const [supportComment, setSupportComment] = useState('')
     const [supportFormClicked, setSupportFormClicked] = useState(false)
@@ -108,6 +108,12 @@ export default function HelpPage(props: HelpPageProps) {
 
     const sendSupportTicket = async () => {
         setSupportFormClicked(true)
+
+        if (!currentUser.approved) {
+            toast.error('Ваш аккаунт заблокирован. Вы не можете оформлять заказы')
+            return
+        }
+
         if (supportComment.length < 10 || visibleLoadingOverlay) return
 
         if (!room.label || !room.value) {
@@ -286,7 +292,11 @@ export default function HelpPage(props: HelpPageProps) {
                                 }))}
                                 error={room.error}
                             />
-                            <Button text='Отправить заявку' stretch onClick={sendSupportTicket} />
+
+                            <Button
+                                text={isAuthenticated ? 'Отправить заявку' : 'Войти и отправить заявку'}
+                                stretch onClick={isAuthenticated ? () => sendSupportTicket() : () => openAuthModal()}
+                            />
                         </div>
                     </div>
                     <span id='info' className='faq-title'>Часто задаваемые вопросы</span>

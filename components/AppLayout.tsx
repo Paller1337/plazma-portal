@@ -28,6 +28,7 @@ export default function AppLayout(props: AppLayoutProps): JSX.Element {
 
     return (<>
         <div className='wrapper' data-barba="wrapper">
+            <Toaster />
             {/* <Header /> */}
             {props.children}
             <Footer />

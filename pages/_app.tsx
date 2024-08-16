@@ -38,19 +38,29 @@ export default function App({ Component, pageProps }) {
     const router = useRouter();
     const loaderRef = useRef<LoadingBarRef>(null);
 
+    
     useEffect(() => {
         // Логика для путей, отличных от админ-панели
         if (!router.pathname.startsWith('/admin')) {
             router.events.on('routeChangeStart', () => {
                 loaderRef.current?.continuousStart();
-            });
+            })
 
             router.events.on('routeChangeComplete', () => {
                 loaderRef.current?.complete();
-            });
+            })
         }
-    }, [router]);
+    }, [router])
 
+    useEffect(() => {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('/worker.js')
+            .then(registration => console.log('Service Worker зарегистрирован:', registration))
+            .catch(error => console.error('Ошибка регистрации Service Worker:', error));
+        }
+      }, []);
+
+      
     if (router.pathname.startsWith('/admin')) {
         // Рендеринг админ-панели без контекстов
         return (<>
@@ -67,6 +77,7 @@ export default function App({ Component, pageProps }) {
             </MantineProvider>
         </>)
     }
+    
     return (
         <>
             <Head>
@@ -82,7 +93,6 @@ export default function App({ Component, pageProps }) {
                     <OrderProvider>
                         <CartProvider>
                             <AppLayout asPath={router.asPath} pageProps={pageProps}>
-                                <Toaster />
                                 <Component {...pageProps} />
                             </AppLayout>
                         </CartProvider>

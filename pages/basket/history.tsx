@@ -15,6 +15,7 @@ import { withAuthServerSideProps } from 'helpers/withAuthServerSideProps'
 import { getOrdersByGuestId } from 'helpers/order/order'
 import Button from '@/components/Button'
 import { IOrder } from 'types/order'
+import { useOrders } from 'context/OrderContext'
 
 
 
@@ -61,9 +62,8 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
 
 
 export default function OrderServices(props: BasketHistoryProps) {
-    // const { state } = useOrders()
+    const { state } = useOrders()
     // @ts-ignore
-    // const orders = state.service_orders
     // useEffect(() => console.log('orders: ', state))
     const fetch = async () => {
         await getOrdersByGuestId(7)
@@ -74,7 +74,11 @@ export default function OrderServices(props: BasketHistoryProps) {
             <div className='page-wrapper'>
                 <div className='order-list'>
                     {props.orders?.length > 0 ? props.orders.sort((a, b) => b.id - a.id).map((x, i) =>
-                        <OrderListItem key={(x.id + x.create_at).toString()} order={x} />
+                        <OrderListItem
+                            key={(x.id + x.create_at).toString()}
+                            order={x}
+                            orderStatus={state.orders?.find(ord => parseInt(ord.id) === x.id)?.status}
+                        />
                     )
                         :
                         <div className='order-list__nothing'>У вас нет заказов</div>

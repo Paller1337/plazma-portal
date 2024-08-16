@@ -1,4 +1,4 @@
-import { IOrder, IProduct } from 'types/order'
+import { IOrder, IProduct, TOrderStatus } from 'types/order'
 import Button from './Button'
 import { IServiceOrdered } from 'types/services'
 import { useEffect, useMemo, useState } from 'react'
@@ -11,12 +11,13 @@ import { getProductById } from 'helpers/cartContext'
 
 interface OrderListItemProps {
     order?: IOrder
+    orderStatus?: TOrderStatus
 }
 
 
 
 const OrderLine = (props: { product: IProduct, quantity: number }) => {
-    console.log('order line: ', props.product)
+    // console.log('order line: ', props.product)
     return (
         <div className='guest-order__part'>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -39,7 +40,7 @@ export default function OrderListItem(props: OrderListItemProps) {
     } as React.CSSProperties)
 
     const status = useMemo(() => {
-        switch (props.order.status) {
+        switch (props.orderStatus) {
             case 'new':
                 return {
                     text: 'Новый',
@@ -66,7 +67,7 @@ export default function OrderListItem(props: OrderListItemProps) {
                     color: '#000'
                 };
         }
-    }, [props.order.status]);
+    }, [props.orderStatus]);
 
     useEffect(() => {
         setStatusStyle({
@@ -107,58 +108,60 @@ export default function OrderListItem(props: OrderListItemProps) {
     }
 
     return (
-        <div className='guest-order'>
-            <LoadingOverlay
-                visible={visibleLoadingOverlay}
-                zIndex={1000}
-                overlayProps={{ radius: 'sm', blur: 2 }}
-                loaderProps={{ color: 'gray', type: 'oval' }}
-            />
+        <div className='guest-order__wrapper' id={props.order.id.toString()}>
+            <div className='guest-order'>
+                <LoadingOverlay
+                    visible={visibleLoadingOverlay}
+                    zIndex={1000}
+                    overlayProps={{ radius: 'sm', blur: 2 }}
+                    loaderProps={{ color: 'gray', type: 'oval' }}
+                />
 
-            <div className='guest-order__header'>
-                <span className='guest-order__date'>{createAt}</span>
-                <span className='guest-order__status guest-order__status--active' style={statusStyle}>{status.text}</span>
-            </div>
-
-
-            <div className='guest-order__info'>
-                <span className='guest-order__number'>№ {props.order.id}</span>
-                <span className='guest-order__type'>Тип заказа: Услуги</span>
-            </div>
-
-            <div className='guest-order__services'>
-                {orderProducts ? props.order.products.map((x, i) => {
-                    return (
-                        <OrderLine
-                            key={x.id + DateTime.now().toISO()}
-                            product={orderProducts?.find(p => x.id === parseInt(p.id)) as IProduct}
-                            quantity={x.quantity}
-                        />
-                    )
-                }) : <Loader color='gray' style={{ margin: '0 auto' }} size={24} />}
-            </div>
-
-            <div className='guest-order__total'>
-
-                <div className='guest-order__total-row'>
-                    <span className='guest-order__total-label'>Способ оплаты</span>
-                    <span className='guest-order__total-amount'>{props.order.paymentType === 'bank-card' ? 'Банковская карта' : 'Наличные'}</span>
+                <div className='guest-order__header'>
+                    <span className='guest-order__date'>{createAt}</span>
+                    <span className='guest-order__status guest-order__status--active' style={statusStyle}>{status.text}</span>
                 </div>
-                <div className='guest-order__total-row'>
-                    <span className='guest-order__total-label'>Итого</span>
-                    <span className='guest-order__total-amount'>{
-                        orderProducts ? props.order.products.reduce(
-                            (val, x) => val + x.quantity * (orderProducts?.find(p => x.id === parseInt(p.id)) as IProduct).price, 0
-                        ) : <Loader color='gray' style={{ margin: '0 auto' }} size={12} />} ₽
-                    </span>
-                </div>
-            </div>
 
-            <div
-                className='guest-order__buttons'
-                onClick={() => orderServiceRepeat()}
-            >
-                <Button text='Повторить заказ' stretch />
+
+                <div className='guest-order__info'>
+                    <span className='guest-order__number'>№ {props.order.id}</span>
+                    <span className='guest-order__type'>Тип заказа: Услуги</span>
+                </div>
+
+                <div className='guest-order__services'>
+                    {orderProducts ? props.order.products.map((x, i) => {
+                        return (
+                            <OrderLine
+                                key={x.id + DateTime.now().toISO()}
+                                product={orderProducts?.find(p => x.id === parseInt(p.id)) as IProduct}
+                                quantity={x.quantity}
+                            />
+                        )
+                    }) : <Loader color='gray' style={{ margin: '0 auto' }} size={24} />}
+                </div>
+
+                <div className='guest-order__total'>
+
+                    <div className='guest-order__total-row'>
+                        <span className='guest-order__total-label'>Способ оплаты</span>
+                        <span className='guest-order__total-amount'>{props.order.paymentType === 'bank-card' ? 'Банковская карта' : 'Наличные'}</span>
+                    </div>
+                    <div className='guest-order__total-row'>
+                        <span className='guest-order__total-label'>Итого</span>
+                        <span className='guest-order__total-amount'>{
+                            orderProducts ? props.order.products.reduce(
+                                (val, x) => val + x.quantity * (orderProducts?.find(p => x.id === parseInt(p.id)) as IProduct).price, 0
+                            ) : <Loader color='gray' style={{ margin: '0 auto' }} size={12} />} ₽
+                        </span>
+                    </div>
+                </div>
+
+                <div
+                    className='guest-order__buttons'
+                    onClick={() => orderServiceRepeat()}
+                >
+                    <Button text='Повторить заказ' stretch />
+                </div>
             </div>
         </div>
     )

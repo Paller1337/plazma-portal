@@ -1,4 +1,5 @@
 import { useAuth } from 'context/admin/AuthContext';
+import { useAdminOrders } from 'context/admin/OrderContext';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -46,6 +47,7 @@ export default function AdminWrapper(props: AdminWrapperProps) {
     const [isMenuMin, setIsMenuMin] = useState(false)
     const [openSections, setOpenSections] = useState({})
     const [activeIndex, setActiveIndex] = useState(-1)
+    const { clients } = useAdminOrders()
 
     const toggleMin = () => setIsMenuMin(p => !p)
 
@@ -146,6 +148,8 @@ export default function AdminWrapper(props: AdminWrapperProps) {
                         })}
                     </div>
                     {/* FOOTER NAV */}
+                    {/* {clients?.count ? 'Онлайн: ' + clients?.count : ''} */}
+
                     <div className='admin-nav__footer'>
                         <span className='admin-nav__vs' />
                         <div className='admin-nav__footer-content'>

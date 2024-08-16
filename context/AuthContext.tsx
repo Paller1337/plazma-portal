@@ -1,16 +1,18 @@
-import { verifyToken } from 'helpers/login';
-import React, { createContext, useContext, useState, ReactNode, useEffect, Dispatch, SetStateAction } from 'react'
+import { verifyToken } from 'helpers/login'
+import React, { createContext, useContext, useState, ReactNode, useEffect, Dispatch, SetStateAction, useCallback } from 'react'
 import Cookies from 'js-cookie'
-import { DEFAULTS } from 'defaults';
-import { io } from 'socket.io-client';
-import { checkOrderStatus } from 'helpers/order/order';
-import toast from 'react-hot-toast';
-import axios from 'axios';
-import { axiosInstance } from 'helpers/axiosInstance';
-import WelcomeScreen from '@/components/WelcomeScreen';
-import { useRouter } from 'next/router';
-import AuthModal from '@/components/AuthModal';
-import Button from '@/components/Button';
+import { DEFAULTS } from 'defaults'
+import { io } from 'socket.io-client'
+import { checkOrderStatus } from 'helpers/order/order'
+import toast from 'react-hot-toast'
+import axios from 'axios'
+import { axiosInstance } from 'helpers/axiosInstance'
+import WelcomeScreen from '@/components/WelcomeScreen'
+import { useRouter } from 'next/router'
+import AuthModal from '@/components/AuthModal'
+import Button from '@/components/Button'
+import { useSubscribe } from 'helpers/push/subscribe'
+import FingerprintJS from '@fingerprintjs/fingerprintjs'
 
 interface AuthContextType {
     isAuthenticated: boolean
@@ -52,10 +54,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const [showWelcomeScreen, setShowWelcomeScreen] = useState(false)
     const [endWelcomeScreen, setEndWelcomeScreen] = useState(false)
-
+    const [visitorId, setVisitorId] = useState(null)
+    
     const [authModalIsOpen, setAuthModalIsOpen] = useState(false)
     const closeAuthModal = () => setAuthModalIsOpen(false)
     const openAuthModal = () => setAuthModalIsOpen(true)
+
+    const [notifyModalIsOpen, setNotifyModalIsOpen] = useState(false)
+    const closeNotifyModal = () => setNotifyModalIsOpen(false)
+    const openNotifyModal = () => setNotifyModalIsOpen(true)
 
     // const login = async (surname: string, roomNumber: string) => {
     //     const auth = await axios.post('/api/login', {
@@ -202,6 +209,79 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // console.log('isAuth: ', isAuthenticated)
     }, [isAuthenticated])
 
+    useEffect(() => {
+        FingerprintJS.load()
+            .then(fp => fp.get())
+            .then(result => {
+                setVisitorId(result.visitorId)
+                console.log('visitorId: ', result)
+            })
+
+    }, [])
+
+    const { getSubscription } = useSubscribe({ publicKey: 'BBu8PIpHwRr3d2B61zDh75x_GqvvBwn4sPxHIIu7D5fxaG0rEIiWPU8k6oc0vS-aaO3J8Jum19QjEFfT-hFJczs' })
+
+    const onSubmitSubscribe = async () => {
+        if (!visitorId) return
+        try {
+            console.log('subscription start')
+            const permission = await Notification.requestPermission()
+            if (permission !== 'granted') {
+                throw { errorCode: "PermissionDenied" };
+            }
+
+            console.log('subscription permission ' + permission)
+
+            // Получение объекта подписки с использованием функции getSubscription
+            const subscription = await getSubscription()
+            console.log(subscription)
+            const res = await axiosInstance.post('/api/web-push/subscribe', {
+                subscription: subscription,
+                visitorId: visitorId,
+                userId: currentUser.id,
+            })
+
+            console.log('push res: ' + res)
+            // Вывод сообщения в случае успешной подписки
+            console.log('Subscribe success');
+        } catch (e) {
+            // Вывод предупреждения в случае возникновения ошибки
+            console.warn(e);
+        }
+    }
+
+    const onSubmitPush = useCallback(async (e: React.FormEvent) => {
+        e.preventDefault()
+        try {
+            const res = await axiosInstance.post('/api/web-push/send', {
+                message: 'Тестовое уведомление',
+                title: 'Заголовок уведомления',
+                visitorId: visitorId,
+            })
+            toast.success('Push success')
+        } catch (e) {
+            toast.error('Details console')
+        }
+    }, [visitorId])
+
+    // const subscribe = async () => {
+    //     const registration = await navigator.serviceWorker.ready;
+    //     const subscription = await registration.pushManager.subscribe({
+    //         userVisibleOnly: true,
+    //         applicationServerKey: 'BBu8PIpHwRr3d2B61zDh75x_GqvvBwn4sPxHIIu7D5fxaG0rEIiWPU8k6oc0vS-aaO3J8Jum19QjEFfT-hFJczs' // Вставьте ваш публичный ключ VAPID
+    //     });
+
+    //     const res = await fetch(`${DEFAULTS.STRAPI.url}/subscription/subscribe`, { // URL вашего Strapi сервера
+    //         method: 'POST',
+    //         body: JSON.stringify(subscription),
+    //         headers: {
+    //             'Content-Type': 'application/json'
+    //         }
+    //     })
+
+    //     console.log('subscription: ', res)
+    // }
+
     return (
         <AuthContext.Provider value={{
             isAuthenticated,
@@ -214,9 +294,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             closeAuthModal,
         }}>
             <AuthModal isOpen={authModalIsOpen} onClose={closeAuthModal} />
+            <AuthModal isOpen={notifyModalIsOpen} onClose={closeNotifyModal} />
             <Button
                 text={!isAuthenticated ? 'Модалка авторизации' : 'Вы авторизованы'}
                 onClick={!isAuthenticated ? () => setAuthModalIsOpen(true) : () => { }}
+            />
+            <Button
+                text={'Подписаться на уведомления'}
+                onClick={!isAuthenticated ? () => openNotifyModal() : () => { }}
+            />
+
+            <Button
+                text={'Подписаться на уведомления'}
+                onClick={onSubmitSubscribe}
+            />
+
+            <Button
+                text={'Тестовое уведомление'}
+                onClick={onSubmitPush}
             />
 
             <WelcomeScreen show={showWelcomeScreen} end={endWelcomeScreen} />

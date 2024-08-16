@@ -51,36 +51,35 @@ const orderReducer = (state: GlobalStateType, action: any) => {
         case 'INITIALIZE_ORDERS':
             return {
                 ...state,
-                orders: action.payload.orders,
+                orders: action.payload.orders as IOrderContext[],
             };
 
         case 'UPDATE_ORDER_STATUS':
-            const { orderId, status } = action.payload;
+            const { orderId, status } = action.payload
             return {
                 ...state,
-                orders: {
-                    ...state.orders,
-                    [orderId]: {
-                        ...state.orders[orderId],
-                        status: status,
-                    },
-                },
-            };
+                orders: state.orders.map(order =>
+                    order.id === orderId
+                        ? { ...order, status: status }
+                        : order
+                ),
+            }
+
 
         case 'CREATE_ORDER':
             const newOrder = action.payload.order;
             return {
                 ...state,
-                orders: {
+                orders: [
                     ...state.orders,
-                    [newOrder.id]: newOrder,
-                },
-            };
+                    newOrder
+                ] as IOrderContext[],
+            }
 
         case 'INITIALIZE_TICKETS':
             return {
                 ...state,
-                tickets: action.payload.tickets,
+                tickets: action.payload.tickets as ITicketContext[],
             };
 
         default:
@@ -101,6 +100,7 @@ export const OrderProvider = ({ children }) => {
     const [ticketsIsLoading, setTicketsIsLoading] = useState(true)
     const { isAuthenticated, currentUser } = useAuth()
 
+    useEffect(() => { console.log(state) }, [state])
     useEffect(() => {
         async function fetchOrdersAndTickets() {
             try {
@@ -174,21 +174,25 @@ export const OrderProvider = ({ children }) => {
         if (isAuthenticated && currentUser.id !== 0) {
             const socket = io(DEFAULTS.SOCKET.URL, {
                 query: {
-                    userId: currentUser.id,
+                    userId: 'u_' + currentUser.id,
                     role: currentUser.role,
                 },
             });
 
             socket.on('connect', () => {
-                console.log('Connected to Strapi WebSocket');
+                console.log('Connected to Strapi WebSocket')
             });
 
             socket.on('orderStatusChange', (data) => {
-                const { newStatus, orderId } = data;
+                const { newStatus, orderId } = data
+                console.log('status change data ', data)
+                console.log('orderId ', orderId)
+                console.log('state.orders ', state.orders)
+                console.log('status old data ', state.orders.find(x => x.id == orderId))
                 dispatch({
                     type: 'UPDATE_ORDER_STATUS',
-                    payload: { orderId, status: newStatus },
-                });
+                    payload: { orderId, status: newStatus, previous_status: state.orders.find(x => x.id == orderId)?.status },
+                })
 
                 const textStatus = checkOrderStatus(newStatus);
                 toast.success(<span>Новый статус заказа ({textStatus})</span>);
@@ -215,7 +219,7 @@ export const OrderProvider = ({ children }) => {
                 socket.disconnect();
             };
         }
-    }, [isAuthenticated, currentUser]);
+    }, [isAuthenticated, currentUser, state.orders]);
 
     return (
         <OrderContext.Provider value={{ state, dispatch, ordersIsLoading, ticketsIsLoading }}>

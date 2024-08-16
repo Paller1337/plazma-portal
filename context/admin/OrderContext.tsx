@@ -45,6 +45,7 @@ const initialState: GlobalStateType = {
 };
 
 const orderReducer = (state: GlobalStateType, action: any) => {
+    console.log('orderReducer', action)
     switch (action.type) {
         case 'INITIALIZE_ORDERS':
             return {
@@ -57,7 +58,7 @@ const orderReducer = (state: GlobalStateType, action: any) => {
                 ...state,
                 orders: state.orders.map(order =>
                     order.id === action.payload.orderId
-                        ? { ...order, status: action.payload.status }
+                        ? { ...order, status: action.payload.status, previous_status: action.payload.previous_status }
                         : order
                 ),
             };
@@ -242,17 +243,12 @@ export const OrderProvider = ({ children }) => {
     }, [isAuthenticated, currentUser.id]);
 
 
-    //НЕ ПОЛУЧАЮТСЯ ЗАКАЗЫ 
-    //НЕ ПОЛУЧАЮТСЯ ЗАКАЗЫ 
-    //НЕ ПОЛУЧАЮТСЯ ЗАКАЗЫ 
-
-
     useEffect(() => {
         if (isAuthenticated && currentUser.id) {
             if (!socketRef.current) {
                 socketRef.current = io(DEFAULTS.SOCKET.URL, {
                     query: {
-                        userId: currentUser.id,
+                        userId: 'a_' + currentUser.id,
                         role: currentUser.role,
                     }
                 });
@@ -270,12 +266,16 @@ export const OrderProvider = ({ children }) => {
 
                 socket.on('orderStatusChange', (data) => {
                     const { newStatus, orderId } = data;
-                    dispatch({
-                        type: 'UPDATE_ORDER_STATUS',
-                        payload: { orderId, status: newStatus },
-                    });
+                    // dispatch({
+                    //     type: 'UPDATE_ORDER_STATUS',
+                    //     payload: { 
+                    //         orderId, 
+                    //         status: newStatus,
+                    //         previous_status: response.data.newData.data.attributes.previous_status,
+                    //     },
+                    // })
                     toast.success(`Новый статус заказа (${checkOrderStatus(newStatus)})`)
-                });
+                })
 
                 socket.on('orderCreate', (data) => {
                     const newOrder = data.newOrder;

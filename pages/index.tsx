@@ -86,15 +86,14 @@ interface IndexPageProps {
 
 
 export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(async (context) => {
+    
+    const vkPosts = (await axiosInstance('/api/slider')).data.posts
     try {
 
         const token = context.req.headers.cookie?.split('; ').find(c => c.startsWith('session_token='))?.split('=')[1]
 
-        const cat = await axios.get(`${DEFAULTS.STRAPI.url}/api/categories`, {
-            params: {
-                'populate': 'deep,3',
-            }
-        })
+        const cat = await axiosInstance.get('/api/articles')
+        // console.log('cat: ', cat)
 
         const categories = cat.data.data.map(c => ({
             name: c.attributes.name,
@@ -121,7 +120,6 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
             })) : [],
         }))
 
-        const vkPosts = (await axiosInstance('/api/slider')).data.posts
         return {
             props: {
                 // orders: orders,
@@ -133,6 +131,7 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
         console.error('Ошибка при получении услуг:', error)
         return {
             props: {
+                slider: vkPosts,
                 // orders: []
             } as IndexPageProps
         }
@@ -247,7 +246,7 @@ export default function IndexPage(props: IndexPageProps) {
     //     fetch()
     // }, [])
     // console.log('state: ', state)
-    const workOrders = orders.filter(x => x.status !== 'done')
+    const workOrders = orders?.filter(x => x.status !== 'done')
     console.log('workOrders: ', workOrders)
 
     const openedTicks = supportTicks.filter(x => x.status !== 'closed')
