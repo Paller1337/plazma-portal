@@ -175,7 +175,11 @@ export const CartProvider = ({ children }) => {
     useEffect(() => {
         const initRooms = async () => {
             const rooms = await axiosInstance.get('/api/rooms')
-            const availableRooms = rooms.data.filter(x => x.tags !== '')
+            const availableRooms = rooms.data
+                .filter(x => x.tags !== '')
+                .sort((a, b) => a.tags.localeCompare(b.tags))
+
+            console.log('availableRooms: ', availableRooms)
             setHotelRooms(availableRooms)
         }
         initRooms()

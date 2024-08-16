@@ -7,7 +7,7 @@ import { withAdminAuthServerSideProps } from 'helpers/withAdminAuthServerSidePro
 import { useRouter } from 'next/router'
 import { GetServerSideProps } from 'next/types'
 import { useEffect, useState } from 'react'
-import { TOrderStatus } from 'types/order'
+import { IOrder, TOrderStatus } from 'types/order'
 import { IconSearch } from '@tabler/icons-react'
 import { DateTime } from 'luxon'
 
@@ -64,7 +64,7 @@ const PageNavItem = (props: PageNavItemProps) => {
 }
 
 
-const groupOrdersByDate = (orders) => {
+const groupOrdersByDate = (orders: IOrder[]) => {
     return orders.reduce((groups, order) => {
         // Преобразуем дату создания заказа в объект DateTime и форматируем в строку 'yyyy-MM-dd'
         const date = DateTime.fromISO(order.create_at).toFormat('yyyy-MM-dd')
@@ -224,11 +224,12 @@ export default function OrdersPage(props: AdminOrdersPageProps) {
                                     <div className='admin-main__vs' />
                                 </div>
                                 <div className='admin-serviceCards'>
-                                    {groupedOrders[date].map((order) => (
+                                    {groupedOrders[date].map((order: IOrder) => (
                                         <ServiceOrder
                                             key={'order-in-list-' + order.id}
                                             order={order}
                                             products={productsList}
+                                            isVisualNew={order.isVisualNew}
                                         />
                                     ))}
                                 </div>

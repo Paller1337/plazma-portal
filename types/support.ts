@@ -12,6 +12,7 @@ export interface ISupportTicket {
     // customer?: IOrderCustomer
     guest?: IGuestAccount
     messages?: ISupportTicketMessage[]
+    isVisualNew?: boolean
 }
 
 export type TSupportTicketStatus = 'new' | 'inwork' | 'closed'

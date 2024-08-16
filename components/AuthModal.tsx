@@ -1,4 +1,3 @@
-// OrderSendModal.tsx
 import React, { useEffect, useState } from 'react'
 import ReactModal from 'react-modal'
 import Button from './Button'
@@ -230,7 +229,7 @@ const AuthModal = (props: IProps) => {
                             />
                             {codeIsSend ?
                                 <div className='Auth-Modal__form-hidden'>
-                                    <span>Введите код из SMS</span>
+                                    <span>Введите код из SMS {smsCode}</span>
                                     <PinInput
                                         type={/^[0-9]*$/}
                                         inputType="tel"

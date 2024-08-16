@@ -41,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 name,
                 email,
                 role,
-                approved: false,
+                approved: true,
                 mailing: false
             }
         }, {

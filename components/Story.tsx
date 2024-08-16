@@ -1,4 +1,3 @@
-// OrderSendModal.tsx
 import React, { CSSProperties, useCallback, useEffect, useState } from 'react'
 import ReactModal from 'react-modal'
 import Button from './Button'
