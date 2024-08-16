@@ -1,4 +1,4 @@
-import authenticationPortal, { verifyToken } from 'helpers/login';
+import { verifyToken } from 'helpers/login';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
