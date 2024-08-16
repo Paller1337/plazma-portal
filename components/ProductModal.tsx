@@ -50,7 +50,7 @@ const ProductModal = (props: IProps) => {
                 <div className='Product-Modal__image'>
                     <img src={DEFAULTS.STRAPI.url + props.product?.image} alt='' />
                 </div>
-                <ReactSVG className='Product-Modal__close' src='/svg/modal-close.svg' onClick={props.onClose} />
+                <ReactSVG color='#fff' className='Product-Modal__close' src='/svg/modal-close.svg' onClick={props.onClose} />
 
                 <div className='Product-Modal__info'>
                     {props.product?.memo_text ? <span className='Product-Modal__info-memo'>{props.product?.memo_text}</span> : <></>}

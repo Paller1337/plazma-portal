@@ -1,6 +1,7 @@
 import IndexNavButton from '@/components/IndexNavButton'
 import NavBar from '@/components/NavBar'
 import PromoSlider from '@/components/PromoSlider'
+import RatingModal from '@/components/RatingModal'
 import StoriesModal from '@/components/Story'
 import WelcomeScreen from '@/components/WelcomeScreen'
 import { CardProps } from '@mantine/core'
@@ -86,7 +87,7 @@ interface IndexPageProps {
 
 
 export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(async (context) => {
-    
+
     const vkPosts = (await axiosInstance('/api/slider')).data.posts
     try {
 
@@ -173,6 +174,11 @@ export default function IndexPage(props: IndexPageProps) {
     const supportTicks = state.tickets
     const [sliderData, setSliderData] = useState(null)
 
+    const [ratingModalIsOpen, setRatingModalIsOpen] = useState(false)
+    const closeRatingModal = () => setRatingModalIsOpen(false)
+    const openRatingModal = () => {
+        setRatingModalIsOpen(true)
+    }
     function formatOrderMessage(orderCount) {
         let orderWord = 'заказов';
         let activeWord = 'активных';
@@ -251,6 +257,7 @@ export default function IndexPage(props: IndexPageProps) {
 
     const openedTicks = supportTicks.filter(x => x.status !== 'closed')
     return (<>
+        <RatingModal isOpen={ratingModalIsOpen} onClose={closeRatingModal} />
         <div className='index-preview'>
             <img src='/images/welcome.png' alt='' />
         </div>
@@ -313,7 +320,7 @@ export default function IndexPage(props: IndexPageProps) {
                     <div className='index-nav__button-cust'>
                         <ReactSVG src='/svg/tg.svg' />
                     </div>
-                    <div className='index-nav__button-cust'>
+                    <div onClick={() => openRatingModal()} className='index-nav__button-cust'>
                         <ReactSVG src='/svg/star.svg' />
                         Оставить отзыв
                     </div>
