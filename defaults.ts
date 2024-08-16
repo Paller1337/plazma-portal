@@ -14,8 +14,8 @@ export module DEFAULTS {
     export const PORTAL = {
         url: {
             prod: 'https://portal.kplazma.ru',
-            // dev: 'http://192.168.1.19:4000',
-            dev: 'https://portal-plazma.ru.tuna.am',
+            dev: 'http://localhost:4000',
+            // dev: 'https://portal-plazma.ru.tuna.am','
         }
     }
 

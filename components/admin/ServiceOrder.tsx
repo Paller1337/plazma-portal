@@ -121,7 +121,7 @@ export default function ServiceOrder(props: ICServiceOrderProps) {
 
                 <div className='admin-serviceCard__header'>
                     <div className='admin-serviceCard__status'>
-                        <div />
+                        <div className='admin-serviceCard__status_order' />
                     </div>
                     <Flex direction={'column'} gap={2}>
                         <Flex direction={'row'} gap={8} align={'center'}>
