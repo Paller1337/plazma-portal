@@ -38,6 +38,7 @@ export interface IOrder {
     comment?: string
     type: IStoreType
     store: IStore
+    isVisualNew?: boolean
 }
 
 export interface IRoomInfo {

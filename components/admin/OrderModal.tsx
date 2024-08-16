@@ -1,4 +1,3 @@
-// OrderSendModal.tsx
 import React, { useState } from 'react'
 import ReactModal from 'react-modal'
 import { ReactSVG } from 'react-svg'
@@ -66,11 +65,11 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
     const rows = props.order.order.products.map((x, i) => {
         const product = props.order.products.find(p => parseInt(p.id) === x.id)
         return (
-            <Table.Tr key={product.name + i + x.quantity * product.price}>
-                <Table.Td>{product.name}</Table.Td>
+            <Table.Tr key={product?.name + i + x.quantity * product?.price}>
+                <Table.Td>{product?.name}</Table.Td>
                 <Table.Td>{x.quantity}</Table.Td>
-                <Table.Td>{product.price}</Table.Td>
-                <Table.Td>{x.quantity * product.price}</Table.Td>
+                <Table.Td>{product?.price}</Table.Td>
+                <Table.Td>{x.quantity * product?.price}</Table.Td>
             </Table.Tr>
         )
     })
@@ -123,7 +122,7 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                                 <span className='title'>Сумма заказа</span>
                                 <span className='value'>{props.order.order.products.reduce((total, x) => {
                                     const product = props.order.products.find(p => parseInt(p.id) === x.id)
-                                    return total + product.price * x.quantity
+                                    return total + product?.price * x.quantity
                                 }, 0)
                                 } руб.</span>
                             </div>
@@ -190,7 +189,7 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                                                 }}>
                                                     Итого {props.order.order.products.reduce((total, x) => {
                                                         const product = props.order.products.find(p => parseInt(p.id) === x.id)
-                                                        return total + product.price * x.quantity
+                                                        return total + product?.price * x.quantity
                                                     }, 0)
                                                     } руб.</Table.Td>
                                             </Table.Tr>
@@ -202,72 +201,6 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                     </div>
                 </div>
             </div>
-            {/* <div className="OrderAdmin-Modal__content">
-                <ReactSVG className='OrderAdmin-Modal__close' src='/svg/modal-close.svg' onClick={onClose} />
-                <ServiceOrderBadge status={order.order?.status} id={order.order.id} date={order.order?.create_at} />
-
-                <div className='admin-serviceCard__header'>
-                    <div className='admin-serviceCard__status'>
-                        <div />
-                    </div>
-                    <Flex direction={'column'} gap={2}>
-                        <Flex direction={'row'} gap={8} align={'center'}>
-                            <span className='admin-serviceCard__room'>{order.order.room?.label}</span>
-                        </Flex>
-                        <Flex direction={'row'} gap={2}>
-                            <span className='admin-serviceCard__customer'>Заказчик:</span>
-                            <span className='admin-serviceCard__customer-name'>{order.order.guest?.name}</span>
-                        </Flex>
-                    </Flex>
-                </div>
-
-                <div className='admin-serviceCard__order'>
-                    <span className='admin-serviceCard__blockTitle'>Заказ:</span>
-                    <div className='admin-serviceCard__orderList'> */}
-            {/* {order.order.map((x, i) => (
-                            <div key={x.service.id + '-' + i} className='admin-serviceCard__orderItemWrap'>
-                                <ServiceOrderItem
-                                    key={i}
-                                    name={x.service.attributes.title}
-                                    amount={x.quantity}
-                                    image={DEFAULTS.SOCKET_URL.prod + x.service.attributes.images.data[0].attributes.url}
-                                />
-                                {i < order.order.length - 1 ?
-                                    <div className='admin-serviceCard__orderDivider' />
-                                    : <></>
-                                }
-                            </div>
-                        )
-                        )} */}
-            {/* </div>
-                </div>
-
-                <div className='admin-serviceCard__comment'>
-                    <span className='admin-serviceCard__blockTitle'>Комментарий:</span>
-                    <span className='admin-serviceCard__comment-text'>
-                        {order.order.description ? order.order.description : 'Комментарий не указан'}
-                    </span>
-                </div>
-                <div className='admin-serviceCard__feedback'>
-                    <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
-                        <span className='admin-serviceCard__blockTitle'>Телефон для связи:</span>
-                        <span className='admin-serviceCard__blockTitle'>{order.order.guest?.phone ? order.order.guest?.phone : 'Не указан'}</span>
-                    </Flex>
-                </div>
-                <div className='admin-serviceCard__result'>
-                    <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
-                        <span className='admin-serviceCard__blockText'>Сумма заказа:</span> */}
-            {/* <span className='admin-serviceCard__blockTitle'>{order.order.reduce(
-                            (total, service) => total + service.service.attributes.price * service.quantity, 0)
-                        } руб.</span> */}
-            {/* </Flex>
-
-                    <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
-                        <span className='admin-serviceCard__blockText'>Способ оплаты:</span>
-                        <span className='admin-serviceCard__blockTitle'>{paymentType}</span>
-                    </Flex>
-                </div>
-            </div> */}
         </ReactModal>
     )
 }

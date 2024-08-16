@@ -44,7 +44,7 @@ export default function OrderServices(props) {
     const [modalIsOpen, setModalIsOpen] = useState(false)
     const { state, dispatch, productsInfo, storesInfo, hotelRooms } = useCart()
     const [visibleLoadingOverlay, setVisibleLoadingOverlay] = useState(false)
-    
+
     const router = useRouter()
     const currentStoreState = state.stores[props.id]
     const total = currentStoreState?.order?.reduce((acc, curr) => acc + productsInfo[curr.id.toString()]?.price * curr.quantity, 0) || 0
@@ -61,7 +61,7 @@ export default function OrderServices(props) {
         error: ''
     })
 
-    const rooms = hotelRooms?.filter(x => x.tags !== '').map(room => ({
+    const rooms = hotelRooms?.map(room => ({
         value: room.id.toString(),
         label: room.tags
     }))
@@ -144,7 +144,7 @@ export default function OrderServices(props) {
         // console.log('currentStoreState: ', currentStoreState)
         // console.log('orderPhone: ', orderPhone)
         // if (currentStoreState) return
-        if(!currentUser.approved) {
+        if (!currentUser.approved) {
             toast.error('Ваш аккаунт заблокирован. Вы не можете оформлять заказы')
             return
         }
@@ -252,6 +252,8 @@ export default function OrderServices(props) {
     }
 
     const closeModal = () => {
+        console.log('state.stores: ', state.stores)
+        if (Object.keys(state.stores).length === 0) router.push('/', null, { shallow: true })
         setModalIsOpen(false)
     }
 

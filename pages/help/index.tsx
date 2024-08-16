@@ -79,7 +79,7 @@ export default function HelpPage(props: HelpPageProps) {
     // @ts-ignore
     const tickets: ISupportTicket[] = state.support_tickets
 
-    const rooms = hotelRooms?.filter(x => x.tags !== '').map(room => ({
+    const rooms = hotelRooms?.map(room => ({
         value: room.id.toString(),
         label: room.tags
     }))

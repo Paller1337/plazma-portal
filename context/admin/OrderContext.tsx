@@ -66,7 +66,7 @@ const orderReducer = (state: GlobalStateType, action: any) => {
         case 'CREATE_ORDER':
             return {
                 ...state,
-                orders: [action.payload.order, ...state.orders],
+                orders: [{ ...action.payload.order, isVisualNew: true }, ...state.orders],
             };
 
         case 'INITIALIZE_TICKETS':
@@ -194,7 +194,15 @@ export const OrderProvider = ({ children }) => {
                             value: ord?.attributes.store.data?.attributes.store_type.data?.attributes.value
                         },
                         category: ord?.attributes.store.data?.attributes.category.data?.attributes.name,
-                    }
+                    },
+                    isVisualNew: false,
+                    completed_at: ord?.attributes.completed_at,
+                    // type: {
+                    //     id: ord?.attributes.type.data?.id,
+                    //     label: ord?.attributes.type.data?.attributes.label,
+                    //     value: ord?.attributes.type.data?.attributes.value,
+
+                    // }
                 }) as IOrder)
 
                 console.log(orders)
@@ -218,7 +226,8 @@ export const OrderProvider = ({ children }) => {
                         sender: message.sender,
                         sender_type: message.sender_type,
                     })),
-                }));
+                    isVisualNew: false,
+                }) as ISupportTicket);
 
                 dispatch({
                     type: 'INITIALIZE_ORDERS',

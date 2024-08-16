@@ -1,4 +1,3 @@
-// OrderSendModal.tsx
 import React, { useEffect } from 'react'
 import ReactModal from 'react-modal'
 import Button from './Button'
