@@ -4,16 +4,18 @@ import { DateTime } from 'luxon';
 import { useEffect, useState } from 'react'
 import { IOrder, IProduct, TOrderPaymentType, TOrderStatus } from 'types/order'
 import { IServiceOrdered, TServiceOrderStatus } from 'types/services'
-import AdminOrderModal from './OrderModal';
-import AdminHelpModal from './HelpModal';
+import AdminOrderModal from './OrderModal'
+import AdminHelpModal from './HelpModal'
+import { ISupportTicket, TSupportTicketStatus } from 'types/support'
 
 
 interface HelpDeskProps {
-
+    ticket: ISupportTicket
+    isVisualNew?: boolean
 }
 
 
-export const HelpDeskBadge = (props: { status: TOrderStatus, id: number, date: string }) => {
+export const HelpDeskBadge = (props: { status: TSupportTicketStatus, id: number, date: string }) => {
     const checkOrderStatus = (status) => {
         // if (!props.status) return
         switch (props.status) {
@@ -22,17 +24,10 @@ export const HelpDeskBadge = (props: { status: TOrderStatus, id: number, date: s
                     name: 'Новый',
                     color: 'blue',
                 }
-            // break;
-            case 'delivered':
-                return {
-                    name: 'Доставляется',
-                    color: 'green',
-                }
-            // break;
 
-            case 'done':
+            case 'closed':
                 return {
-                    name: 'Выполнен',
+                    name: 'Закрыта',
                     color: 'gray',
                 }
             // break
@@ -55,13 +50,13 @@ export const HelpDeskBadge = (props: { status: TOrderStatus, id: number, date: s
     const date = DateTime.fromISO(props.date).toLocaleString({ weekday: 'short', month: 'long', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 
     return (
-        <Flex direction={'row'} justify={'space-between'}>
+        <Group px={12} w='100%' align='center' justify='space-between'>
             <span className='admin-serviceCard__date'>{date}</span>
             <span className='admin-serviceCard__id'>ID:{props.id}</span>
             <Badge autoContrast variant="light" color={badge.color} className='admin-serviceCard__badge' >
                 {badge.name}
             </Badge>
-        </Flex>
+        </Group>
     )
 }
 
@@ -82,45 +77,45 @@ export default function HelpDesk(props: HelpDeskProps) {
 
 
         <Grid.Col span={{ base: 12, lg: 4 }}>
-            <Box pt={10} pb={24} className='admin-serviceCard' onClick={() => openModal(true)}>
-                {/* <HelpOrderBadge status={props.order.status} id={props.order.id} date={props.order.create_at} /> */}
-                <Group px={12} w='100%' align='center1' justify='space-between'>
+            <Box pt={10} pb={24} className={`admin-serviceCard${props.isVisualNew ? ' admin-serviceCard_new' : ''}`} onClick={() => openModal(true)}>
+                <HelpDeskBadge status={props.ticket.status} id={props.ticket.id} date={props.ticket.create_at} />
+                {/* <Group px={12} w='100%' align='center' justify='space-between'>
                     <Text fz='xs' fw={400} c='dimmed'>чт, 15 августа в 16:41</Text>
                     <Badge autoContrast variant="light">Новый</Badge>
-                </Group>
-                <Stack w='100%' px={24} align='flex-start' gap={6}>
+                </Group> */}
+                <Stack w='100%' px={24} align='flex-start' gap={0}>
                     <Group w='100%' align='center' justify='flex-start'>
                         <div className='admin-serviceCard__status'>
-                            <div className='admin-serviceCard__status_helpDesk' />
+                            <div className='admin-serviceCard__status_ticket' />
                         </div>
-                        <Stack flex='flex-start' gap={2}>
-                            <Text fz='md' fw={600} c='var(--portal-color-text)' style={{ wordBreak: 'break-word' }}>
-                                Домик на набережной 3
+                        <Stack flex='flex-start' gap={0} py={12}>
+                            <Text fz='lg' fw={600} c='var(--portal-color-text)' style={{ wordBreak: 'break-word' }}>
+                                {props.ticket.room?.label ? props.ticket.room?.label : 'Не указано'}
                             </Text>
                             <Group align='center' gap={6}>
-                                <Text fz='sm' fw={600} c='var(--portal-color-text)'>
+                                <Text fz='md' fw={600} c='var(--portal-color-text-secondary)'>
                                     Заказчик
                                 </Text>
-                                <Text fz='sm' fw={400} c='var(--portal-color-text-secondary)'>
-                                    Анастасия Сыч
+                                <Text fz='md' fw={600} c='var(--portal-color-text)'>
+                                    {` ${props.ticket.guest.name} `}
                                 </Text>
                             </Group>
                         </Stack>
                     </Group>
                     <Group mt={10} w='100%' align='center' justify='space-between'>
-                        <Text fz='sm' fw={400} c='var(--portal-color-text-secondary)'>
+                        <Text fz='md' fw={600} c='var(--portal-color-text-secondary)'>
                             Тип проблемы
                         </Text>
-                        <Text fz='sm' fw={600} c='var(--portal-color-text-secondary)'>
+                        <Text fz='md' fw={600} c='var(--portal-color-text)'>
                             Wi-Fi
                         </Text>
                     </Group>
                     <Group w='100%' align='center' justify='space-between'>
-                        <Text fz='sm' fw={400} c='var(--portal-color-text-secondary)'>
+                        <Text fz='md' fw={600} c='var(--portal-color-text-secondary)'>
                             Телефон для связи
                         </Text>
-                        <Text fz='sm' fw={600} c='var(--portal-color-text-secondary)'>
-                            +79539687367
+                        <Text fz='md' fw={600} c='var(--portal-color-text)'>
+                            {props.ticket.guest.phone ? props.ticket.guest.phone : 'Не указан'}
                         </Text>
                     </Group>
                 </Stack>

@@ -164,7 +164,7 @@ export default function OrdersPage(props: AdminOrdersPageProps) {
                 </div> */}
                 <div className='admin--order__header'>
                     <div className='admin--order__header-content'>
-                        <span className='admin--order__header-title'>Показаны заказы за сегодня</span>
+                        <span className='admin--order__header-title'>Заказы услуг и еды</span>
                         <div className='admin--order__header-filters'>
                             <SegmentedControl
                                 color="#262E4A"

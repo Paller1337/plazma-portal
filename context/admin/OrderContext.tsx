@@ -88,7 +88,7 @@ const orderReducer = (state: GlobalStateType, action: any) => {
         case 'CREATE_TICKET':
             return {
                 ...state,
-                tickets: [action.payload.ticket, ...state.tickets],
+                tickets: [{ ...action.payload.ticket, isVisualNew: true }, ...state.tickets],
             };
 
         default:
@@ -226,6 +226,16 @@ export const OrderProvider = ({ children }) => {
                         sender: message.sender,
                         sender_type: message.sender_type,
                     })),
+                    room: ticket?.attributes.room,
+                    guest: {
+                        id: ticket?.attributes.guest.data?.id,
+                        name: ticket?.attributes.guest.data?.attributes.name,
+                        phone: ticket?.attributes.guest.data?.attributes.phone,
+                        email: ticket?.attributes.guest.data?.attributes.email,
+                        role: ticket?.attributes.guest.data?.attributes.role,
+                        mailing: ticket?.attributes.guest.data?.attributes.mailing,
+                        approved: ticket?.attributes.guest.data?.attributes.approved,
+                    },
                     isVisualNew: false,
                 }) as ISupportTicket);
 
@@ -306,6 +316,7 @@ export const OrderProvider = ({ children }) => {
 
                 socket.on('supportTicketCreate', (data) => {
                     const newTicket = data.newTicket;
+                    console.log('Новая заявка на поддержку: ',newTicket)
                     dispatch({
                         type: 'CREATE_TICKET',
                         payload: { ticket: newTicket },

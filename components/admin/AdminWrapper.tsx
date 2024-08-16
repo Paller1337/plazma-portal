@@ -1,6 +1,7 @@
 import { useAuth } from 'context/admin/AuthContext';
 import { useAdminOrders } from 'context/admin/OrderContext';
 import { GetServerSideProps } from 'next';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { ReactSVG } from 'react-svg';
@@ -10,7 +11,7 @@ const menuItems = [
         label: 'Гостевой портал',
         links: [
             { label: 'Заказы', path: '/admin/portal/orders' },
-            { label: 'Поддержка', path: '/admin/portal/products-services' },
+            { label: 'Поддержка', path: '/admin/portal/tickets' },
             { label: 'Гости', path: '/admin/portal/guests' },
         ],
         icon: 'nav_users',
@@ -122,9 +123,9 @@ export default function AdminWrapper(props: AdminWrapperProps) {
                                         {!isMenuMin && isSectionOpen ?
                                             <div className='admin-nav__menu-section-links'>
                                                 {item.links.map((link, idx) => (
-                                                    <a key={idx} href={link.path} className={`admin-nav__menu-link ${router.pathname.startsWith(link.path) ? 'active' : ''}`}>
+                                                    <Link key={idx} href={link.path} className={`admin-nav__menu-link ${router.pathname.startsWith(link.path) ? 'active' : ''}`}>
                                                         {link.label}
-                                                    </a>
+                                                    </Link>
                                                 ))}
                                             </div>
                                             : <></>}

@@ -1,5 +1,6 @@
 // import { IOrderCustomer } from './order'
 
+import { IRoomInfo } from './order'
 import { IGuestAccount } from './session'
 
 export interface ISupportTicket {
@@ -12,10 +13,11 @@ export interface ISupportTicket {
     // customer?: IOrderCustomer
     guest?: IGuestAccount
     messages?: ISupportTicketMessage[]
+    room: IRoomInfo
     isVisualNew?: boolean
 }
 
-export type TSupportTicketStatus = 'new' | 'inwork' | 'closed'
+export type TSupportTicketStatus = 'new' | 'inwork' | 'closed' | 'null'
 export type TSupportTicketMessageSender = 'admin' | 'guest'
 
 export interface ISupportTicketMessage {

@@ -26,7 +26,7 @@ const SupportTicketSendModal = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="OrderSend-Modal__actions">
-                    <Button text='Мои заявки' outlined stretch onClick={() => router.push('/help/history')} />
+                    <Button text='Мои заявки' outlined stretch onClick={() => router.push('/help/history', null, { shallow: true })} />
                     <Button text='Хорошо!' stretch onClick={onClose} />
                 </div>
             </div>

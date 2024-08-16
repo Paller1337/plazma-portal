@@ -65,6 +65,18 @@ const AdminHelpModal = (props: AdminOrderModalProps) => {
                         </Text>
                         <Text fz='lg' fw={800} c='var(--portal-color-text)'>Paller</Text>
                     </Group>
+                    <Group w='100%' align='center' justify='flex-start' >
+                        <Text w={140} fz='lg' fw={600} c='var(--portal-color-text)' >
+                            Номер:
+                        </Text>
+                        <Text fz='lg' fw={800} c='var(--portal-color-text)'>Nfey[nfa</Text>
+                    </Group>
+                    <Group w='100%' align='center' justify='flex-start' >
+                        <Text w={140} fz='lg' fw={600} c='var(--portal-color-text)' >
+                            Телефон:
+                        </Text>
+                        <Text fz='lg' fw={800} c='var(--portal-color-text)'>88005553535</Text>
+                    </Group>
                     <Group wrap='nowrap' w='100%' align='flex-start' justify='flex-start' >
                         <Text w={140} fz='lg' fw={600} c='var(--portal-color-text)' >
                             Комментарий:
