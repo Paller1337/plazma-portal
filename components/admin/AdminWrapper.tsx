@@ -10,7 +10,7 @@ const menuItems = [
         label: 'Гостевой портал',
         links: [
             { label: 'Заказы', path: '/admin/portal/orders' },
-            { label: 'Товары и услуги', path: '/admin/portal/products-services' },
+            { label: 'Поддержка', path: '/admin/portal/products-services' },
             { label: 'Гости', path: '/admin/portal/guests' },
         ],
         icon: 'nav_users',

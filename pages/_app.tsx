@@ -13,32 +13,22 @@ import AppLayout from '@/components/AppLayout'
 import { CartProvider } from 'context/CartContext'
 import { AuthProvider } from 'context/AuthContext'
 import { AuthProvider as AdminAuthProvider } from 'context/admin/AuthContext'
-import { Button, MantineProvider, createTheme } from '@mantine/core'
+import { Button, MantineProvider } from '@mantine/core'
 import AdminHeader from '@/components/admin/AdminHeader'
 import { Toaster } from 'react-hot-toast'
 import { OrderProvider as AdminOrderProvider } from 'context/admin/OrderContext'
 import { OrderProvider } from 'context/OrderContext'
 import AdminWrapper from '@/components/admin/AdminWrapper'
+import { plazmaTheme, resolver } from '../theme'
 
 
-const theme = createTheme({
-    components: {
-        Button: Button.extend({
-            defaultProps: {
-                color: 'cyan',
-                variant: 'outline',
-                py: 12,
-            },
-        }),
-    },
-})
 
 
 export default function App({ Component, pageProps }) {
     const router = useRouter();
     const loaderRef = useRef<LoadingBarRef>(null);
 
-    
+
     useEffect(() => {
         // Логика для путей, отличных от админ-панели
         if (!router.pathname.startsWith('/admin')) {
@@ -54,17 +44,17 @@ export default function App({ Component, pageProps }) {
 
     useEffect(() => {
         if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.register('/worker.js')
-            .then(registration => console.log('Service Worker зарегистрирован:', registration))
-            .catch(error => console.error('Ошибка регистрации Service Worker:', error));
+            navigator.serviceWorker.register('/worker.js')
+                .then(registration => console.log('Service Worker зарегистрирован:', registration))
+                .catch(error => console.error('Ошибка регистрации Service Worker:', error));
         }
-      }, []);
+    }, []);
 
-      
+
     if (router.pathname.startsWith('/admin')) {
         // Рендеринг админ-панели без контекстов
         return (<>
-            <MantineProvider theme={theme}>
+            <MantineProvider cssVariablesResolver={resolver} defaultColorScheme='light' theme={plazmaTheme}>
                 <AdminAuthProvider>
                     <AdminOrderProvider>
                         <Toaster />
@@ -77,7 +67,7 @@ export default function App({ Component, pageProps }) {
             </MantineProvider>
         </>)
     }
-    
+
     return (
         <>
             <Head>
@@ -88,7 +78,7 @@ export default function App({ Component, pageProps }) {
             <LoadingBar color='#262626' ref={loaderRef} height={2} />
 
 
-            <MantineProvider theme={theme}>
+            <MantineProvider cssVariablesResolver={resolver} defaultColorScheme='light' theme={plazmaTheme}>
                 <AuthProvider>
                     <OrderProvider>
                         <CartProvider>
@@ -102,5 +92,3 @@ export default function App({ Component, pageProps }) {
         </>
     )
 }
-
-

@@ -91,7 +91,7 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
             <div className='OrderAdmin-Modal__header'>
                 <div className='OrderAdmin-Modal__header-content'>
                     Управление заказом
-                    <ReactSVG className='OrderAdmin-Modal__close' src='/svg/admin/admin_modal-close.svg' onClick={props.onClose} />
+                    <ReactSVG className='OrderAdmin-Modal__close' style={{cursor: 'pointer'}} src='/svg/admin/admin_modal-close.svg' onClick={props.onClose} />
                 </div>
             </div>
 
