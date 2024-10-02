@@ -1,3 +1,5 @@
+import { rem } from '@mantine/core';
+import { IconChevronLeft } from '@tabler/icons-react';
 import { useAuth } from 'context/admin/AuthContext';
 import { useAdminOrders } from 'context/admin/OrderContext';
 import { GetServerSideProps } from 'next';
@@ -45,7 +47,7 @@ interface AdminWrapperProps {
 export default function AdminWrapper(props: AdminWrapperProps) {
     const router = useRouter()
     const { logOut } = useAuth()
-    const [isMenuMin, setIsMenuMin] = useState(false)
+    const [isMenuMin, setIsMenuMin] = useState(true)
     const [openSections, setOpenSections] = useState({})
     const [activeIndex, setActiveIndex] = useState(-1)
     const { clients } = useAdminOrders()
@@ -81,10 +83,16 @@ export default function AdminWrapper(props: AdminWrapperProps) {
         <main className='admin-main'>
             {props.navIsVisible ?
                 <div className={`admin-nav${isMenuMin ? ' min' : ''}`}>
+                    <div className='admin-nav__spoiler' onClick={() => toggleMin()} >
+                        <IconChevronLeft color='#BCC5DD' style={{
+                            width: rem(20), height: rem(20),
+                            transform: `rotate(${isMenuMin ? 180 : 0}deg)`, transition: 'all .24s ease-in-out'
+                        }} />
+                    </div>
                     {/* HEADER NAV*/}
                     <div className='admin-nav__header'>
                         <div className='admin-nav__header-content'>
-                            <ReactSVG className='admin-nav__header-logo' src='/svg/logo-white-48.svg' onClick={() => toggleMin()} />
+                            <ReactSVG className='admin-nav__header-logo' src='/svg/logo-white-48.svg' />
                             {!isMenuMin ?
                                 <>
                                     <span className='admin-nav__header-hs' />

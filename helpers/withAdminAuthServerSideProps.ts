@@ -4,7 +4,7 @@ import { SECRET_KEY } from './login'
 import axios from 'axios';
 import { axiosInstance } from './axiosInstance';
 
-type TUserRoles = 'admin' | 'moderator' | 'user'
+type TUserRoles = 'admin' | 'moderator' | 'user' | 'sport' | 'banquet'
 
 export function withAdminAuthServerSideProps(gssp: GetServerSideProps, roles: TUserRoles[]): GetServerSideProps {
     return async (context: GetServerSidePropsContext): Promise<GetServerSidePropsResult<any>> => {

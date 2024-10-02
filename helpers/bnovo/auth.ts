@@ -1,39 +1,6 @@
 import { axiosInstance } from 'helpers/axiosInstance';
 import bnovoClient from './bnovoClient'
-
-// Функция для получения SID из Redis
-export async function getCachedRedis(key) {
-  try {
-    const result = await axiosInstance.post('/api/redis', {
-      action: 'get',
-      key: key
-    });
-
-    console.log('Received cache: ', result.data.result ? result.data.result.substring(0, 150) : 'No data', ' | in key:', key);
-    return result.data.result;
-  } catch (err) {
-    console.error('Ошибка получения из Redis:', err);
-    throw err; // Проброс ошибки для обработки на более высоком уровне
-  }
-}
-
-
-// Функция для кэширования SID в Redis
-export async function cacheToRedis(key, value, time) {
-  try {
-    const result = await axiosInstance.post('/api/redis', {
-      action: 'set',
-      key: key,
-      value: value,
-      time: time
-    })
-    console.log(key, ' кэширован в Redis:', result.data.result, ' \nВремя действия: ', time, ' секунд');
-
-  } catch (err) {
-    console.error('Ошибка кэширования ', key, ' в Redis:', err);
-    throw err;
-  }
-}
+import { cacheToRedis, getCachedRedis } from 'helpers/redis';
 
 export async function bnovoAuth() {
   const cachedSID = await getCachedRedis('bnovoSID')

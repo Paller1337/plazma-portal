@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 import { IOrder, TOrderStatus } from 'types/order'
 import { IconSearch } from '@tabler/icons-react'
 import { DateTime } from 'luxon'
+import { withAdminPage } from 'helpers/withAdminPage'
 
 
 interface AdminOrdersPageProps {
@@ -76,7 +77,7 @@ const groupOrdersByDate = (orders: IOrder[]) => {
     }, {})
 }
 
-export default function OrdersPage(props: AdminOrdersPageProps) {
+function OrdersPage(props: AdminOrdersPageProps) {
     const [currentNav, setCurrentNav] = useState<TOrderStatus>('new')
     const hotelRooms = props.rooms?.filter(x => x.tags !== '')
     const { state, productsList } = useAdminOrders()
@@ -269,3 +270,5 @@ export default function OrdersPage(props: AdminOrdersPageProps) {
         </>
     )
 }
+
+export default withAdminPage(OrdersPage)

@@ -16,7 +16,11 @@ const nextConfig = {
     ],
   },
   experimental: {
-    optimizePackageImports: ['@mantine/core'],
+    optimizePackageImports: [
+      '@mantine/core',
+      '@mantine/hooks',
+      '@mantine/dates'
+    ],
   },
   webpack: (config, { isServer }) => {
     // Ваши настройки webpack

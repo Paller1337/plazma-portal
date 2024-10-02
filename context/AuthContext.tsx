@@ -294,7 +294,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             closeAuthModal,
         }}>
             <AuthModal isOpen={authModalIsOpen} onClose={closeAuthModal} />
-            <AuthModal isOpen={notifyModalIsOpen} onClose={closeNotifyModal} />
+            {/* <AuthModal isOpen={notifyModalIsOpen} onClose={closeNotifyModal} />
             <Button
                 text={!isAuthenticated ? 'Модалка авторизации' : 'Вы авторизованы'}
                 onClick={!isAuthenticated ? () => setAuthModalIsOpen(true) : () => { }}
@@ -312,7 +312,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             <Button
                 text={'Тестовое уведомление'}
                 onClick={onSubmitPush}
-            />
+            /> */}
 
             <WelcomeScreen show={showWelcomeScreen} end={endWelcomeScreen} />
             {children}

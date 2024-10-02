@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { DEFAULTS } from 'defaults'
-import { cacheToRedis, getCachedRedis } from 'helpers/bnovo/auth'
+import { cacheToRedis, getCachedRedis } from 'helpers/redis'
 import { IiikoToken } from 'types/iiko'
 
 export default async function getIikoToken(): Promise<IiikoToken> {

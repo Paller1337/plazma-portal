@@ -1,6 +1,7 @@
 import { TBnovoRoom } from 'types/bnovo';
-import { bnovoAuth, cacheToRedis, getCachedRedis } from './auth'
+import { bnovoAuth } from './auth'
 import bnovoClient from './bnovoClient'
+import { cacheToRedis, getCachedRedis } from 'helpers/redis';
 
 export async function getRooms() {
     const redisRooms = await getCachedRedis(`bnovoRooms`)

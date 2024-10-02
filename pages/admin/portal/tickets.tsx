@@ -6,6 +6,7 @@ import { IconSearch } from '@tabler/icons-react'
 import { useAdminOrders } from 'context/admin/OrderContext'
 import { getRooms } from 'helpers/bnovo/getRooms'
 import { withAdminAuthServerSideProps } from 'helpers/withAdminAuthServerSideProps'
+import { withAdminPage } from 'helpers/withAdminPage'
 import { DateTime } from 'luxon'
 import { useRouter } from 'next/router'
 import { GetServerSideProps } from 'next/types'
@@ -54,7 +55,7 @@ const groupTicketsByDate = (tickets: ISupportTicket[]) => {
     }, {})
 }
 
-export default function ProductsServicesPage(props: ProductsServicesPageProps) {
+function ProductsServicesPage(props: ProductsServicesPageProps) {
     const [currentNav, setCurrentNav] = useState<TSupportTicketStatus>('new')
     const router = useRouter()
     const { state } = useAdminOrders()
@@ -172,3 +173,6 @@ export default function ProductsServicesPage(props: ProductsServicesPageProps) {
         </>
     )
 }
+
+
+export default withAdminPage(ProductsServicesPage)

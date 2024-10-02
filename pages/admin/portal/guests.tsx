@@ -13,6 +13,7 @@ import { DateTime } from 'luxon'
 import { axiosInstance } from 'helpers/axiosInstance'
 import { IGuestAccount } from 'types/session'
 import toast from 'react-hot-toast'
+import { withAdminPage } from 'helpers/withAdminPage'
 
 
 interface AdminOrdersPageProps {
@@ -65,7 +66,7 @@ type TNavItem = {
 }
 
 
-export default function GuestsPage(props: AdminOrdersPageProps) {
+function GuestsPage(props: AdminOrdersPageProps) {
     const [currentNav, setCurrentNav] = useState<TGuestStatusApproved>('null')
     const [initGuests, setInitGuests] = useState<IGuestAccount[]>(props.guests)
     const [guests, setGuests] = useState<IGuestAccount[]>(props.guests)
@@ -260,3 +261,5 @@ export default function GuestsPage(props: AdminOrdersPageProps) {
         </>
     )
 }
+
+export default withAdminPage(GuestsPage)

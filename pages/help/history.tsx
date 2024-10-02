@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import { useAuth } from 'context/AuthContext'
 import OrderListItem from '@/components/OrderListItem'
 // import { IServiceOrder } from 'types/order'
-import { getServiceOrdersByGuestId, servicesFromRes } from 'helpers/order/services'
+// import { getServiceOrdersByGuestId, servicesFromRes } from 'helpers/order/services'
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import { GetServerSideProps } from 'next'
 import { SECRET_KEY } from 'helpers/login'
@@ -32,19 +32,8 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
         }
         const decoded = jwt.verify(token, SECRET_KEY) as JwtPayload
 
-
-        const res = await getServiceOrdersByGuestId(decoded.accountId)
-
-        if (!res) {
-            throw new Error(`Заказов нет`);
-        }
-
-        // const orders: IServiceOrder[] = servicesFromRes(res)
-
         return {
-            props: {
-                // orders: orders,
-            } as SupportTicketsProps
+            props: {} as SupportTicketsProps
         }
     } catch (error) {
         console.error('Ошибка при получении услуг:', error)

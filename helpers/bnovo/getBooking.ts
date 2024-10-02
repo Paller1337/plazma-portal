@@ -1,9 +1,10 @@
 import { TBooking, TBookingExtra } from 'types/bnovo';
-import { bnovoAuth, cacheToRedis, getCachedRedis } from './auth'
+import { bnovoAuth } from './auth'
 import bnovoClient from './bnovoClient'
 import { DateTime } from 'luxon'
 import axios from 'axios';
 import { axiosInstance } from 'helpers/axiosInstance';
+import { cacheToRedis, getCachedRedis } from 'helpers/redis';
 
 export async function getBooking(id: number) {
     const redisBooking = await getCachedRedis(`bookingBnovo_${id}`)

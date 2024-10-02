@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { updateServiceOrderStatus } from 'helpers/order/services'
-import { updateSupportTicketStatus } from 'helpers/support/tickets'
+// import { updateServiceOrderStatus } from 'helpers/order/services'
 import axios from 'axios'
 import { DEFAULTS } from 'defaults'
 import { IGuestAccount } from 'types/session'

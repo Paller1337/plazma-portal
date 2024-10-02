@@ -1,16 +1,5 @@
-import { TBookingExtra } from 'types/bnovo'
-import { getBooking, getBookingByRoomId, getBookingCustomers } from './bnovo/getBooking'
-import { axiosInstance } from './axiosInstance'
-// import { createGuestAccount, getGuestAccountByRoomIdAndSurname } from './session/guestAccount'
 import jwt, { JwtPayload } from 'jsonwebtoken'
-import Cookies from 'js-cookie'
-// import { IGuestAccountResident } from 'types/session'
 import { DateTime } from 'luxon'
-import axios from 'axios'
-import { updateGuestAccountStatus, updateGuestLivingDate } from './guest/guest'
-
-
-
 export const SECRET_KEY = process.env.JWT_KEY
 
 export const generateToken = (accountId, phone, name) => {
