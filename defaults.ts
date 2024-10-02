@@ -13,8 +13,8 @@ export module DEFAULTS {
 
     export const PORTAL = {
         url: {
-            // prod: 'https://portal.kplazma.ru',
-            prod: 'https://portal-plazma.ru.tuna.am',
+            prod: 'https://portal.kplazma.ru',
+            // prod: 'https://portal-plazma.ru.tuna.am',
             // dev: 'http://localhost:4000',
             dev: 'https://portal-plazma.ru.tuna.am',
         }
