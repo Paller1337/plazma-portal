@@ -5,7 +5,7 @@ import Router, { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { ReactSVG } from 'react-svg'
 
-type TPortalPages = 'index' | 'services' | 'help' | 'order/history'
+type TPortalPages = 'index' | 'services' | 'help' | 'basket/history'
 
 interface NavBarProps {
     page?: TPortalPages

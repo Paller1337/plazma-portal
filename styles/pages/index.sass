@@ -59,6 +59,8 @@
         flex-direction: column
         gap: 32px
         padding: 48px 24px 24px 24px
+        @media screen and ( max-width: 520px )
+            padding: 48px 4px 24px 4px
         &__category
             display: flex
             flex-direction: column
@@ -79,6 +81,8 @@
                     line-height: 125%
     &-swiper
         padding-bottom: 40px !important
+        @media screen and ( max-width: 520px )
+            padding-bottom: 20px !important
         .swiper-pagination-bullet
             width: 16px
             height: 16px
@@ -96,6 +100,8 @@
         padding: 12px 24px
         margin: 0 auto
         flex-wrap: wrap
+        @media screen and ( max-width: 520px )
+            padding: 12px 4px
         &__logo
             div
                 div
@@ -233,4 +239,6 @@
             transform: rotate(-30deg)
 
     &-orders
-        padding: 24px 24px
+        padding: 4px 24px
+        @media screen and ( max-width: 520px )
+            padding: 4px 4px

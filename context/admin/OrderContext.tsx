@@ -275,7 +275,7 @@ export const OrderProvider = ({ children }) => {
                 const socket = socketRef.current;
 
                 socket.on('connect', () => {
-                    console.log('Connected to Strapi WebSocket');
+                    console.log('Connected admin to Strapi WebSocket');
                 });
 
                 socket.on('portalOnline', (data) => {
@@ -307,6 +307,7 @@ export const OrderProvider = ({ children }) => {
 
                 socket.on('supportTicketStatusChange', (data) => {
                     const { newStatus, ticketId } = data
+                    console.log('ticket data: ', data)
                     dispatch({
                         type: 'UPDATE_TICKET_STATUS',
                         payload: { ticketId, status: newStatus },

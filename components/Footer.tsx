@@ -1,4 +1,5 @@
 import { useAuth } from 'context/AuthContext'
+import { DEFAULTS } from 'defaults'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
@@ -32,10 +33,10 @@ export default function Footer() {
                     </div>
 
                     <div className='footer__socials'>
-                        <Link target='_blank' className='footer__social-btn' href={'https://t.me/plazmadonskoy'}>
+                        <Link target='_blank' className='footer__social-btn' href={DEFAULTS.SOCIALS.telegram}>
                             <ReactSVG src='/svg/telegram-white.svg' />
                         </Link>
-                        <Link target='_blank' className='footer__social-btn' href={'https://vk.com/park_hotel_plazma'}>
+                        <Link target='_blank' className='footer__social-btn' href={DEFAULTS.SOCIALS.vk}>
                             <ReactSVG src='/svg/vk-white.svg' />
                         </Link>
                     </div>

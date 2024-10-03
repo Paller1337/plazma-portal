@@ -19,6 +19,8 @@ import { Input, InputBase, Loader, LoadingOverlay, Select, Textarea } from '@man
 import { IMaskInput } from 'react-imask'
 import { IGuestAccount } from 'types/session'
 import Link from 'next/link'
+import { telegramSendOrder } from 'helpers/telegram'
+import { getOrdersByGuestId } from 'helpers/order/order'
 
 
 export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(async (context) => {
@@ -73,26 +75,26 @@ export default function OrderServices(props) {
     const [orderComment, setOrderComment] = useState('')
     const [orderPayment, setOrderPayment] = useState('bank-card')
 
-    const sendOrderToTelegram = async (order) => {
-        try {
-            const response = await fetch('/api/send-order', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(order)
-            })
+    // const sendOrderToTelegram = async (order) => {
+    //     try {
+    //         const response = await fetch('/api/send-order', {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json'
+    //             },
+    //             body: JSON.stringify(order)
+    //         })
 
-            if (!response.ok) {
-                throw new Error('Не удалось отправить заказ')
-            }
+    //         if (!response.ok) {
+    //             throw new Error('Не удалось отправить заказ')
+    //         }
 
-            return await response.json();
-        } catch (error) {
-            console.error('Ошибка при отправке заказа:', error)
-            throw error;
-        }
-    }
+    //         return await response.json();
+    //     } catch (error) {
+    //         console.error('Ошибка при отправке заказа:', error)
+    //         throw error;
+    //     }
+    // }
 
     const placeOrder = async (orderData) => {
         try {
@@ -209,35 +211,33 @@ export default function OrderServices(props) {
                 })
 
                 if (!orderIsPlace.status) return
+                const orders = await getOrdersByGuestId(currentUser.id)
+                const targetOrder = orders.find(o => o.id === orderIsPlace.data.data.id)
+                // const orderToTelegram = {
+                //     id: orderIsPlace.data.data.id,
+                //     time: DateTime.fromISO(nowTime).toLocaleString(DateTime.DATETIME_MED),
+                //     comment: orderComment,
+                //     type: storesInfo[props.id]?.store_type.label,
+                //     phone: orderPhone.value,
+                //     room: {
+                //         label: room.label,
+                //         roomId: room.value,
+                //     },
+                //     payment: orderPayment,
+                //     items: serviceOrder,
+                //     total: total,
+                //     status: 'new',
+                //     store: storesInfo[props.id]?.title,
+                //     guest: guestAccount?.attributes.name
+                // }
 
-                const orderToTelegram = {
-                    id: orderIsPlace.data.data.id,
-                    time: DateTime.fromISO(nowTime).toLocaleString(DateTime.DATETIME_MED),
-                    comment: orderComment,
-                    type: storesInfo[props.id]?.store_type.label,
-                    phone: orderPhone.value,
-                    room: {
-                        label: room.label,
-                        roomId: room.value,
-                    },
-                    payment: orderPayment,
-                    items: serviceOrder,
-                    total: total,
-                    status: 'new',
-                    store: storesInfo[props.id]?.title,
-                    guest: guestAccount?.attributes.name
-                }
-
-                const response = await sendOrderToTelegram(orderToTelegram) // Предполагается, что здесь вызывается функция отправки заказа
-                console.log('tg response: ', response)
-                if (response.message && orderIsPlace) {
+                const response = await telegramSendOrder(targetOrder) // Предполагается, что здесь вызывается функция отправки заказа
+                // console.log('tg response: ', response)
+                if (response && orderIsPlace) {
                     toast.success('Заказ успешно отправлен!')
                     setOrderComment('')
                     dispatch({ type: 'CLEAR_CART', storeId: props.id })
-                    // console.log(`/basket/${Object.keys(storesInfo).find(x => x != props.id)}`)
                     router.push(`/basket/${Object.keys(storesInfo).find(x => x != props.id) || 0}`)
-                    // console.log(state)
-                    // console.log('serviceOrder: ', serviceOrder)
                     setModalIsOpen(true)
                     setVisibleLoadingOverlay(false)
 

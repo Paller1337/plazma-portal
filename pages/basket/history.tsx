@@ -82,6 +82,6 @@ export default function OrderServices(props: BasketHistoryProps) {
                 </div>
             </div>
         </main>
-        <NavBar page={'order/history'} />
+        <NavBar page={'basket/history'} />
     </>)
 }

@@ -20,7 +20,7 @@ export async function getOrdersByGuestId(id: number): Promise<IOrder[]> {
         const response = await axiosInstance.post(`/api/orders`,
             { data: { id: id } }
         )
-        console.log('get Order By Guest Id', response.data.orders)
+        // console.log('get Order By Guest Id', response.data.orders)
 
         const orders: IOrder[] = response.data.orders.data.map(order => ({
             id: order.id,
@@ -52,11 +52,12 @@ export async function getOrdersByGuestId(id: number): Promise<IOrder[]> {
             },
             store: {
                 id: order.attributes.store?.data?.id || 0,
+                title: order.attributes.store?.data?.attributes?.title || '-',
             }
         } as IOrder))
 
 
-        console.log('Formated Orders ', orders)
+        // console.log('Formated Orders ', orders)
 
         return orders
     } catch (error) {

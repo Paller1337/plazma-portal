@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { DEFAULTS } from 'defaults';
 import { ISupportTicket } from 'types/support'
 import { TOrderStatus } from 'types/order';
+import { ticketStatus } from 'helpers/support/tickets';
 
 interface IOrderProduct {
     id: string;
@@ -80,6 +81,16 @@ const orderReducer = (state: GlobalStateType, action: any) => {
             return {
                 ...state,
                 tickets: action.payload.tickets as ITicketContext[],
+            };
+
+        case 'UPDATE_TICKET_STATUS':
+            return {
+                ...state,
+                tickets: state.tickets.map(ticket =>
+                    ticket.id === action.payload.ticketId
+                        ? { ...ticket, status: action.payload.status }
+                        : ticket
+                ),
             };
 
         default:
@@ -208,6 +219,16 @@ export const OrderProvider = ({ children }) => {
                 toast.success(<span>Новый заказ услуг</span>);
             });
 
+            socket.on('supportTicketStatusChange', (data) => {
+                const { newStatus, ticketId } = data
+                console.log('ticket data: ', data)
+                dispatch({
+                    type: 'UPDATE_TICKET_STATUS',
+                    payload: { ticketId, status: newStatus },
+                });
+                toast.success(`Новый статус заявки (${ticketStatus(newStatus)})`)
+            });
+            
             socket.on('connect_error', (error) => {
                 console.error('Connection error:', error);
             });

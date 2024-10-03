@@ -71,6 +71,7 @@ interface IndexPageProps {
             preview_size: 'big' | 'std' | 'min',
             tag: string,
             short_desc: string,
+            isActive: boolean
         }[]
     }[]
 
@@ -109,6 +110,7 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
                 preview_size: s.attributes?.preview_size || 'min',
                 tag: s.attributes?.tag || '',
                 short_desc: s.attributes?.short_desc || '',
+                isActive: s.attributes?.isActive || false,
             })) : [],
         }))
 
@@ -305,12 +307,12 @@ export default function IndexPage(props: IndexPageProps) {
                     isHelpButton
                 />
                 <div className='index-nav__button-group'>
-                    <div className='index-nav__button-cust'>
+                    <Link target='_blank' href={DEFAULTS.SOCIALS.vk} className='index-nav__button-cust'>
                         <ReactSVG src='/svg/vk.svg' />
-                    </div>
-                    <div className='index-nav__button-cust'>
+                    </Link>
+                    <Link target='_blank' href={DEFAULTS.SOCIALS.telegram} className='index-nav__button-cust'>
                         <ReactSVG src='/svg/tg.svg' />
-                    </div>
+                    </Link>
                     <div onClick={() => openRatingModal()} className='index-nav__button-cust'>
                         <ReactSVG src='/svg/star.svg' />
                         Оставить отзыв
@@ -320,7 +322,7 @@ export default function IndexPage(props: IndexPageProps) {
 
             <div className='index-content'>
                 {props.categories ? props.categories.sort((a, b) => a.priorirty - b.priorirty).map((category, i) => {
-                    if (category?.articles?.length > 0 || category?.stores?.length > 0)
+                    if (category?.articles?.length > 0 || category?.stores?.filter(x => x.isActive === true).length > 0)
                         return (
                             <div key={category.name + i} className='index-content__category'>
                                 {category.name && category.priorirty !== 0 ?

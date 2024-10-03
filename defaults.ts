@@ -2,22 +2,22 @@ export namespace DEFAULTS {
     export const SOCKET_URL = {
         prod: 'https://strapi.kplazma.ru',
         // local: 'http://192.168.1.19:1337'
-        // local: 'https://strapi-plazma.ru.tuna.am',
-        local: 'https://strapi.kplazma.ru'
+        local: 'https://strapi-plazma.ru.tuna.am',
+        // local: 'https://strapi.kplazma.ru'
     }
 
     export const STRAPI_URL = {
         prod: 'https://strapi.kplazma.ru',
-        // local: 'https://strapi-plazma.ru.tuna.am'
-        local: 'https://strapi.kplazma.ru'
+        local: 'https://strapi-plazma.ru.tuna.am'
+        // local: 'https://strapi.kplazma.ru'
     }
 
     export const PORTAL = {
         url: {
             prod: 'https://portal.kplazma.ru',
             // prod: 'https://portal-plazma.ru.tuna.am',
-            dev: 'https://portal.kplazma.ru',
-            // dev: 'https://portal-plazma.ru.tuna.am',
+            // dev: 'https://portal.kplazma.ru',
+            dev: 'https://portal-plazma.ru.tuna.am',
         }
     }
 
@@ -40,5 +40,10 @@ export namespace DEFAULTS {
     export const PHONE_NUMBERS = {
         reception: '+79101681761',
         restaurant: '+79202756312',
+    }
+
+    export const SOCIALS = {
+        vk: 'https://vk.com/park_hotel_plazma',
+        telegram: 'https://t.me/plazmadonskoy',
     }
 }

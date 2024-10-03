@@ -73,8 +73,7 @@ export default function HelpDesk(props: HelpDeskProps) {
     //     console.log('ServiceOrder: ', props.orderInfo.customer.name, ': ', props)
     // }, [props])
     return (<>
-        <AdminHelpModal isOpen={modalIsOpen} onClose={() => setModalIsOpen(false)} />
-
+        <AdminHelpModal ticket={props.ticket} isOpen={modalIsOpen} onClose={() => setModalIsOpen(false)} />
 
         <Grid.Col span={{ base: 12, lg: 4 }}>
             <Box pt={10} pb={24} className={`admin-serviceCard${props.isVisualNew ? ' admin-serviceCard_new' : ''}`} onClick={() => openModal(true)}>

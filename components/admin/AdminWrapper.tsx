@@ -25,12 +25,12 @@ const menuItems = [
         icon: 'nav_order',
         notification: 4,
     },
-    {
-        label: 'Спортивные мероприятия',
-        path: '/admin/sports-events',
-        icon: 'nav_sport',
-        notification: 0,
-    }
+    // {
+    //     label: 'Спортивные мероприятия',
+    //     path: '/admin/sports-events',
+    //     icon: 'nav_sport',
+    //     notification: 0,
+    // }
 ];
 
 export const getServerSideProps: GetServerSideProps = async (context) => {

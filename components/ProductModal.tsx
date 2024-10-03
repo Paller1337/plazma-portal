@@ -56,7 +56,7 @@ const ProductModal = (props: IProps) => {
                     {props.product?.name ? <span className='Product-Modal__info-title'>{props.product?.name}</span> : <></>}
                     {props.product?.warning_text ? <span className='Product-Modal__info-warning_text'>{props.product?.warning_text}</span> : <></>}
                     {props.product?.description ? <span className='Product-Modal__info-description'>{props.product?.description}</span> : <></>}
-                    {props.product?.price && props.product?.price > 0 ? <span className='Product-Modal__info-price'>{props.product?.price}</span> : <></>}
+                    {props.product?.price && props.product?.price > 0 ? <span className='Product-Modal__info-price'>{props.product?.price} руб.</span> : <></>}
                 </div>
                 <div className="Product-Modal__actions">
                     <Button text='Добавить' stretch bgColor='#56754B' color='#fff' onClick={handleAddToCart} />

@@ -135,7 +135,7 @@ export default function StorePage(props: StorePageProps) {
                     {/* <span className='store-content__description'>{'Для оформления заказа необходимо авторизоваться'}</span> */}
                 </div>
                 <div className='store-content__products'>
-                    {props.store?.products?.map(product => (
+                    {props.store?.products?.filter(p => p.for_sale === true).map(product => (
                         <div key={product.name + product.id} className='store-content__product' onClick={() => openProductModal(product)}>
                             <div className={`store-content__product-image${product.price && product.price > 0 ? ' with-price' : ''}`}>
                                 <img src={`${DEFAULTS.STRAPI.url + product.image}  `} alt='' />

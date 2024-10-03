@@ -11,7 +11,7 @@ import { BlocksRenderer } from '@strapi/blocks-react-renderer'
 import { LoadingOverlay, Select, Textarea } from '@mantine/core'
 import Button from '@/components/Button'
 import toast from 'react-hot-toast'
-import { formatTicketMessage, ticketStatus } from 'helpers/support/tickets'
+import { formatTicketMessage, getSupportTicketsByGuestId, ticketStatus } from 'helpers/support/tickets'
 import { DateTime } from 'luxon'
 import { getGuestAccountByBookingId, getGuestAccountById } from 'helpers/session/guestAccount'
 import Cookies from 'js-cookie'
@@ -20,6 +20,7 @@ import SupportTicketSendModal from '@/components/SupportTicketSendModal'
 import { ISupportTicket, TSupportTicketStatus } from 'types/support'
 import { useOrders } from 'context/OrderContext'
 import { useCart } from 'context/CartContext'
+import { telegramSendTicket } from 'helpers/telegram'
 
 
 interface HelpPageProps {
@@ -77,7 +78,7 @@ export default function HelpPage(props: HelpPageProps) {
 
     const { state } = useOrders()
     // @ts-ignore
-    const tickets: ISupportTicket[] = state.support_tickets
+    const tickets: ISupportTicket[] = state.tickets
 
     const rooms = hotelRooms?.map(room => ({
         value: room.id.toString(),
@@ -88,7 +89,7 @@ export default function HelpPage(props: HelpPageProps) {
         try {
             const response = await axiosInstance.post('/api/ticket/create', ticketData)
             if (response.status === 200) {
-                console.log('Ticket placed successfully:', response.data)
+                // console.log('Ticket placed successfully:', response.data)
                 return { data: response.data, status: true }
             } else {
                 console.error('Error placing ticket:', response.data)
@@ -138,9 +139,9 @@ export default function HelpPage(props: HelpPageProps) {
 
             // const serviceOrder = state.services.items.map(x => ({ service: parseInt(x.id), quantity: x.quantity }))
             const nowTime = DateTime.now().toISO()
-            console.log('guestAccount: ', guestAccount)
-            console.log('ticket time: ', nowTime)
-            console.log('ticket message: ', supportComment)
+            // console.log('guestAccount: ', guestAccount)
+            // console.log('ticket time: ', nowTime)
+            // console.log('ticket message: ', supportComment)
 
             try {
                 // const response = await sendOrderToTelegram(state); // Предполагается, что здесь вызывается функция отправки заказа
@@ -183,31 +184,38 @@ export default function HelpPage(props: HelpPageProps) {
                 })
 
                 if (!ticketIsPlace.status) return
+                const tickets = await getSupportTicketsByGuestId(currentUser.id)
+                const targetTicket = tickets.find(o => o.id === ticketIsPlace.data.data.id)
 
+                const response = await telegramSendTicket(targetTicket).then(res => {
+                    // console.log({ res })
+                    return res
+                }) 
 
-                const ticketToTelegram = {
-                    id: ticketIsPlace.data.data.id,
-                    time: DateTime.fromISO(nowTime).toLocaleString(DateTime.DATETIME_MED),
-                    messages: [{
-                        create_at: nowTime,
-                        sender: guestAccount.attributes.name,
-                        sender_type: 'guest',
-                        message: supportComment
-                    }],
-                    guest: guestAccount?.attributes.name
-                }
+                // const ticketToTelegram = {
+                //     id: ticketIsPlace.data.data.id,
+                //     time: DateTime.fromISO(nowTime).toLocaleString(DateTime.DATETIME_MED),
+                //     messages: [{
+                //         create_at: nowTime,
+                //         sender: guestAccount.attributes.name,
+                //         sender_type: 'guest',
+                //         message: supportComment
+                //     }],
+                //     guest: guestAccount?.attributes.name
+                // }
 
                 // const response = await sendOrderToTelegram(orderToTelegram) // Предполагается, что здесь вызывается функция отправки заказа
-                // if (response.message && ticketIsPlace) {
-                toast.success('Заявка отправлена!')
-                setModalIsOpen(true)
-                setVisibleLoadingOverlay(false)
-                setSupportComment('')
-                setSupportFormClicked(false)
-                // console.log('responseStrapi: ', responseStrapi)
-                // }
+                if (response && ticketIsPlace) {
+                    toast.success('Заявка отправлена!')
+                    setModalIsOpen(true)
+                    setVisibleLoadingOverlay(false)
+                    setSupportComment('')
+                    setSupportFormClicked(false)
+                    // console.log('responseStrapi: ', responseStrapi)
+                }
             } catch (error) {
                 toast.error('Ошибка при отправке заказа.')
+                setVisibleLoadingOverlay(false)
             }
         }
     }
@@ -229,7 +237,7 @@ export default function HelpPage(props: HelpPageProps) {
         <main className='--gray-main'>
             <div className='page-wrapper'>
                 <div className='help-content'>
-                    {tickets && tickets.length > 0 ?
+                    {tickets && tickets.length > 0 && tickets?.filter(t => t.status !== 'closed').length > 0 ?
                         <div className={`support-status ${tickets[0].status ? `--status-${tickets[0].status}` : ''}`}>
                             <div className='support-status__bg'>
                                 <ReactSVG src={`/svg/nav/help-light.svg`} />

@@ -44,18 +44,42 @@ export async function getSupportTickets(): Promise<ISupportTicket[]> {
 
 export async function getSupportTicketsByGuestId(id: number): Promise<ISupportTicket[]> {
     try {
-        const response = await axios.get(`${DEFAULTS.STRAPI.url}/api/support-tickets`, {
-            params: {
-                // 'sort': "created_at:DESC",
-                'filters[customer][guest_account][id][$eq]': id,
-                'sort[create_at]': `desc`,
-                'populate': 'deep,4',
+        const ticketsRes = await axios.post('/api/tickets', {
+            data: {
+                id: id,
             }
         })
 
-        return response.data.data;
+        const tickets = ticketsRes.data.tickets.data?.map(ticket => ({
+            id: ticket.id,
+            status: ticket.attributes?.status,
+            create_at: ticket.attributes?.create_at,
+            close_at: ticket.attributes?.close_at,
+            messages: ticket.attributes?.messages?.map(message => ({
+                id: message.id,
+                message: message.message,
+                sender: message.sender,
+                sender_type: message.sender_type,
+            })),
+            room: {
+                label: ticket.attributes?.room.label,
+            },
+            guest: {
+                name: ticket.attributes?.guest?.data?.attributes?.name,
+                approved: ticket.attributes?.guest?.data?.attributes?.approved,
+                createdAt: ticket.attributes?.guest?.data?.attributes?.createdAt,
+                email: ticket.attributes?.guest?.data?.attributes?.email,
+                id: ticket.attributes?.guest?.data?.id,
+                mailing: ticket.attributes?.guest?.data?.attributes?.mailing,
+                phone: ticket.attributes?.guest?.data?.attributes?.phone,
+                role: ticket.attributes?.guest?.data?.attributes?.role,
+            },
+            update_at: ticket.attributes?.update_at,
+        }) as ISupportTicket)
+
+        return tickets;
     } catch (error) {
-        console.error('Ошибка при создании аккаунта гостя:', error);
+        console.error('Ошибка при получении заявок:', error);
         throw error; // Переброс ошибки для дальнейшей обработки
     }
 }
