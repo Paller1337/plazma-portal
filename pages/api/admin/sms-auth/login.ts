@@ -12,6 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return
     }
 
+    res.setHeader('Access-Control-Allow-Origin', 'https://portal-plazma.ru.tuna.am')
     const phone = req.body.data.phone
     // console.log('phone ', phone)
 

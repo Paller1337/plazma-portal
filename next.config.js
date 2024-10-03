@@ -6,27 +6,27 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 });
 
 const nextConfig = {
-  async headers() {
-    return [
-      {
-        source: '/api/:path*',
-        headers: [
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: 'https://portal-plazma.ru.tuna.am',
-          },
-          {
-            key: 'Access-Control-Allow-Methods',
-            value: 'GET,POST,PUT,DELETE,OPTIONS', // Разрешить нужные методы
-          },
-          {
-            key: 'Access-Control-Allow-Headers',
-            value: 'X-Requested-With,Content-Type,Authorization', // Разрешить нужные заголовки
-          },
-        ],
-      },
-    ];
-  },
+  // async headers() {
+  //   return [
+  //     {
+  //       source: '/api/:path*',
+  //       headers: [
+  //         {
+  //           key: 'Access-Control-Allow-Origin',
+  //           value: 'https://portal-plazma.ru.tuna.am',
+  //         },
+  //         {
+  //           key: 'Access-Control-Allow-Methods',
+  //           value: 'GET,POST,PUT,DELETE,OPTIONS', // Разрешить нужные методы
+  //         },
+  //         {
+  //           key: 'Access-Control-Allow-Headers',
+  //           value: 'X-Requested-With,Content-Type,Authorization', // Разрешить нужные заголовки
+  //         },
+  //       ],
+  //     },
+  //   ];
+  // },
   images: {
     domains: ['strapi.kplazma.ru', '192.168.1.19', 'userapi.com'],
     remotePatterns: [
