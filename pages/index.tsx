@@ -14,7 +14,7 @@ import Link from 'next/link'
 import { WallWallpostFull } from 'node_modules/vk-io/lib/api/schemas/objects'
 import React, { useEffect, useState } from 'react'
 import { ReactSVG } from 'react-svg'
-import {  TOrderStatus } from 'types/order'
+import { TOrderStatus } from 'types/order'
 
 const slides = [
     {
@@ -83,9 +83,9 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
     try {
 
         const token = context.req.headers.cookie?.split('; ').find(c => c.startsWith('session_token='))?.split('=')[1]
-
+        console.log('token: ', token)
         const cat = await axiosInstance.get('/api/articles')
-        // console.log('cat: ', cat)
+        console.log('cat: ', cat)
 
         const categories = cat.data.data.map(c => ({
             name: c.attributes.name,

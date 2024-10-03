@@ -9,6 +9,8 @@ import { TBookingExtra } from 'types/bnovo'
 const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    console.log('url: ', DEFAULTS.STRAPI.url)
+    console.log('token: ', STRAPI_API_TOKEN)
     try {
         const categories = await axios.get(`${DEFAULTS.STRAPI.url}/api/categories`, {
             params: {
@@ -20,11 +22,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
         })
 
+
         console.log('cat api: ', categories.data)
 
 
         res.status(200).json(categories.data)
     } catch (error) {
+        console.error('Ошибка API статей:', error)
         res.status(500).json({ message: error.message });
     }
 }

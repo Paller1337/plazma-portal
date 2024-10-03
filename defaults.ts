@@ -1,22 +1,23 @@
-export module DEFAULTS {
+export namespace DEFAULTS {
     export const SOCKET_URL = {
         prod: 'https://strapi.kplazma.ru',
         // local: 'http://192.168.1.19:1337'
-        local: 'https://strapi-plazma.ru.tuna.am'
+        // local: 'https://strapi-plazma.ru.tuna.am',
+        local: 'https://strapi.kplazma.ru'
     }
 
     export const STRAPI_URL = {
         prod: 'https://strapi.kplazma.ru',
-        local: 'https://strapi-plazma.ru.tuna.am'
-        // local: 'http://192.168.1.19:1337'
+        // local: 'https://strapi-plazma.ru.tuna.am'
+        local: 'https://strapi.kplazma.ru'
     }
 
     export const PORTAL = {
         url: {
             prod: 'https://portal.kplazma.ru',
             // prod: 'https://portal-plazma.ru.tuna.am',
-            // dev: 'http://localhost:4000',
-            dev: 'https://portal-plazma.ru.tuna.am',
+            dev: 'https://portal.kplazma.ru',
+            // dev: 'https://portal-plazma.ru.tuna.am',
         }
     }
 
