@@ -6,6 +6,7 @@ import { getRooms } from 'helpers/bnovo/getRooms';
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { TBookingExtra } from 'types/bnovo';
 
+const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const id = parseInt(req.query.id.toString())
 
@@ -13,6 +14,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const guest = await axios.get(`${DEFAULTS.STRAPI.url}/api/guest-accounts/${id}`, {
             params: {
                 'populate': 'deep,3',
+            },
+            headers: {
+                ContentType: 'application/json',
+                Authorization: `Bearer ${STRAPI_API_TOKEN}`,
             }
         })
         

@@ -49,6 +49,8 @@ interface ArticlePageProps {
     article2?: any
 }
 
+const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN
+
 export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(async (context) => {
     const { id } = context.params
     console.log('id ', id)
@@ -56,6 +58,10 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
         const article = await axios.get(`${DEFAULTS.STRAPI.url}/api/articles/${id}`, {
             params: {
                 'populate': 'deep,3',
+            },
+            headers: {
+                ContentType: 'application/json',
+                Authorization: `Bearer ${STRAPI_API_TOKEN}`,
             }
         })
 
