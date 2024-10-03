@@ -36,6 +36,6 @@ export default function HelpPage() {
         </main>
 
 
-        <NavBar page='order/history' />
+        <NavBar page='basket/history' />
     </>)
 }
