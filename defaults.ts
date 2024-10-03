@@ -21,13 +21,13 @@ export namespace DEFAULTS {
         }
     }
 
-    export const MAIN_URL = PORTAL.url.dev
+    export const MAIN_URL = PORTAL.url.prod
 
     export const SOCKET = {
-        URL: SOCKET_URL.local,
+        URL: SOCKET_URL.prod,
     }
     export const STRAPI = {
-        url: STRAPI_URL.local,
+        url: STRAPI_URL.prod,
     }
 
     export const IIKO = {
