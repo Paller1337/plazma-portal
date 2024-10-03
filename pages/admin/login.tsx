@@ -106,7 +106,7 @@ export default function AuthPage() {
             // console.log('Код уже отправлен, следующая попытка через ', intervalHold, ' секунд')
             return
         }
-
+        console.log(axiosInstance)
         const response = await axiosInstance.post('/api/admin/sms-auth/login', {
             data: { phone },
         })
