@@ -197,7 +197,7 @@ function BanquetEditPage(props: BanquetPortalPageProps) {
     }, [props.banquet?.banquetData])
 
     useEffect(() => setCreateState(props.banquet), [props.banquet])
-    useEffect(() => setCreateState(p => ({ ...p, banquetData: banquetData })), [banquetData])
+    useEffect(() => setCreateState(p => ({ ...p, banquetData: {...p.banquetData, order: banquetData.order} })), [banquetData.order])
 
 
     useEffect(() => {

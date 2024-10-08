@@ -28,6 +28,10 @@
                 bottom: 0
                 background: linear-gradient(180deg, #8A2387 0%, #E94057 50%, #F27121 100%)
                 z-index: 2
+                animation-name: rotation
+                animation-duration: 3s
+                animation-iteration-count: infinite
+                animation-timing-function: linear
 
             &-image
                 padding: 4px
@@ -49,7 +53,9 @@
             &.has-history
 
     &-preview
-        max-height: 240px
+        height: 45vw
+        max-height: 200px
+        margin-bottom: -24px
         img
             object-fit: cover
             height: 100%
@@ -60,7 +66,7 @@
         gap: 32px
         padding: 48px 24px 24px 24px
         @media screen and ( max-width: 520px )
-            padding: 48px 4px 24px 4px
+            padding: 48px 8px 24px 8px
         &__category
             display: flex
             flex-direction: column

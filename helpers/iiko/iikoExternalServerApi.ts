@@ -2,7 +2,7 @@ import { Config } from './IikoApi/config'
 import { IikoAPI } from './IikoApi/IikoAPI'
 
 const iikoApiConfig: Config = {
-    apiKey: process.env.IIKO_API_KEY || '',
+    apiKey: process.env.IIKO_EXTERNAL_API_KEY || '',
     baseURL: process.env.IIKO_BASE_URL || 'https://api-ru.iiko.services',
     redis: {
         host: process.env.REDIS_PORTAL_HOST || 'ru.tuna.am',
@@ -14,7 +14,7 @@ const iikoApiConfig: Config = {
         maxAttempts: 3,
         initialDelayMs: 200,
     },
-    cachePrefix: 'iiko:cache:'
+    cachePrefix: 'portal:menu:'
 }
 
-export const iikoApiServer = new IikoAPI(iikoApiConfig)
+export const iikoExternalServerApi = new IikoAPI(iikoApiConfig)

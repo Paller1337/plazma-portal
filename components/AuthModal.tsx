@@ -12,6 +12,7 @@ import toast from 'react-hot-toast'
 import axios from 'axios'
 import { axiosInstance } from 'helpers/axiosInstance'
 import { useAuth } from 'context/AuthContext'
+import { sendAuthCode } from 'helpers/send-code'
 
 ReactModal.setAppElement('#__next')
 
@@ -35,6 +36,7 @@ const AuthModal = (props: IProps) => {
     const [codeIsSend, setCodeIsSend] = useState(false)
     const [codeTimer, setCodeTimer] = useState(false)
     const [codeIsFailed, setCodeIsFailed] = useState(false)
+    const codeHoldTimeout = 5000
 
     const [intervalHold, setIntervalHold] = useState(5)
     const [smsCode, setSmsCode] = useState('')
@@ -89,22 +91,16 @@ const AuthModal = (props: IProps) => {
 
 
 
-    function generateSmsCode() {
-        let code = '';
-        for (let i = 0; i < 4; i++) {
-            code += Math.floor(Math.random() * 10);
-        }
-        return code;
-    }
+    
 
-    useEffect(() => {
-        if (codeIsSend) {
-            console.log('Ваш SMS код: ', smsCode)
-            toast.success(`Ваш SMS код: ${smsCode}`)
-        }
-    }, [codeIsSend, smsCode])
+    // useEffect(() => {
+    //     if (codeIsSend) {
+    //         console.log('Ваш SMS код: ', smsCode)
+    //         toast.success(`Ваш SMS код: ${smsCode}`)
+    //     }
+    // }, [codeIsSend, smsCode])
 
-    const sendCode = () => {
+    const sendCode = async () => {
         if (codeIsSend && codeTimer) {
             console.log('Код уже отправлен, следующая попытка через ', intervalHold, ' секунд')
             return
@@ -116,19 +112,21 @@ const AuthModal = (props: IProps) => {
 
         setCodeIsSend(true)
         setCodeTimer(true)
-        setIntervalHold(5)
-        console.log('Запущен таймер на 5 секунд: ', codeTimer)
+        setIntervalHold(codeHoldTimeout / 1000)
+        console.log(`Запущен таймер на ${codeHoldTimeout / 1000} секунд: `, codeTimer)
+
         const timer = setTimeout(() => {
             setCodeIsSend(true)
             setCodeTimer(false)
-            console.log('Можно попробовать еще раз: ', codeTimer)
-        }, 5000)
+            console.log('Можно попробовать еще раз')
+        }, codeHoldTimeout)
 
+        const smsCode = await sendAuthCode(phone)
+        setSmsCode(smsCode)
         const interval = setInterval(() => {
             setIntervalHold(p => {
                 if (p <= 1) {
                     clearInterval(interval)
-                    setSmsCode(generateSmsCode())
                 }
                 return p - 1
             })
@@ -229,7 +227,7 @@ const AuthModal = (props: IProps) => {
                             />
                             {codeIsSend ?
                                 <div className='Auth-Modal__form-hidden'>
-                                    <span>Введите код из SMS {smsCode}</span>
+                                    <span>Введите код из SMS</span>
                                     <PinInput
                                         type={/^[0-9]*$/}
                                         inputType="tel"
@@ -257,7 +255,7 @@ const AuthModal = (props: IProps) => {
                                 bgColor='#56754B'
                                 color='#fff'
                                 onClick={() => sendCode()}
-                                disabled={codeTimer || phoneValue.length < 12}
+                                disabled={codeTimer || formatNumber(phoneValue).length < 12}
                             />
                             {/* <Button text='Войти' stretch bgColor='#56754B' color='#fff' onClick={() => login()} /> */}
                         </div>

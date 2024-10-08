@@ -4,6 +4,7 @@ import 'swiper/css/bundle'
 // import "aos/dist/aos.css"
 import '@mantine/core/styles.css'
 import '@mantine/dates/styles.css'
+import '@mantine/carousel/styles.css'
 
 import React, { useEffect, useRef } from 'react'
 

@@ -42,11 +42,31 @@
             color: #252525
     &-content
         padding: 0 24px
+        display: flex
+        flex-direction: column
+        // overflow-y: scroll
+        // overflow-y: scroll
+        // overflow-x: hidden
+        // max-height: calc( 100vh - 24px )
         &__info
             display: flex
             flex-direction: column
             gap: 0px
             padding-bottom: 24px
+            background: #fff
+            z-index: 1000
+            max-width: 650px
+            width: 100%
+
+            &.fixed
+                transform: translateX(-24px)
+                padding: 12px 24px
+                overflow: hidden
+                position: fixed
+                top: 0
+            &.shadow
+                box-shadow: rgba(0, 0, 0, 0.2) 0px 0px 11px
+
         &__title
             font-size: 24px
             font-weight: 600
@@ -58,7 +78,7 @@
         &__products
             display: grid
             grid-template-columns: repeat(2, 1fr)
-            gap: 12px
+            gap: 24px 12px
         &__product
             display: flex
             flex-direction: column

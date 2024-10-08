@@ -1,14 +1,15 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ReactModal from 'react-modal'
 import { ReactSVG } from 'react-svg'
 import { useRouter } from 'next/router'
 import { ICServiceOrderProps, ServiceOrderBadge, ServiceOrderItem } from './ServiceOrder'
-import { Button, Flex, LoadingOverlay, Table } from '@mantine/core'
+import { Button, Flex, LoadingOverlay, Stack, Table } from '@mantine/core'
 import { DEFAULTS } from 'defaults'
 import { TOrderStatus } from 'types/order'
 import { axiosInstance } from 'helpers/axiosInstance'
 import { useAdminOrders } from 'context/admin/OrderContext'
 import toast from 'react-hot-toast'
+import { useIiko } from 'context/IikoContext'
 
 ReactModal.setAppElement('#__next') // Для Next.js обычно это #__next, для create-react-app это #root
 
@@ -23,6 +24,9 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
     const paymentType = props.order.order?.paymentType === 'bank-card' ? 'Банковская карта' : props.order.order?.paymentType === 'cash' ? 'Наличные' : 'Не указан'
     const { dispatch } = useAdminOrders()
     const [visibleLoadingOverlay, setVisibleLoadingOverlay] = useState(false)
+    const { nomenclature } = useIiko()
+
+    useEffect(() => console.log(props.order), [props.isOpen])
 
     async function updateStatus(status: TOrderStatus, newStatus: TOrderStatus) {
         setVisibleLoadingOverlay(true)
@@ -62,17 +66,33 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
         }
     }
 
-    const rows = props.order.order.products.map((x, i) => {
-        const product = props.order.products.find(p => parseInt(p.id) === x.id)
-        return (
-            <Table.Tr key={product?.name + i + x.quantity * product?.price}>
-                <Table.Td>{product?.name}</Table.Td>
-                <Table.Td>{x.quantity}</Table.Td>
-                <Table.Td>{product?.price}</Table.Td>
-                <Table.Td>{x.quantity * product?.price}</Table.Td>
-            </Table.Tr>
-        )
-    })
+    const rows =
+        props.order.order.store.store_type?.value === 'eat'
+            ? props.order.order.iikoProducts.map((x, i) => {
+                const product = nomenclature?.products.find(p => p.id === x.product)
+                // const product = props.order.products.find(p => parseInt(p.id) === x.id)
+                // console.log('nomenclature ', nomenclature)
+                // console.log('product', product)
+                return (
+                    <Table.Tr key={product?.name + i + x.quantity * x?.price}>
+                        <Table.Td>{product?.name}</Table.Td>
+                        <Table.Td>{x.quantity}</Table.Td>
+                        <Table.Td>{x?.price}</Table.Td>
+                        <Table.Td>{x.quantity * x?.price}</Table.Td>
+                    </Table.Tr>
+                )
+            })
+            : props.order.order.products.map((x, i) => {
+                const product = props.order.products.find(p => parseInt(p.id) === x.id)
+                return (
+                    <Table.Tr key={product?.name + i + x.quantity * product?.price}>
+                        <Table.Td>{product?.name}</Table.Td>
+                        <Table.Td>{x.quantity}</Table.Td>
+                        <Table.Td>{product?.price}</Table.Td>
+                        <Table.Td>{x.quantity * product?.price}</Table.Td>
+                    </Table.Tr>
+                )
+            })
 
     return (
         <ReactModal
@@ -91,14 +111,17 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
             <div className='OrderAdmin-Modal__header'>
                 <div className='OrderAdmin-Modal__header-content'>
                     Управление заказом
-                    <ReactSVG className='OrderAdmin-Modal__close' style={{cursor: 'pointer'}} src='/svg/admin/admin_modal-close.svg' onClick={props.onClose} />
+                    <ReactSVG className='OrderAdmin-Modal__close' style={{ cursor: 'pointer' }} src='/svg/admin/admin_modal-close.svg' onClick={props.onClose} />
                 </div>
             </div>
 
             <div className='OrderAdmin-Modal__main'>
                 <div className='OrderAdmin-Modal__main-section left-section'>
                     <div className='OrderAdmin-Modal__info AdminModal-block'>
-                        {props.order.order.status + ' ' + props.order.order.id}
+                        {/* {props.order.order.status + ' ' + props.order.order.id} */}
+                        <Stack style={{ position: 'relative', borderRadius: 0, borderBottom: '1px solid rgb(38, 46, 74)' }} h={37} px={0} mt={-10}>
+                            <ServiceOrderBadge status={props.order.order.status} id={props.order.order.id} date={props.order.order.create_at} />
+                        </Stack>
                         <div className='OrderAdmin-Modal__info-header'>
                             <span className='OrderAdmin-Modal__info-title'>Заказ от {props.order.order.guest?.name ? props.order.order.guest?.name : 'гостя'}</span>
                             <span className='OrderAdmin-Modal__info-subtitle'>
@@ -120,20 +143,27 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                         <div className='OrderAdmin-Modal__info-section'>
                             <div className='row'>
                                 <span className='title'>Сумма заказа</span>
-                                <span className='value'>{props.order.order.products.reduce((total, x) => {
-                                    const product = props.order.products.find(p => parseInt(p.id) === x.id)
-                                    return total + product?.price * x.quantity
-                                }, 0)
+                                <span className='value'>{
+                                    props.order.order.store.store_type?.value === 'eat'
+                                        ?
+                                        props.order.order.iikoProducts.reduce((total, x) => {
+                                            return total + x?.price * x.quantity
+                                        }, 0)
+                                        :
+                                        props.order.order.products.reduce((total, x) => {
+                                            const product = props.order.products.find(p => parseInt(p.id) === x.id)
+                                            return total + product?.price * x.quantity
+                                        }, 0)
                                 } руб.</span>
                             </div>
                             <div className='row'>
                                 <span className='title'>Способ оплаты</span>
-                                <span className='value'>{props.order.order.guest.phone}</span>
+                                <span className='value'>{props.order.order.paymentType === 'bank-card' ? 'Банковская карта' : 'Наличные'}</span>
                             </div>
-                            <div className='row'>
+                            {/* <div className='row'>
                                 <span className='title'>Способ оплаты</span>
                                 <span className='value'>{props.order.order.guest.phone}</span>
-                            </div>
+                            </div> */}
                         </div>
                     </div>
                     <div className='OrderAdmin-Modal__actions AdminModal-block'>
@@ -187,10 +217,17 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                                                     fontWeight: 600,
                                                     fontSize: 18
                                                 }}>
-                                                    Итого {props.order.order.products.reduce((total, x) => {
-                                                        const product = props.order.products.find(p => parseInt(p.id) === x.id)
-                                                        return total + product?.price * x.quantity
-                                                    }, 0)
+                                                    Итого {
+                                                        props.order.order.store.store_type?.value === 'eat'
+                                                            ?
+                                                            props.order.order.iikoProducts.reduce((total, x) => {
+                                                                return total + x?.price * x.quantity
+                                                            }, 0)
+                                                            :
+                                                            props.order.order.products.reduce((total, x) => {
+                                                                const product = props.order.products.find(p => parseInt(p.id) === x.id)
+                                                                return total + product?.price * x.quantity
+                                                            }, 0)
                                                     } руб.</Table.Td>
                                             </Table.Tr>
                                         </Table.Tbody>

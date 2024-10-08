@@ -1,12 +1,9 @@
-import React, { CSSProperties, useCallback, useEffect, useState } from 'react'
+import React, { CSSProperties, useCallback, useEffect, useRef, useState } from 'react'
 import ReactModal from 'react-modal'
-import Button from './Button'
-import { ReactSVG } from 'react-svg'
-import { useRouter } from 'next/router'
-import axios from 'axios'
 import { DEFAULTS } from 'defaults'
-
-ReactModal.setAppElement('#__next') // Для Next.js обычно это #__next, для create-react-app это #root
+import Image from 'next/image'
+import { useSwipeable } from 'react-swipeable'
+ReactModal.setAppElement('#__next'); // Для Next.js обычно это #__next
 
 const ProgressLine = ({ duration, index, current }) => {
     const [width, setWidth] = useState('0%');
@@ -14,6 +11,7 @@ const ProgressLine = ({ duration, index, current }) => {
 
     useEffect(() => {
         if (index < current) {
+            console.log({ index, current })
             setWidth('100%');
             setTransition('none');
         } else if (index === current) {
@@ -49,105 +47,71 @@ const ProgressLine = ({ duration, index, current }) => {
     };
 
     return (
-        <div className='Stories-Modal__progress-line' style={progressLineStyle}>
+        <div className="Stories-Modal__progress-line" style={progressLineStyle}>
             <div style={progressStyle}></div>
         </div>
     );
 };
 
-const StoriesModal = ({ isOpen, onClose }) => {
-    const [stories, setStories] = useState([]);
+const StoriesModal = ({ isOpen, onClose, stories }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [loading, setLoading] = useState(true);
     const [duration, setDuration] = useState(0);
-    const [start, setStart] = useState(false);
+    const timerRef = useRef(null)
+    const [isPaused, setIsPaused] = useState(false)
+
+    const handlers = useSwipeable({
+        onSwipedDown: eventData => {
+            eventData.event.preventDefault()
+            onClose()
+        },
+        // preventDefaultTouchmoveEvent: true,
+    })
 
     useEffect(() => {
-        // Загрузка данных из API
-        const fetchStories = async () => {
-            try {
-                const response = await axios.get(DEFAULTS.STRAPI.url + '/api/stories', {
-                    params: {
-                        'populate': 'deep,3',
-                    }
-                });
-                const s = response.data.data.sort((a,b) => a.id - b.id).sort((aa,bb) => bb.attributes.priority - aa.attributes.priority)
-                // console.log('s ', s);
-                setStories(s);
-                setLoading(false);
-                setStart(true); // Начать таймер после загрузки данных
-            } catch (error) {
-                console.error('Error fetching stories:', error);
-            }
-        };
-
-        if (isOpen) {
-            fetchStories();
-        }
-    }, [isOpen]);
-
-    useEffect(() => {
-        if (stories.length === 0 || !start) return;
+        if (isPaused || !isOpen || stories.length === 0) return;
 
         const currentStory = stories[currentIndex];
         const storyDuration = currentStory.attributes.duration * 1000;
 
         setDuration(storyDuration);
 
-        const timer = setTimeout(() => {
+        // Очистка предыдущего таймера
+        if (timerRef.current) {
+            clearTimeout(timerRef.current);
+        }
+
+        // Установка нового таймера
+        timerRef.current = setTimeout(() => {
             handleNext();
         }, storyDuration);
 
-        return () => clearTimeout(timer);
-    }, [currentIndex, stories, start]);
+        return () => {
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+            }
+        };
+    }, [currentIndex, stories, isOpen, isPaused]);
 
     const handleNext = useCallback(() => {
-        setStart(false);
         setCurrentIndex((prevIndex) => {
-            const nextIndex = (prevIndex + 1) % stories.length;
-            if (nextIndex === 0) {
+            const nextIndex = prevIndex + 1;
+            if (nextIndex >= stories.length) {
                 onClose();
                 return 0;
             }
             return nextIndex;
         });
-        setTimeout(() => {
-            setStart(true)
-        }, 50)
-    }, [stories.length, onClose])
-    
+    }, [stories.length, onClose]);
+
     const handlePrev = useCallback(() => {
-        if(currentIndex === 0) return
-        setStart(false);
-        setCurrentIndex((prevIndex) => (prevIndex - 1 + stories.length) % stories.length);
-        setTimeout(() => {
-            setStart(true)
-        }, 50)
-    }, [currentIndex, stories.length])
-
-    const currentStory = stories[currentIndex];
-
-    useEffect(() => {
-        if (currentStory) {
-            setDuration(currentStory.attributes.duration * 1000);
-        }
-    }, [currentStory]);
-
-    if (loading) {
-        return <div>Loading...</div>;
-    }
+        setCurrentIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : 0));
+    }, []);
 
     if (!stories.length) {
-        return <div>No stories available</div>;
+        return null; // Если нет историй, не рендерим компонент
     }
 
-    const cleanState = () => {
-        setStories([]);
-        setCurrentIndex(0);
-        setStart(false);
-        setLoading(true);
-    };
-
+    const currentStory = stories[currentIndex];
     const imageUrl = currentStory.attributes.media.data.attributes.url;
 
     return (
@@ -156,33 +120,44 @@ const StoriesModal = ({ isOpen, onClose }) => {
             onRequestClose={onClose}
             className="Stories-Modal"
             overlayClassName="Overlay-Stories"
-            onAfterClose={cleanState}
         >
-            <div className="Stories-Modal__content">
-                <div className='Stories-Modal__progress'>
+            <div
+                {...handlers}
+                className="Stories-Modal__content"
+            >
+                <div className="Stories-Modal__progress">
                     {stories.map((story, i) => (
-                        <ProgressLine
-                            key={story.id}
-                            current={currentIndex}
-                            duration={duration}
-                            index={i}
-                        />
+                        <ProgressLine key={story.id} current={currentIndex} duration={duration} index={i} />
                     ))}
                 </div>
-                <div className='Stories-Modal__media'>
-                    <img
-                        src={DEFAULTS.STRAPI.url + imageUrl}
+                <div className="Stories-Modal__media"
+                    onMouseDown={() => setIsPaused(true)}
+                    onMouseUp={() => setIsPaused(false)}
+                    onTouchStart={() => setIsPaused(true)}
+                    onTouchEnd={() => setIsPaused(false)}
+                >
+                    {/* <img
+                        src={`${DEFAULTS.STRAPI.url}${imageUrl}`}
+                        alt={
+                            currentStory.attributes.media.data.attributes.alternativeText || 'Story Image'
+                        }
+                        className="Stories-Modal__media-img"
+                    /> */}
+                    <Image
+                        className="Stories-Modal__media-img"
+                        src={`${DEFAULTS.STRAPI.url}${imageUrl}`}
                         alt={currentStory.attributes.media.data.attributes.alternativeText || 'Story Image'}
-                        className='Stories-Modal__media-img'
+                        layout="fill"
+                        objectFit="cover"
                     />
                 </div>
-                <div className='Stories-Modal__controls'>
-                    <div className='Stories-Modal__controls-prev' onClick={handlePrev}></div>
-                    <div className='Stories-Modal__controls-next' onClick={handleNext}></div>
+                <div className="Stories-Modal__controls">
+                    <div className="Stories-Modal__controls-prev" onClick={handlePrev}></div>
+                    <div className="Stories-Modal__controls-next" onClick={handleNext}></div>
                 </div>
             </div>
         </ReactModal>
     );
 };
 
-export default StoriesModal
+export default StoriesModal;

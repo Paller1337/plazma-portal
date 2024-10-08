@@ -1,33 +1,44 @@
 export namespace DEFAULTS {
-    export const SOCKET_URL = {
+    export const SERVER_URL = {
         prod: 'https://strapi.kplazma.ru',
-        // local: 'http://192.168.1.19:1337'
-        local: 'https://strapi-plazma.ru.tuna.am',
-        // local: 'https://strapi.kplazma.ru'
+        dev: 'https://strapi-plazma.ru.tuna.am',
+    }
+
+    export const APP_URL = {
+        prod: 'https://portal.kplazma.ru',
+        dev: 'https://portal-plazma.ru.tuna.am',
+    }
+
+    //prod or dev
+    export const GENERAL_URL = {
+        app: APP_URL.dev,
+        server: SERVER_URL.dev
+    }
+
+    export const SOCKET_URL = {
+        prod: SERVER_URL.prod,
+        local: SERVER_URL.dev,
     }
 
     export const STRAPI_URL = {
-        prod: 'https://strapi.kplazma.ru',
-        local: 'https://strapi-plazma.ru.tuna.am'
-        // local: 'https://strapi.kplazma.ru'
+        prod: SERVER_URL.prod,
+        local: SERVER_URL.dev
     }
 
     export const PORTAL = {
         url: {
-            prod: 'https://portal.kplazma.ru',
-            // prod: 'https://portal-plazma.ru.tuna.am',
-            // dev: 'https://portal.kplazma.ru',
-            dev: 'https://portal-plazma.ru.tuna.am',
+            prod: APP_URL.prod,
+            dev: APP_URL.dev,
         }
     }
 
-    export const MAIN_URL = PORTAL.url.prod
+    export const MAIN_URL = GENERAL_URL.app
 
     export const SOCKET = {
-        URL: SOCKET_URL.prod,
+        URL: GENERAL_URL.server,
     }
     export const STRAPI = {
-        url: STRAPI_URL.prod,
+        url: GENERAL_URL.server,
     }
 
     export const IIKO = {

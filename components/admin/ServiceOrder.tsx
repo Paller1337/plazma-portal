@@ -134,51 +134,6 @@ export default function ServiceOrder(props: ICServiceOrderProps) {
                         </Flex>
                     </Flex>
                 </div>
-
-                {/* <div className='admin-serviceCard__order'>
-                    <span className='admin-serviceCard__blockTitle'>
-                        Заказ <span className='admin-serviceCard__order-type'> {props.order?.store.store_type.label}</span>
-                    </span>
-                    <div className='admin-serviceCard__orderList'>
-                        {props.order.products.map((x, i) => {
-                            const product = props.products.find(p => parseInt(p.id) === x.id)
-                            if (i <= 1) {
-                                return (
-                                    <div key={x.id + '-' + i} className='admin-serviceCard__orderItemWrap'>
-                                        <ServiceOrderItem
-                                            key={i}
-                                            name={product.name}
-                                            amount={x.quantity}
-                                            image={DEFAULTS.STRAPI.url + product.image}
-                                        />
-                                        {i < props.order.products.length - 1 ?
-                                            <div className='admin-serviceCard__orderDivider' />
-                                            : <></>
-                                        }
-                                    </div>
-                                )
-                            } else if ((i + 1) === props.order.products.length) {
-                                return (
-                                    <div key={x.id + '-' + i} className='admin-serviceCard__orderItemWrap'>
-                                        <div className='admin-serviceCard__additional'>
-                                            и еще {props.order.products.length - 2} позиции
-                                            <div className='admin-serviceCard__additional-btn' onClick={openModal}>
-                                                показать всё
-                                            </div>
-                                        </div>
-                                    </div>
-                                )
-                            }
-                        })}
-                    </div>
-                </div> */}
-
-                {/* <div className='admin-serviceCard__comment'>
-                    <span className='admin-serviceCard__blockTitle'>Комментарий:</span>
-                    <span className='admin-serviceCard__comment-text'>
-                        {props.order.comment ? props.order.comment : 'Комментарий не указан'}
-                    </span>
-                </div> */}
                 <div className='admin-serviceCard__feedback'>
                     <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
                         <span className='admin-serviceCard__blockText'>Тип заказа</span>
@@ -191,29 +146,7 @@ export default function ServiceOrder(props: ICServiceOrderProps) {
                         <span className='admin-serviceCard__blockTitle'>{props.order.phone ? props.order.phone : 'Не указан'}</span>
                     </Flex>
                 </div>
-                {/* <div className='admin-serviceCard__result'>
-                    <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
-                        <span className='admin-serviceCard__blockText'>Сумма заказа</span>
-                        <span className='admin-serviceCard__blockTitle'>{props.order.products.reduce((total, x) => {
-                            const product = props.products.find(p => parseInt(p.id) === x.id)
-                            return total + product.price * x.quantity
-                        }, 0)
-                        } руб.</span>
-                    </Flex>
-
-                    <Flex direction={'row'} justify={'space-between'} style={{ width: '100%' }}>
-                        <span className='admin-serviceCard__blockText'>Способ оплаты:</span>
-                        <span className='admin-serviceCard__blockTitle'>{paymentType}</span>
-                    </Flex>
-                </div> */}
-                {/* <div className='admin-serviceCard__action'>
-                    <Button onClick={() => updateStatus(props.order.status, 'inwork')} variant="filled" color="blue" size='md' radius={'md'}
-                        style={{ fontSize: 14, fontWeight: 500 }}>Принять</Button>
-                    <Button onClick={() => updateStatus(props.order.status, 'delivered')} variant="filled" color="orange" size='md' radius={'md'}
-                        style={{ fontSize: 14, fontWeight: 500 }}>Доставка</Button>
-                    <Button onClick={() => updateStatus(props.order.status, 'done')} variant="filled" color={'green'} size='md' radius={'md'}
-                        style={{ fontSize: 14, fontWeight: 500 }}>Выполнен</Button>
-                </div> */}
+              
             </div>
         </div>
     </>

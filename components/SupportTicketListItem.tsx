@@ -54,34 +54,36 @@ export default function SupportTicketItem(props: SupportTicketItemProps) {
     const createAt = DateTime.fromISO(props.ticket.create_at).toFormat('dd MMMM, HH:mm')
 
     return (
-        <div className='guest-order'>
-            <LoadingOverlay
-                visible={visibleLoadingOverlay}
-                zIndex={1000}
-                overlayProps={{ radius: 'sm', blur: 2 }}
-                loaderProps={{ color: 'gray', type: 'oval' }}
-            />
+        <div className='guest-order__wrapper'>
+            <div className='guest-order'>
+                <LoadingOverlay
+                    visible={visibleLoadingOverlay}
+                    zIndex={1000}
+                    overlayProps={{ radius: 'sm', blur: 2 }}
+                    loaderProps={{ color: 'gray', type: 'oval' }}
+                />
 
-            <div className='guest-order__header'>
-                <span className='guest-order__date'>{createAt}</span>
-                <span className='guest-order__status guest-order__status--active' style={statusStyle}>{status.text}</span>
-            </div>
+                <div className='guest-order__header'>
+                    <span className='guest-order__date'>{createAt}</span>
+                    <span className='guest-order__status guest-order__status--active' style={statusStyle}>{status.text}</span>
+                </div>
 
 
-            <div className='guest-order__info'>
-                <span className='guest-order__number'>№ {props.ticket.id}</span>
-            </div>
+                <div className='guest-order__info'>
+                    <span className='guest-order__number'>№ {props.ticket.id}</span>
+                </div>
 
-            <div className='guest-order__comment'>
-                <span className='guest-order__comment-title'>Комментарий:</span>
-                <span className='guest-order__comment-text'>{props.ticket.messages[0].message}</span>
-            </div>
+                <div className='guest-order__comment'>
+                    <span className='guest-order__comment-title'>Комментарий:</span>
+                    <span className='guest-order__comment-text'>{props.ticket.messages[0].message}</span>
+                </div>
 
-            <div className='guest-order__total'>
-            </div>
+                <div className='guest-order__total'>
+                </div>
 
-            <div className='guest-order__buttons'>
-                <Button text='Позвонить' stretch onClick={() => window.location.href = `tel:${DEFAULTS.PHONE_NUMBERS.reception}`} />
+                <div className='guest-order__buttons'>
+                    <Button text='Позвонить' stretch onClick={() => window.location.href = `tel:${DEFAULTS.PHONE_NUMBERS.reception}`} />
+                </div>
             </div>
         </div>
     )

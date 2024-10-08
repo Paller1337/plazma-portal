@@ -160,7 +160,7 @@ function BanquetCreatePage(props: BanquetManagementPageProps) {
         }
     }, [iiko])
 
-    useEffect(() => setCreateState(p => ({ ...p, banquetData: banquetData })), [banquetData])
+    useEffect(() => setCreateState(p => ({ ...p, banquetData: { ...p.banquetData, order: banquetData.order } })), [banquetData.order])
 
     useEffect(() => {
         console.log('iiko: ', { iiko })

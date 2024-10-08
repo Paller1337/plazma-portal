@@ -163,6 +163,11 @@ export const OrderProvider = ({ children }) => {
                         id: product.product.data.id,
                         quantity: product.quantity,
                     })),
+                    iikoProducts: ord?.attributes.iikoProducts?.map(product => ({
+                        product: product?.product,
+                        quantity: product?.quantity,
+                        price: product?.price || -1,
+                    })) || [],
                     comment: ord?.attributes.comment,
                     create_at: ord?.attributes.create_at,
                     description: ord?.attributes.description,
@@ -317,7 +322,7 @@ export const OrderProvider = ({ children }) => {
 
                 socket.on('supportTicketCreate', (data) => {
                     const newTicket = data.newTicket;
-                    console.log('Новая заявка на поддержку: ',newTicket)
+                    console.log('Новая заявка на поддержку: ', newTicket)
                     dispatch({
                         type: 'CREATE_TICKET',
                         payload: { ticket: newTicket },

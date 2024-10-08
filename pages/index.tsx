@@ -3,6 +3,7 @@ import NavBar from '@/components/NavBar'
 import PromoSlider from '@/components/PromoSlider'
 import RatingModal from '@/components/RatingModal'
 import StoriesModal from '@/components/Story'
+import axios from 'axios'
 import { useOrders } from 'context/OrderContext'
 import { DEFAULTS } from 'defaults'
 import { axiosInstance } from 'helpers/axiosInstance'
@@ -10,6 +11,7 @@ import useIsPwa from 'helpers/frontend/pwa'
 import { formatTicketMessage, ticketStatus, ticketStatusColor } from 'helpers/support/tickets'
 import { withAuthServerSideProps } from 'helpers/withAuthServerSideProps'
 import { GetServerSideProps } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { WallWallpostFull } from 'node_modules/vk-io/lib/api/schemas/objects'
 import React, { useEffect, useState } from 'react'
@@ -74,7 +76,7 @@ interface IndexPageProps {
             isActive: boolean
         }[]
     }[]
-
+    stories: any[]
 }
 
 
@@ -84,9 +86,9 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
     try {
 
         const token = context.req.headers.cookie?.split('; ').find(c => c.startsWith('session_token='))?.split('=')[1]
-        console.log('token: ', token)
+        // console.log('token: ', token)
         const cat = await axiosInstance.get('/api/articles')
-        console.log('cat: ', cat)
+        // console.log('cat: ', cat)
 
         const categories = cat.data.data.map(c => ({
             name: c.attributes.name,
@@ -114,11 +116,22 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
             })) : [],
         }))
 
+        const response = await axios.get(`${DEFAULTS.STRAPI.url}/api/stories`, {
+            params: {
+                populate: 'deep,3',
+            },
+        });
+        const stories = response.data.data
+            .sort((a, b) => a.id - b.id)
+            .sort((aa, bb) => bb.attributes.priority - aa.attributes.priority);
+
+
         return {
             props: {
                 // orders: orders,
                 slider: vkPosts,
                 categories: categories,
+                stories: stories
             } as IndexPageProps
         }
     } catch (error) {
@@ -143,12 +156,20 @@ interface MainCardProps {
 
 
 export function MainCard(props: MainCardProps) {
+    const [fallback, setFallback] = useState('')
+
     return (
         <Link href={props.href} className={`card-${props.size}`}>
             <div className='main-cards__item'>
                 <div className='main-cards__item-image'>
                     {props.tag ? <span className='main-cards__item-tag'>{props.tag}</span> : <></>}
-                    <img src={props.image} alt='' />
+                    <Image
+                        fill
+                        objectFit='cover'
+                        src={fallback || props.image} alt=''
+                        onError={() => setFallback('/images/fallback-2.png')}
+                    // style={{ }}
+                    />
                 </div>
                 <div className='main-cards__item-text'>
                     <div className='main-cards__item-title'>{props.title}</div>
@@ -246,23 +267,26 @@ export default function IndexPage(props: IndexPageProps) {
     // }, [])
     // console.log('state: ', state)
     const workOrders = orders?.filter(x => x.status !== 'done')
-    console.log('workOrders: ', workOrders)
+    // console.log('workOrders: ', workOrders)
 
     const openedTicks = supportTicks.filter(x => x.status !== 'closed')
+    const openStories = () => {
+        if (props.stories?.length > 0) setModalIsOpen(true)
+    }
     return (<>
         <RatingModal isOpen={ratingModalIsOpen} onClose={closeRatingModal} />
         <div className='index-preview'>
             <img src='/images/welcome.png' alt='' />
         </div>
 
-        <StoriesModal isOpen={modalIsOpen} onClose={closeModal} />
+        <StoriesModal isOpen={modalIsOpen} onClose={closeModal} stories={props.stories} />
 
         <main className='swing-main'>
             <div className='index-header'>
                 <div className='index-header__content'>
                     <span className='index-header__title'>Парк-отель Plazma</span>
-                    <div className='index-header__avatar' onClick={() => setModalIsOpen(true)}>
-                        <div className='index-header__avatar-gr' />
+                    <div className='index-header__avatar' onClick={openStories}>
+                        {props.stories?.length > 0 ? <div className='index-header__avatar-gr' /> : <></>}
                         <div className='index-header__avatar-image'>
                             <img src='/images/logo.png' alt='' />
                         </div>

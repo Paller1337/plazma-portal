@@ -42,7 +42,11 @@ export async function getOrdersByGuestId(id: number): Promise<IOrder[]> {
             products: order.attributes.products?.map(product => ({
                 id: product.product.data.id,
                 quantity: product.quantity,
-            })),//
+            })) || [],//
+            iikoProducts: order.attributes.iikoProducts?.map(product => ({
+                product: product?.product,
+                quantity: product?.quantity,
+            })) || [],//
             room: order.attributes.room,//
             phone: order.attributes.phone,
             comment: order.attributes.comment,

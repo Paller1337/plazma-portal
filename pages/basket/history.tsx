@@ -32,7 +32,7 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
 
         const orders = await getOrdersByGuestId(decoded.accountId)
 
-        // console.log('orders ', orders)
+        console.log('orders ', orders)
 
         if (!orders) {
             throw new Error(`Заказов нет`);

@@ -7,7 +7,8 @@ import { DateTime, Settings } from 'luxon'
 import { Flex, Loader, LoadingOverlay } from '@mantine/core'
 import { useCart } from 'context/CartContext'
 import Router from 'next/router'
-import { getProductById } from 'helpers/cartContext'
+import { findItemInCache, getProductById } from 'helpers/cartContext'
+import { ItemMenuV2 } from 'helpers/iiko/IikoApi/types'
 
 interface OrderListItemProps {
     order?: IOrder
@@ -21,7 +22,7 @@ const OrderLine = (props: { product: IProduct, quantity: number }) => {
     return (
         <div className='guest-order__part'>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={DEFAULTS.STRAPI.url + props.product?.image} alt='Халат'
+            <img src={DEFAULTS.STRAPI.url + props.product?.image} alt=''
                 className='guest-order__image' />
             <span className='guest-order__item'>{props.product?.name}</span>
             <div className='guest-order__part-amount'>
@@ -31,10 +32,28 @@ const OrderLine = (props: { product: IProduct, quantity: number }) => {
         </div>
     )
 }
+
+const IikoOrderLine = (props: { product: ItemMenuV2, quantity: number }) => {
+    // console.log('order line: ', props.product)
+    return (
+        <div className='guest-order__part'>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={props.product?.itemSizes[0]?.buttonImageUrl || '/images/no-photo-60x60.png'} alt=''
+                className='guest-order__image' />
+            <span className='guest-order__item'>{props.product?.name}</span>
+            <div className='guest-order__part-amount'>
+                <span className='guest-order__part-quantity'>{props.quantity} x</span>
+                <span className='guest-order__part-price'>{props.product?.itemSizes[0]?.prices[0]?.price} ₽</span>
+            </div>
+        </div>
+    )
+}
+
 export default function OrderListItem(props: OrderListItemProps) {
     const [visibleLoadingOverlay, setVisibleLoadingOverlay] = useState(false)
     const [orderProducts, setOrderProducts] = useState<IProduct[]>(null)
-    const { dispatch, productsInfo } = useCart()
+    const { dispatch, productsInfo, menuCache, iikoMenuIsFetched } = useCart()
+
     const [statusStyle, setStatusStyle] = useState({
         '--status-color': '#000'
     } as React.CSSProperties)
@@ -92,21 +111,37 @@ export default function OrderListItem(props: OrderListItemProps) {
 
     const orderServiceRepeat = () => {
         setVisibleLoadingOverlay(true)
-        dispatch({ type: 'CLEAR_CART', storeId: props.order.store.id.toString() })
-        for (let product of props.order.products) {
-            // console.log(`in ${service.service.id.toString()} amount ${service.quantity}`)
-            dispatch({
-                type: 'ADD_ITEM',
-                storeId: props.order.store.id.toString(),
-                item: {
-                    id: product.id.toString(),
-                    quantity: product.quantity
-                },
-            })
+        if (props.order.type.value === 'eat') {
+            dispatch({ type: 'CLEAR_CART', storeId: 'eat' })
+            for (let product of props.order.iikoProducts) {
+                // console.log(`in ${service.service.id.toString()} amount ${service.quantity}`)
+                dispatch({
+                    type: 'ADD_ITEM',
+                    storeId: 'eat',
+                    item: {
+                        id: product.product.toString(),
+                        quantity: product.quantity
+                    },
+                })
+            }
+            Router.push(`/basket/eat`, null, { shallow: true })
+        } else {
+            dispatch({ type: 'CLEAR_CART', storeId: props.order.store.id.toString() })
+            for (let product of props.order.products) {
+                // console.log(`in ${service.service.id.toString()} amount ${service.quantity}`)
+                dispatch({
+                    type: 'ADD_ITEM',
+                    storeId: props.order.store.id.toString(),
+                    item: {
+                        id: product.id.toString(),
+                        quantity: product.quantity
+                    },
+                })
+            }
+            Router.push(`/basket/${props.order.store.id}`, null, { shallow: true })
         }
-        Router.push(`/basket/${props.order.store.id}`)
     }
-
+    useEffect(() => console.log(props.order), [props.order])
     return (
         <div className='guest-order__wrapper' id={props.order.id.toString()}>
             <div className='guest-order'>
@@ -125,19 +160,30 @@ export default function OrderListItem(props: OrderListItemProps) {
 
                 <div className='guest-order__info'>
                     <span className='guest-order__number'>№ {props.order.id}</span>
-                    <span className='guest-order__type'>Тип заказа: Услуги</span>
+                    <span className='guest-order__type'>Тип заказа: {props.order?.type?.label}</span>
                 </div>
 
                 <div className='guest-order__services'>
-                    {orderProducts ? props.order.products.map((x, i) => {
-                        return (
-                            <OrderLine
-                                key={x.id + DateTime.now().toISO()}
-                                product={orderProducts?.find(p => x.id === parseInt(p.id)) as IProduct}
-                                quantity={x.quantity}
-                            />
-                        )
-                    }) : <Loader color='gray' style={{ margin: '0 auto' }} size={24} />}
+                    {props.order?.type?.value === 'eat' ?
+                        iikoMenuIsFetched ? props.order.iikoProducts.map((x, i) => {
+                            const product = findItemInCache(x.product, menuCache)
+                            return (
+                                <IikoOrderLine
+                                    key={x.product + DateTime.now().toISO()}
+                                    product={product}
+                                    quantity={x.quantity}
+                                />
+                            )
+                        }) : <Loader color='gray' style={{ margin: '0 auto' }} size={24} />
+                        : orderProducts ? props.order.products.map((x, i) => {
+                            return (
+                                <OrderLine
+                                    key={x.id + DateTime.now().toISO()}
+                                    product={orderProducts?.find(p => x.id === parseInt(p.id)) as IProduct}
+                                    quantity={x.quantity}
+                                />
+                            )
+                        }) : <Loader color='gray' style={{ margin: '0 auto' }} size={24} />}
                 </div>
 
                 <div className='guest-order__total'>
@@ -148,10 +194,21 @@ export default function OrderListItem(props: OrderListItemProps) {
                     </div>
                     <div className='guest-order__total-row'>
                         <span className='guest-order__total-label'>Итого</span>
-                        <span className='guest-order__total-amount'>{
-                            orderProducts ? props.order.products.reduce(
+                        <span className='guest-order__total-amount'>
+                            {/* {orderProducts ? props.order.products.reduce(
                                 (val, x) => val + x.quantity * (orderProducts?.find(p => x.id === parseInt(p.id)) as IProduct).price, 0
-                            ) : <Loader color='gray' style={{ margin: '0 auto' }} size={12} />} ₽
+                            ) : <Loader color='gray' style={{ margin: '0 auto' }} size={12} />} ₽ */}
+
+                            {props.order?.type?.value === 'eat' ?
+                                iikoMenuIsFetched ? props.order.iikoProducts.reduce((val, x) => {
+                                    const product = findItemInCache(x.product, menuCache)
+                                    const sum = val + x.quantity * product.itemSizes[0]?.prices[0]?.price
+                                    return sum
+                                }, 0) : <Loader color='gray' style={{ margin: '0 auto' }} size={24} />
+                                : orderProducts ? props.order.products.reduce(
+                                    (val, x) => val + x.quantity * (orderProducts?.find(p => x.id === parseInt(p.id)) as IProduct).price, 0
+                                ) : <Loader color='gray' style={{ margin: '0 auto' }} size={12} />} ₽
+
                         </span>
                     </div>
                 </div>

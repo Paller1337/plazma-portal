@@ -15,6 +15,7 @@ import {
 export class IikoAPI {
     private client: AxiosInstance;
     private apiKey: string;
+    private prefix: string;
     private authToken?: string;
     private cacheManager: CacheManager;
     private logger: Logger;
@@ -23,9 +24,11 @@ export class IikoAPI {
 
     constructor(config: Config) {
         // Initialize API key and base URL
-        this.apiKey = config.apiKey || defaultConfig.apiKey;
+        this.apiKey = config.apiKey || defaultConfig.apiKey
         // this.redis = config.redis || defaultConfig.redis;
-        const baseURL = config.baseURL || defaultConfig.baseURL;
+        const baseURL = config.baseURL || defaultConfig.baseURL
+
+        this.prefix = config.cachePrefix || defaultConfig.cachePrefix
 
         // Initialize HTTP client
         this.client = axios.create({
@@ -52,9 +55,8 @@ export class IikoAPI {
         if (this.authToken) {
             return this.authToken;
         }
-
         // Проверка токена в кэше
-        const cachedToken = await this.cacheManager.get('iiko:authToken');
+        const cachedToken = await this.cacheManager.get(`${this.prefix}authToken`);
         if (cachedToken) {
             this.authToken = cachedToken;
             this.logger.info('[IIKO API] Токен авторизации, извлеченный из кэша');
@@ -76,6 +78,26 @@ export class IikoAPI {
         return this.authToken;
     }
 
+    // Хранение последних запросов
+    private requestCache: { [key: string]: number } = {};
+
+    // Метод для проверки и обновления кеша запросов
+    private shouldMakeRequest(method: 'GET' | 'POST', url: string, data?: any): boolean {
+        const currentTime = Date.now();
+        const cacheKey = method === 'POST' && data ? `${url}:${JSON.stringify(data)}` : url;
+        const lastRequestTime = this.requestCache[cacheKey];
+
+        // Проверка, если прошло менее 5 секунд с момента последнего запроса
+        if (lastRequestTime && currentTime - lastRequestTime < 5000) {
+            this.logger.info(`[IIKO API] Пропуск повторного запроса к ${cacheKey}, так как прошло меньше 5 секунд`);
+            return false;
+        }
+
+        // Обновляем время последнего запроса
+        this.requestCache[cacheKey] = currentTime;
+        return true;
+    }
+
     /** Утилита для отправки запросов с повторными попытками */
     private async makeRequest<T>(
         method: 'GET' | 'POST',
@@ -83,6 +105,11 @@ export class IikoAPI {
         data?: any,
         attempt: number = 1
     ): Promise<AxiosResponse<T, any>> {
+        // Проверяем, можно ли отправить запрос
+        // if (!this.shouldMakeRequest(method, url, data)) {
+        //     throw new Error(`Запрос к ${url} был заблокирован, так как он повторяется в течение 5 секунд.`);
+        // }
+
         // Экспоненциальная задержка возврата
         const delay = this.initialDelayMs * Math.pow(2, attempt - 1);
 
@@ -164,7 +191,7 @@ export class IikoAPI {
 
     /** Получить организации */
     public async getOrganizations(): Promise<OrganizationResponse> {
-        const cacheKey = 'iiko:organizations';
+        const cacheKey = `${this.prefix}organizations`;
         const cachedData = await this.cacheManager.get(cacheKey);
         if (cachedData) {
             this.logger.info('[IIKO API] Список организаций, получен из кэша');
@@ -183,7 +210,7 @@ export class IikoAPI {
 
     /** Получить для которых доступно бронирование банкета/резервации */
     public async getReserveOrganizations(): Promise<OrganizationResponse> {
-        const cacheKey = 'iiko:reserve:organizations';
+        const cacheKey = `${this.prefix}reserve:organizations`;
         const cachedData = await this.cacheManager.get(cacheKey);
         if (cachedData) {
             this.logger.info('[IIKO API] Список организаций, для которых доступно бронирование банкета/резервации полученный из кэша');
@@ -202,7 +229,7 @@ export class IikoAPI {
 
     /** Получить групп терминалов */
     public async getTerminalGroups(organizationIds: string[]): Promise<TerminalGroupsResponse> {
-        const cacheKey = 'iiko:terminal_groups';
+        const cacheKey = `${this.prefix}terminal_groups`;
         const cachedData = await this.cacheManager.get(cacheKey);
         if (cachedData) {
             this.logger.info('[IIKO API] Список терминалов получен из кэша');
@@ -224,7 +251,7 @@ export class IikoAPI {
 
     /** Возвращает все группы терминалов указанных организаций, для которых доступно бронирование банкетов/резерваций. */
     public async getAvailableTerminalGroups(organizationIds: string[]): Promise<TerminalGroupsResponse> {
-        const cacheKey = 'iiko:reserve:available_terminal_groups';
+        const cacheKey = `${this.prefix}reserve:available_terminal_groups`;
         const cachedData = await this.cacheManager.get(cacheKey);
         if (cachedData) {
             this.logger.info('[IIKO API] Список терминалов, для которых доступно бронирование банкетов/резерваций получен из кэша');
@@ -246,7 +273,7 @@ export class IikoAPI {
     /** Возвращает все залы ресторанов указанных групп терминалов, для которых доступно бронирование банкетов/резервов. */
     public async getAvailableRestaurantSections(terminalGroupIds: string[]): Promise<AvailableRestaurantSectionsResponse> {
         let dynamicKey = terminalGroupIds.join(',');
-        const cacheKey = 'iiko:reserve:available_restaurant_sections//' + dynamicKey;
+        const cacheKey = `${this.prefix}reserve:available_restaurant_sections//` + dynamicKey;
         const cachedData = await this.cacheManager.get(cacheKey);
         if (cachedData) {
             this.logger.info('[IIKO API] Список залов ресторанов указанных групп терминалов, для которых доступно бронирование банкетов/резерваций получен из кэша');
@@ -268,7 +295,7 @@ export class IikoAPI {
 
     /** Возвращает все банкеты/резервации для заданных залов ресторана. */
     public async getRestaurantSectionsWorkload(restaurantSectionIds: string[], dateFrom: string, dateTo?: string): Promise<RestaurantSectionsWorkloadResponse> {
-        const cacheKey = 'iiko:reserve:restaurant_sections_workload';
+        const cacheKey = `${this.prefix}reserve:restaurant_sections_workload`;
         const cachedData = await this.cacheManager.get(cacheKey);
         if (cachedData) {
             this.logger.info('[IIKO API] Список банкетов/резерваций для заданных залов ресторана получен из кэша');
@@ -289,7 +316,7 @@ export class IikoAPI {
 
     /** Возвращает статусы банкетов/резервов по IDs. */
     public async getReserveStatusById(organizationId: string, reserveIds: string[], sourceKeys?: string): Promise<ReserveStatusByIdResponse> {
-        const cacheKey = 'iiko:reserve_status_by_id';
+        const cacheKey = `${this.prefix}reserve_status_by_id`;
         const cachedData = await this.cacheManager.get(cacheKey);
         if (cachedData) {
             this.logger.info('[IIKO API] Информация о банкетах/резервацая для заданных IDs получен из кэша');
@@ -321,7 +348,7 @@ export class IikoAPI {
 
     /** Получить номенклатуру */
     public async getNomenclature(organizationId: string): Promise<NomenclatureResponse> {
-        const cacheKey = `iiko:nomenclature:${organizationId}`;
+        const cacheKey = `${this.prefix}nomenclature:${organizationId}`;
         const cachedData = await this.cacheManager.get(cacheKey);
         if (cachedData) {
             this.logger.info(`[IIKO API] Номенклатура для организации ${organizationId} получена из кэша`);
@@ -365,7 +392,7 @@ export class IikoAPI {
     /** Получение списка меню (API v2) */
     public async getMenusV2(request?: MenusV2Request): Promise<MenuV2ByIdResponse> {
         // Формирование ключа кэша на основе идентификаторов организаций и параметров
-        const cacheKey = `iiko:menus:v2`
+        const cacheKey = `${this.prefix}menus:v2`
 
         // Проверка наличия данных в кэше
         const cachedData = await this.cacheManager.get(cacheKey);
@@ -395,7 +422,7 @@ export class IikoAPI {
         }
 
         // Формирование ключа кэша на основе идентификаторов организаций и параметров
-        const cacheKey = `iiko:menu_by_id:v2:${request.externalMenuId}`
+        const cacheKey = `${this.prefix}menu_by_id:v2:${request.externalMenuId}`
 
         // Проверка наличия данных в кэше
         const cachedData = await this.cacheManager.get(cacheKey);

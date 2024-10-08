@@ -11,15 +11,13 @@ import { IOrder, TOrderStatus } from 'types/order'
 import { IconSearch } from '@tabler/icons-react'
 import { DateTime } from 'luxon'
 import { withAdminPage } from 'helpers/withAdminPage'
+import { useIiko } from 'context/IikoContext'
 
 
 interface AdminOrdersPageProps {
     rooms?: any
 }
 
-// export interface IServiceOrderWithEntering extends IServiceOrder {
-//     isEntering?: boolean
-// }
 
 export const getServerSideProps: GetServerSideProps = withAdminAuthServerSideProps(async (context) => {
     try {
@@ -52,22 +50,9 @@ type TNavItem = {
     count: number
 }
 
-const PageNavItem = (props: PageNavItemProps) => {
-
-    return (
-        <div className={`admin-page--pageNav__item ${props.isActive ? 'active' : ''}`}
-            onClick={props.onClick}>
-
-            {props.name}
-            <div className='admin-page--pageNav__item-counter'>{props.count}</div>
-        </div>
-    )
-}
-
 
 const groupOrdersByDate = (orders: IOrder[]) => {
     return orders.reduce((groups, order) => {
-        // Преобразуем дату создания заказа в объект DateTime и форматируем в строку 'yyyy-MM-dd'
         const date = DateTime.fromISO(order.create_at).toFormat('yyyy-MM-dd')
         if (!groups[date]) {
             groups[date] = []
@@ -83,6 +68,7 @@ function OrdersPage(props: AdminOrdersPageProps) {
     const { state, productsList } = useAdminOrders()
     const [orders, setOrders] = useState(state.orders)
     const [orderFetchTime, setOrderFetchTime] = useState(null)
+    const { getNomenclature, organizations, nomenclature } = useIiko()
 
     const router = useRouter()
     const query = router.query
@@ -133,6 +119,14 @@ function OrdersPage(props: AdminOrdersPageProps) {
         }
     }
 
+    useEffect(() => {
+        if (organizations && organizations.length > 0) {
+            if (!nomenclature) {
+                console.log('GET NOMEN')
+                getNomenclature(organizations[0].id)
+            }
+        }
+    }, [organizations])
     const changeTab = (newStatus: TOrderStatus) => {
         setCurrentNav(newStatus)
         router.push(`/admin/portal/orders?status=${newStatus}`, undefined, { shallow: true });
@@ -143,26 +137,12 @@ function OrdersPage(props: AdminOrdersPageProps) {
         loadOrders((query.status as string) as TOrderStatus)
     }, [state.orders, query.status])
 
-    // useEffect(() => {
-    //     console.log('state.orders ', state.orders)
-    // }, [state.orders])
 
     const nowDate = DateTime.now()
 
     return (
         <>
             <div className='admin--order'>
-                {/* <div className='admin-page--pageNav'>
-                    {navItems.map(x =>
-                        <PageNavItem
-                            key={x.name}
-                            count={x.count}
-                            name={x.name}
-                            isActive={currentNav === x.status}
-                            onClick={() => changeTab(x.status)}
-                        />
-                    )}
-                </div> */}
                 <div className='admin--order__header'>
                     <div className='admin--order__header-content'>
                         <span className='admin--order__header-title'>Заказы услуг и еды</span>
@@ -186,30 +166,6 @@ function OrdersPage(props: AdminOrdersPageProps) {
                 </div>
                 {orders.length > 0 ?
                     <div className='admin--order__opd-wrapper'>
-                        {/* {orders.map((order, i) => {
-                        const dateTime = order.create_at
-                        return (
-                            <div key={i} className='admin--order__opd'>
-                                <div className='admin--order__opd-header'>
-                                    <div className='admin--order__opd-content'>
-                                        <span className='admin--order__opd-title'>Заказы за сегодня</span>
-                                    </div>
-                                    <div className='admin-main__vs' />
-                                </div>
-                                <div className='admin-serviceCards'>
-                                    {orders.map((order, i) => {
-                                        return (
-                                            <ServiceOrder
-                                                key={'order-in-list-' + order.id}
-                                                order={order}
-                                                products={productsList}
-                                            />
-                                        )
-                                    })}
-                                </div>
-                            </div>
-                        )
-                    })} */}
                         {Object.keys(groupedOrders).map((date, i) => (
                             <div key={i} className='admin--order__opd'>
                                 <div className='admin--order__opd-header'>
@@ -236,32 +192,6 @@ function OrdersPage(props: AdminOrdersPageProps) {
                                 </div>
                             </div>
                         ))}
-                        {/* <div className='admin--order__opd'>
-                        <div className='admin--order__opd-header'>
-                            <div className='admin--order__opd-content'>
-                                <span className='admin--order__opd-title'>Заказы за сегодня</span>
-                            </div>
-                            <div className='admin-main__vs' />
-                        </div>
-                        <div className='admin-serviceCards'>
-                            {orders.map((order, i) => {
-                                // const serviceRoom = hotelRooms.find(x => x.id === service.orderInfo.customer.room)?.tags
-                                // const orderClass = `service-order ${service.isEntering ? 'service-order-enter' : ''}`
-                                // console.log('Заказ ', service.orderInfo.customer.name, 'Комната: ', serviceRoom)
-                                return (
-                                    // <div
-                                    // // className={`${orderClass}`} 
-                                    // >
-                                    <ServiceOrder
-                                        key={'order-in-list-' + order.id}
-                                        order={order}
-                                        products={productsList}
-                                    />
-                                    // </div>
-                                )
-                            })}
-                        </div>
-                    </div> */}
                     </div>
                     :
                     <div className='admin--order__loader'><Loader size={48} color={'#485066'} /></div>

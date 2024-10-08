@@ -88,6 +88,7 @@ export default function StorePage(props: StorePageProps) {
 
     // @ts-ignore
     const currentStoreState = state.stores[props.store.id]
+    const total = currentStoreState?.order?.reduce((acc, curr) => acc + productsInfo[curr.id.toString()]?.price * curr.quantity, 0) || 0
     useEffect(() => {
         // console.log('props.store ', props.store)
         // console.log('currentStoreState: ', currentStoreState)
@@ -156,7 +157,7 @@ export default function StorePage(props: StorePageProps) {
                         style={{ backgroundColor: 'rgb(86, 117, 75)' }}
                         prefetch
                     >
-                        Перейти к заказу
+                        Перейти к заказу {total ? `${total}₽` : ''}
                     </Link>
                     {/* <Button text='' bgColor='' stretch onClick={() => router.push(`/basket/${props.store?.id}`)} /> */}
                 </div>

@@ -1,3 +1,5 @@
+import Button from '@/components/Button'
+import { Group, Stack } from '@mantine/core'
 import axios from 'axios'
 import { useOrders } from 'context/OrderContext'
 import { DEFAULTS } from 'defaults'
@@ -43,10 +45,14 @@ interface IArticle {
     text?: any
     content?: any
     image?: string
+    button?: {
+        title: string
+        link: string
+        external: boolean
+    }
 }
 interface ArticlePageProps {
     article?: IArticle
-    article2?: any
 }
 
 const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN
@@ -66,7 +72,13 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
         })
 
         console.log('article  ', article.data)
-
+        const action_button = article.data.data.attributes?.action_button
+        const button = {
+            title: action_button?.data?.attributes?.title,
+            link: action_button?.data?.attributes?.link,
+            external: action_button?.data?.attributes?.external,
+        }
+        console.log('button ', button)
         return {
             props: {
                 // article: article.data,
@@ -76,7 +88,8 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
                     text: article.data.data.attributes.text || '',
                     content: article.data.data.attributes.content || '',
                     image: article.data.data.attributes.image.data[0].attributes.url || '',
-                    preview_size: article.data.data.attributes.preview_size || 'min'
+                    preview_size: article.data.data.attributes.preview_size || 'min',
+                    button: button ? button : { title: '', link: '', external: false },
                 }
             } as ArticlePageProps
         }
@@ -98,7 +111,6 @@ export default function IndexPage(props: ArticlePageProps) {
 
     useEffect(() => {
         console.log('props.article ', props.article)
-        console.log('props.article2 ', props.article2)
     }, [])
 
     return (<>
@@ -123,6 +135,24 @@ export default function IndexPage(props: ArticlePageProps) {
             <div className='article-content' dangerouslySetInnerHTML={{ __html: props.article?.content }}  >
                 {/* <BlocksRenderer content={props.article?.text} /> */}
             </div>
+
+            {props.article?.button && props.article?.button?.title ?
+                <Stack px={12} align='center' mt={'40px'}>
+                    <Group maw={400} w={'100%'}>
+                        <Button
+                            stretch
+                            bgColor='#56754B'
+                            text={props.article?.button?.title}
+                            onClick={
+                                () => router.push(
+                                    props.article?.button?.link,
+                                    null,
+                                    { shallow: !props.article?.button?.external })
+                            } />
+                    </Group>
+                </Stack>
+                : <></>
+            }
         </main >
     </>)
 }

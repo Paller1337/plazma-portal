@@ -1,8 +1,9 @@
-import React, { createContext, useReducer, useContext, useEffect, useState } from 'react';
+import React, { createContext, useReducer, useContext, useEffect, useState, useMemo } from 'react';
 import { useCartDetails } from 'helpers/cartContext';
 import { getRooms } from 'helpers/bnovo/getRooms';
 import { axiosInstance } from 'helpers/axiosInstance';
 import { IProduct, IStoreType } from 'types/order';
+import { MenuV2ByIdResponse } from 'helpers/iiko/IikoApi/types';
 
 // Типы
 type CartItem = {
@@ -21,6 +22,8 @@ type CartState = {
 
 type StoreInfo = {
     id: string;
+    customId: string
+    isCustom: boolean
     title: string;
     category: string;
     imageUrl: string
@@ -54,8 +57,10 @@ const CartContext = createContext<{
     dispatch: React.Dispatch<CartAction>;
     storesInfo: { [key: string]: StoreInfo };
     productsInfo: { [key: string]: IProduct }
-    hotelRooms: any
-}>({ state: defaultState, dispatch: () => null, storesInfo: {}, productsInfo: {}, hotelRooms: null });
+    hotelRooms: any,
+    menuCache: { [key: string]: MenuV2ByIdResponse }
+    iikoMenuIsFetched: boolean
+}>({ state: defaultState, dispatch: () => null, storesInfo: {}, productsInfo: {}, hotelRooms: null, menuCache: {}, iikoMenuIsFetched: false });
 
 const cartReducer = (state: CartState, action: CartAction): CartState => {
     switch (action.type) {
@@ -140,20 +145,26 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     }
 }
 
+
 export const CartProvider = ({ children }) => {
     const [isMounted, setIsMounted] = useState(false);
     const [state, dispatch] = useReducer(cartReducer, defaultState)
-    const { storesInfo, productsInfo } = useCartDetails(state)
+    const { storesInfo, productsInfo, menuCache, iikoMenuIsFetched } = useCartDetails(state)
     const [hotelRooms, setHotelRooms] = useState(null)
 
     useEffect(() => {
-        setIsMounted(true);
-    }, []);
-
-    useEffect(() => {
-        console.log('storesInfo ', storesInfo)
-        console.log('productsInfo ', productsInfo)
+        setIsMounted(true)
     }, [])
+
+    // useEffect(() => {
+    //     console.log('storesInfo ', storesInfo)
+    //     // console.log('productsInfo ', productsInfo)
+    // }, [storesInfo])
+
+
+
+
+
     useEffect(() => {
         if (isMounted) {
             const savedCart = localStorage.getItem('cart');
@@ -167,7 +178,7 @@ export const CartProvider = ({ children }) => {
         if (isMounted) {
             localStorage.setItem('cart', JSON.stringify(state));
         }
-    }, [state, isMounted]);
+    }, [state, isMounted])
 
     // useEffect(() => console.log('cart state: ', state), [state])
     // useEffect(() => console.log('HotelRooms: ', hotelRooms), [hotelRooms])
@@ -186,7 +197,7 @@ export const CartProvider = ({ children }) => {
     }, [])
 
     return (
-        <CartContext.Provider value={{ state, dispatch, storesInfo, productsInfo, hotelRooms }}>
+        <CartContext.Provider value={{ state, dispatch, storesInfo, productsInfo, hotelRooms, menuCache, iikoMenuIsFetched }}>
             {children}
         </CartContext.Provider>
     );

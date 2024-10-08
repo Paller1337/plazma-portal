@@ -34,15 +34,9 @@ export default function OrderItem(props: OrderItemPorps) {
     return (
         <div className='order-item'>
             <div className='order-item__meta'>
-                {props.image ?
-                    <Image className='order-item__image' width={60} height={60}
-                        src={DEFAULTS.STRAPI.url + props.image} alt=''
-                    />
-                    :
-                    <Image className='order-item__image' width={60} height={60}
-                        src={'/images/no-photo-60x60.png'} alt=''
-                    />
-                }
+                <Image className='order-item__image' width={60} height={60}
+                    src={props.image ? props.image : '/images/no-photo-60x60.png'} alt=''
+                />
                 <div className='order-item__col'>
                     <span className='order-item__title'>{props.title ? props.title : 'Без названия'}</span>
                     <span className='order-item__desc'>{props.desc}</span>

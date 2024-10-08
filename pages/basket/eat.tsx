@@ -21,11 +21,11 @@ import { IGuestAccount } from 'types/session'
 import Link from 'next/link'
 import { telegramSendOrder } from 'helpers/telegram'
 import { getOrdersByGuestId } from 'helpers/order/order'
-import { DEFAULTS } from 'defaults'
+import { findItemInCache } from 'helpers/cartContext'
 
 
 export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(async (context) => {
-    const { id } = context.params
+    const id = 'eat'
     try {
 
         return {
@@ -41,10 +41,11 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
     }
 })
 
+
 export default function OrderServices(props) {
     const { isAuthenticated, openAuthModal, currentUser } = useAuth()
     const [modalIsOpen, setModalIsOpen] = useState(false)
-    const { state, dispatch, productsInfo, storesInfo, hotelRooms } = useCart()
+    const { state, dispatch, productsInfo, storesInfo, hotelRooms, menuCache, iikoMenuIsFetched } = useCart()
     const [visibleLoadingOverlay, setVisibleLoadingOverlay] = useState(false)
 
     const router = useRouter()
@@ -63,6 +64,7 @@ export default function OrderServices(props) {
         error: ''
     })
 
+    useEffect(() => console.log(storesInfo), [storesInfo])
     const rooms = hotelRooms?.map(room => ({
         value: room.id.toString(),
         label: room.tags
@@ -76,26 +78,8 @@ export default function OrderServices(props) {
     const [orderComment, setOrderComment] = useState('')
     const [orderPayment, setOrderPayment] = useState('bank-card')
 
-    // const sendOrderToTelegram = async (order) => {
-    //     try {
-    //         const response = await fetch('/api/send-order', {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json'
-    //             },
-    //             body: JSON.stringify(order)
-    //         })
 
-    //         if (!response.ok) {
-    //             throw new Error('Не удалось отправить заказ')
-    //         }
 
-    //         return await response.json();
-    //     } catch (error) {
-    //         console.error('Ошибка при отправке заказа:', error)
-    //         throw error;
-    //     }
-    // }
 
     const placeOrder = async (orderData) => {
         try {
@@ -175,12 +159,16 @@ export default function OrderServices(props) {
             const decoded = res.data
             // console.log('store decoded token: ', decoded)
 
-            const serviceOrder = currentStoreState.order.map(item => ({
-                id: item.id,
-                quantity: item.quantity,
-                price: productsInfo[item.id.toString()]?.price,
-                name: productsInfo[item.id.toString()]?.name,
-            }))
+            const serviceOrder = currentStoreState.order.map(item => {
+
+                const product = findItemInCache(item.id, menuCache)
+                return ({
+                    id: item.id,
+                    quantity: item.quantity,
+                    price: product?.itemSizes[0].prices[0].price,
+                    name: product?.name,
+                })
+            })
 
             const nowTime = DateTime.now().toISO()
 
@@ -190,6 +178,32 @@ export default function OrderServices(props) {
                 return
             }
             try {
+                console.log({
+                    guest: currentUser.id, // ID гостя
+                    create_at: new Date().toISOString(),
+                    completed_at: null,
+                    status: 'new',
+                    previous_status: 'none',
+                    paymentType: orderPayment,
+                    comment: orderComment,
+                    phone: orderPhone.value,
+                    room: {
+                        label: room.label,
+                        roomId: room.value,
+                    },
+                    products: [],
+                    iikoProducts: currentStoreState.order.map(p => {
+                        const product = findItemInCache(p.id, menuCache)
+                        return ({
+                            product: p.id,
+                            quantity: p.quantity,
+                            price: product?.itemSizes[0]?.prices[0]?.price || -1,
+                        })
+                    }) || [],
+                    type: storesInfo[props.id]?.store_type.id,
+                    store: storesInfo[props.id]?.id,
+                })
+
                 const orderIsPlace = await placeOrder({
                     guest: currentUser.id, // ID гостя
                     create_at: new Date().toISOString(),
@@ -203,10 +217,15 @@ export default function OrderServices(props) {
                         label: room.label,
                         roomId: room.value,
                     },
-                    products: currentStoreState.order.map(p => ({
-                        product: p.id,
-                        quantity: p.quantity,
-                    })),
+                    products: [],
+                    iikoProducts: currentStoreState.order.map(p => {
+                        const product = findItemInCache(p.id, menuCache)
+                        return ({
+                            product: p.id,
+                            quantity: p.quantity,
+                            price: product?.itemSizes[0]?.prices[0]?.price || -1,
+                        })
+                    }) || [],
                     type: storesInfo[props.id]?.store_type.id,
                     store: storesInfo[props.id]?.id,
                 })
@@ -304,36 +323,30 @@ export default function OrderServices(props) {
                     </div>
                     <div className='order-types'>
                         {Object.keys(storesInfo).map(x => {
-                            if (props.id == storesInfo[x].id) return (
+                            if (x === 'eat') return (
                                 <div className='order-types__type active' key={storesInfo[x].title}>
                                     {storesInfo[x].title}
                                 </div>
                             )
-                            if (storesInfo[x].isCustom) return (
-                                <Link className='order-types__type' href={'/basket/' + storesInfo[x].customId} key={storesInfo[x].title} >
-                                    {storesInfo[x].title}
-                                </Link>
-                            )
-                            else return (
+                            return (
                                 <Link className='order-types__type' href={'/basket/' + storesInfo[x].id} key={storesInfo[x].title} >
                                     {storesInfo[x].title}
                                 </Link>
                             )
-
                         })
                         }
                     </div>
                     <div className='order-body'>
                         {currentStoreState && currentStoreState?.order?.length !== 0 ?
-                            productsInfo[currentStoreState.order[0].id] ? currentStoreState?.order?.map((x, i) => {
-                                const product = productsInfo[x.id]
+                            iikoMenuIsFetched ? currentStoreState?.order?.map((x, i) => {
+                                const product = findItemInCache(x.id, menuCache)
                                 return <OrderItem
                                     key={i + product?.name}
                                     productId={x.id}
                                     title={product?.name}
-                                    desc={`${x.quantity} x ${product?.price} ₽`}
-                                    image={DEFAULTS.STRAPI.url + product?.image}
-                                    storeId={product?.store.id.toString()}
+                                    desc={`${x.quantity} x ${product?.itemSizes[0].prices[0].price}  ₽`}
+                                    image={product?.itemSizes[0].buttonImageUrl}
+                                    storeId={props.id}
                                     count={x.quantity}
                                     category='food'
                                 />

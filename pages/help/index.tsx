@@ -244,7 +244,7 @@ export default function HelpPage(props: HelpPageProps) {
                             </div>
 
                             <div className='support-status__info'>
-                                <span className='support-status__title'>{formatTicketMessage(tickets.length)}</span>
+                                <span className='support-status__title'>{formatTicketMessage(tickets?.filter(t => t.status !== 'closed').length)}</span>
                                 <span className='support-status__desc'>{ticketStatus(tickets[0].status)}</span>
                             </div>
                             <div className='support-status__btn' onClick={() => router.push('/help/history')}>

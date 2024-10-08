@@ -9,6 +9,7 @@ export interface Config {
     maxAttempts?: number;
     initialDelayMs?: number;
   };
+  cachePrefix?: string
 }
 
 export const defaultConfig: Config = {
@@ -19,4 +20,5 @@ export const defaultConfig: Config = {
     maxAttempts: 5,
     initialDelayMs: 100,
   },
+  cachePrefix: 'iiko:cache:'
 };

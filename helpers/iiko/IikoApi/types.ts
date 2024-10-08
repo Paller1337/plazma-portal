@@ -366,8 +366,8 @@ export interface ItemMenuV2 {
     sku: number,
     name: string,
     description: string,
-    allergens: [],
-    tags: [],
+    // allergens: [],
+    // tags: [],
     labels: [],
     itemSizes: {
         sku: number,

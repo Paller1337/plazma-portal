@@ -33,6 +33,7 @@ export interface IOrder {
     description?: string
     guest: IGuestAccount
     products: IOrderProduct[]
+    iikoProducts: IOrderIikoProduct[]
     room: IRoomInfo
     phone: string
     comment?: string
@@ -48,6 +49,12 @@ export interface IRoomInfo {
 export interface IOrderProduct {
     id: number
     quantity: number
+}
+
+export interface IOrderIikoProduct {
+    product: string
+    quantity: number
+    price: number
 }
 
 export interface IProduct {
@@ -74,6 +81,8 @@ export interface IStore {
     products: IProduct[]
     isActive: boolean
     store_type: IStoreType
+    isCustom?: boolean
+    customId?: string
 }
 
 export interface IStoreType {
