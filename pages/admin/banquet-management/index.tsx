@@ -39,6 +39,7 @@ import { withAdminPage } from 'helpers/withAdminPage'
 import { deleteCachedKeysByPattern } from 'helpers/redis'
 import { useDisclosure } from '@mantine/hooks'
 import toast from 'react-hot-toast'
+import { axiosInstance } from 'helpers/axiosInstance'
 
 interface BanquetManagementPageProps {
     banquetsPortal: IReserveByPortal[]
@@ -250,6 +251,17 @@ function BanquetManagementPage(props: BanquetManagementPageProps) {
     }, [props.banquetsInWork, props.banquetsPortal])
 
     useEffect(() => {
+        let int
+        int = setInterval(async () => {
+
+            console.log('Обновляем банкеты в работе!')
+            const data = await axiosInstance.post('/api/iiko/utils/banquets-in-work')
+            console.log({ b: data.data.banquets })
+            setBanquetsInWork(data.data.banquets.reserves)
+        }, 60000)
+        return () => clearInterval(int)
+    }, [])
+    useEffect(() => {
         console.log('BANQUETS FROM DB: ', props.banquetsPortal[0])
         console.log('BANQUETS FROM IIKO: ', props.banquetsInWork[0])
     }, [props])
@@ -302,8 +314,8 @@ function BanquetManagementPage(props: BanquetManagementPageProps) {
                         >
                             Новый банкет
                         </Button>
-                        <Button variant="filled" color='red' radius={'md'} size="md" w={'fit-content'} fw={500} ml={'auto'}
-                            onClick={clearCache} >Очистить кэш</Button>
+                        {/* <Button variant="filled" color='red' radius={'md'} size="md" w={'fit-content'} fw={500} ml={'auto'}
+                            onClick={clearCache} >Очистить кэш</Button> */}
                     </Group>
                     {/* 
                 <Divider my={'md'}/> */}

@@ -104,6 +104,7 @@ export const IikoProvider = ({ children }) => {
     }
 
     useEffect(() => console.log('IIKO Context nomenclature: ', nomenclature), [nomenclature]);
+    useEffect(() => console.log('IIKO Context menu: ', menu), [menu]);
     useEffect(() => console.log('IIKO Context organizations: ', organizations), [organizations])
     useEffect(() => console.log('IIKO Context terminalGroups: ', terminalGroups), [terminalGroups])
     useEffect(() => console.log('IIKO Context isLoading: ', isLoading), [isLoading])

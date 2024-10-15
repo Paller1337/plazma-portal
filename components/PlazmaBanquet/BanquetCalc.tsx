@@ -15,11 +15,11 @@ export default function BanquetCalc({ data, updateData }: BanquetCalcProps) {
 
     const [target, setTarget] = useState((data?.banquetData.order?.items as IBanquetOrderItemWithState[])?.filter(item => item.isCounting !== false))
 
-    useEffect(() => console.log('counter: ', data), [data]);
+    // useEffect(() => console.log('counter: ', data), [data]);
     useEffect(() => setTarget((data?.banquetData.order?.items as IBanquetOrderItemWithState[])?.filter(item => item.isCounting !== false)), [data])
     useEffect(() => {
         // Рассчитываем "Сумму банкета"
-        console.log('// Рассчитываем "Сумму банкета"')
+        // console.log('// Рассчитываем "Сумму банкета"')
         const total = target?.reduce(
             (a, b) => a + parseFloat(b.price) * b.amount,
             0

@@ -149,6 +149,7 @@ function BanquetEditPage(props: BanquetPortalPageProps) {
     }, [sectionState])
 
     useEffect(() => {
+
         const refetch = async () => {
             if (iiko.organizations) {
                 setSectionState(p => ({
@@ -156,7 +157,7 @@ function BanquetEditPage(props: BanquetPortalPageProps) {
                     organizationId: iiko.organizations[0].id
                 }))
             }
-            if (iiko.terminalGroups) {
+            if (iiko.terminalGroups && props.banquet?.banquetData.terminalGroupId) {
                 const group = iiko.terminalGroups.find(t => t.organizationId === props.banquet.banquetData.organizationId)
                 setSectionState(p => ({
                     ...p,
@@ -167,7 +168,7 @@ function BanquetEditPage(props: BanquetPortalPageProps) {
                 }))
             }
 
-            if (props.banquet.banquetData.terminalGroupId) {
+            if (props.banquet?.banquetData.terminalGroupId) {
                 const reserveRestaurantSections = await fetchReserveRestaurantSections({ terminalGroupIds: [props.banquet.banquetData.terminalGroupId] })
                 const foundSection = reserveRestaurantSections.restaurantSections.find(section =>
                     section.tables.some(table => table.id === props.banquet.banquetData.tableIds[0])
@@ -190,19 +191,23 @@ function BanquetEditPage(props: BanquetPortalPageProps) {
         refetch()
     }, [props.banquet, iiko.organizations, iiko.terminalGroups])
 
-    useEffect(() => console.log({ sectionState }), [sectionState])
+    useEffect(() => {
+        if (sectionState?.tableIds?.length > 0) {
+            console.log({ sectionState })
+        }
+    }, [sectionState])
 
     useEffect(() => {
         setBanquetData(props.banquet?.banquetData)
     }, [props.banquet?.banquetData])
 
     useEffect(() => setCreateState(props.banquet), [props.banquet])
-    useEffect(() => setCreateState(p => ({ ...p, banquetData: {...p.banquetData, order: banquetData.order} })), [banquetData.order])
+    useEffect(() => setCreateState(p => ({ ...p, banquetData: { ...p.banquetData, order: banquetData.order } })), [banquetData.order])
 
 
-    useEffect(() => {
-        console.log('props: ', { props })
-    }, [props])
+    // useEffect(() => {
+    //     console.log('props: ', { props })
+    // }, [props])
 
 
 
@@ -224,14 +229,17 @@ function BanquetEditPage(props: BanquetPortalPageProps) {
     async function iikoTransportBanquet() {
         // return false
         overlay.open()
-        await patchBanquet(createState)
+        await patchBanquet({
+            ...createState,
+            status: 'sent',
+        })
         await postCreateReserve(createState)
             .then(res => {
                 if ('reserveInfo' in res) {
                     overlay.close()
 
-                    console.log('Ответ: ', res)
-                    // router.push('/admin/banquet-management', null, { shallow: true })
+                    // console.log('Ответ: ', res)
+                    router.push('/admin/banquet-management', null, { shallow: true })
                 } else {
                     //Report Telegram Bot
                 }
@@ -243,9 +251,9 @@ function BanquetEditPage(props: BanquetPortalPageProps) {
         console.log('createState: ', createState)
     }, [createState])
 
-    useEffect(() => {
-        console.log('createState.status: ', createState.status)
-    }, [createState.status])
+    // useEffect(() => {
+    //     console.log('createState.status: ', createState.status)
+    // }, [createState.status])
 
     if (!props.banquet || Object.keys(props.banquet).length === 0) return (
         <>

@@ -45,7 +45,7 @@ const initialState: GlobalStateType = {
 };
 
 const orderReducer = (state: GlobalStateType, action: any) => {
-    console.log('orderReducer', action)
+    // console.log('orderReducer', action)
     switch (action.type) {
         case 'INITIALIZE_ORDERS':
             return {

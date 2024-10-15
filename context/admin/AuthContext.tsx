@@ -14,7 +14,11 @@ import Button from '@/components/Button';
 
 interface AuthContextType {
     isAuthenticated: boolean
-    authAdminByPhone: (phone: string) => Promise<{
+    // authAdminByPhone: (phone: string) => Promise<{
+    //     status: boolean;
+    //     message: string;
+    // }>
+    authAdminByIdPassword: (id: number, password: string) => Promise<{
         status: boolean;
         message: string;
     }>
@@ -69,10 +73,45 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         router.push('/admin/login')
     }
 
-    const authAdminByPhone = async (phone: string) => {
+    // const authAdminByPhone = async (phone: string) => {
+    //     try {
+    //         const response = await axiosInstance.post('/api/admin/sms-auth/login', {
+    //             data: { phone },
+    //         })
+    //         // console.log('admin: ', response.data)
+    //         if (response.status === 200) {
+    //             setIsAuthenticated(true)
+    //             setCurrentUser({
+    //                 id: response.data.guest.id,
+    //                 name: response.data.guest.attributes.name,
+    //                 role: response.data.guest.attributes.role,
+    //                 phone: response.data.guest.attributes.phone,
+    //                 approved: response.data.guest.attributes.approved
+    //             })
+    //             Cookies.set('session_token', response.data.token)
+
+    //             toast.success('Авторизован')
+    //             return response.data.guest
+    //         } else if (response.status === 204) {
+    //             setIsAuthenticated(false)
+    //             toast.error('Переходим к регистрации')
+    //             return null
+    //         } else {
+    //             throw new Error('Failed to log in')
+    //         }
+    //     } catch (error) {
+    //         console.error(error)
+    //         throw error
+    //     }
+    // }
+
+    const authAdminByIdPassword = async (id: number, password: string) => {
         try {
-            const response = await axiosInstance.post('/api/admin/sms-auth/login', {
-                data: { phone },
+            const response = await axiosInstance.post('/api/admin/auth/login', {
+                data: {
+                    id,
+                    password,
+                },
             })
             // console.log('admin: ', response.data)
             if (response.status === 200) {
@@ -100,6 +139,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             throw error
         }
     }
+
 
     async function checkAuthToken() {
         const token = Cookies.get('session_token')
@@ -171,7 +211,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return (
         <AuthContext.Provider value={{
             isAuthenticated,
-            authAdminByPhone,
+            authAdminByIdPassword,
             currentUser,
             logOut,
         }}>

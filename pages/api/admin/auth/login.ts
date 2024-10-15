@@ -13,15 +13,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     res.setHeader('Access-Control-Allow-Origin', 'https://portal-plazma.ru.tuna.am')
-    const phone = req.body.data.phone
+    const { id, password } = req.body.data
     // console.log('phone ', phone)
 
     try {
-        const response = await axios.get(`${DEFAULTS.STRAPI.url}/api/guests`, {
+        const response = await axios.post(`${DEFAULTS.STRAPI.url}/api/admin/login`, { id, password },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${STRAPI_API_TOKEN}`
+                }
+            });
+        console.log('admin data: ', response.data)
+
+        const resGuest = await axios.get(`${DEFAULTS.STRAPI.url}/api/guests`, {
             params: {
                 filters: {
-                    phone: {
-                        '[$eq]': phone
+                    id: {
+                        '[$eq]': id
                     },
                     role: {
                         // '[$eq]': 'admin',
@@ -33,22 +42,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${STRAPI_API_TOKEN}`
             }
-        });
-        // console.log('admin data: ', response.data)
-        const guest = response.data.data.length > 0 ? response.data.data[0] : null
+        })
+        const guest = resGuest.data.data.length > 0 ? resGuest.data.data[0] : null
 
-        if (!guest) {
+        if (response.status === 200) {
+            res.status(200).json({ token: response.data.token, guest })
+        } else {
             res.status(204).json({ message: 'Администратор не найден' })
-            return
         }
-
-        const token = generateToken(
-            guest.id,
-            guest.attributes.phone,
-            guest.attributes.name,
-        )
-
-        res.status(200).json({ guest, token })
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: error.message });

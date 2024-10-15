@@ -1,3 +1,4 @@
+
 export namespace DEFAULTS {
     export const SERVER_URL = {
         prod: 'https://strapi.kplazma.ru',
@@ -11,8 +12,8 @@ export namespace DEFAULTS {
 
     //prod or dev
     export const GENERAL_URL = {
-        app: APP_URL.prod,
-        server: SERVER_URL.prod
+        app: APP_URL.dev,
+        server: SERVER_URL.dev
     }
 
     export const SOCKET_URL = {

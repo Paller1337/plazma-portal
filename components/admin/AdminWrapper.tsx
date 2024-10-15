@@ -2,36 +2,14 @@ import { rem } from '@mantine/core';
 import { IconChevronLeft } from '@tabler/icons-react';
 import { useAuth } from 'context/admin/AuthContext';
 import { useAdminOrders } from 'context/admin/OrderContext';
+import { NAV } from 'nav';
 import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { ReactSVG } from 'react-svg';
 
-const menuItems = [
-    {
-        label: 'Гостевой портал',
-        links: [
-            { label: 'Заказы', path: '/admin/portal/orders' },
-            { label: 'Поддержка', path: '/admin/portal/tickets' },
-            { label: 'Гости', path: '/admin/portal/guests' },
-        ],
-        icon: 'nav_users',
-        notification: 0,
-    },
-    {
-        label: 'Управление банкетами',
-        path: '/admin/banquet-management',
-        icon: 'nav_order',
-        notification: 4,
-    },
-    // {
-    //     label: 'Спортивные мероприятия',
-    //     path: '/admin/sports-events',
-    //     icon: 'nav_sport',
-    //     notification: 0,
-    // }
-];
+const menuItems = NAV.menuItems
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
     return {
@@ -42,6 +20,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 interface AdminWrapperProps {
     children?: React.ReactNode
     navIsVisible?: boolean
+    role: string
 }
 
 export default function AdminWrapper(props: AdminWrapperProps) {
@@ -73,11 +52,21 @@ export default function AdminWrapper(props: AdminWrapperProps) {
     }, [router.pathname]);
 
     const toggleSection = (index) => {
-        setOpenSections((prevState) => ({
-            ...prevState,
-            [index]: !prevState[index],
-        }));
-    };
+        if (isMenuMin) {
+            setIsMenuMin(false)
+            setOpenSections((prevState) => ({
+                ...prevState,
+                [index]: true,
+            }));
+        } else {
+            setOpenSections((prevState) => ({
+                ...prevState,
+                [index]: !prevState[index],
+            }))
+        }
+    }
+
+    useEffect(() => console.log('wrapper: ', props.role), [props.role])
 
     return (
         <main className='admin-main'>
@@ -114,45 +103,51 @@ export default function AdminWrapper(props: AdminWrapperProps) {
                             const isSectionOpen = openSections[index] || false;
                             const sectionIsActive = item.links
                                 ? item.links.some(link => router.pathname.startsWith(link.path))
-                                : router.pathname.startsWith(item.path);
+                                : router.pathname.startsWith(item.path)
 
-                            if (item.links) {
-                                return (
-                                    <div key={index} className={`admin-nav__menu-section ${sectionIsActive ? 'active' : ''}`}>
-                                        <div className={`admin-nav__menu-section-header ${sectionIsActive ? 'active' : ''}`} onClick={() => toggleSection(index)}>
-                                            <ReactSVG className='admin-nav__menu-section-logo' src={`/svg/admin/${item.icon}${sectionIsActive ? '-dark' : ''}.svg`} />
+                            if (item.roles.includes(props.role)) {
+                                if (item.links) {
+                                    return (
+                                        <div key={index} className={`admin-nav__menu-section ${sectionIsActive ? 'active' : ''}`}>
+                                            <div className={`admin-nav__menu-section-header ${sectionIsActive ? 'active' : ''}`} onClick={() => toggleSection(index)}>
+                                                <ReactSVG className='admin-nav__menu-section-logo' src={`/svg/admin/${item.icon}${sectionIsActive ? '-dark' : ''}.svg`} />
+                                                {!isMenuMin ?
+                                                    <>
+                                                        <span>{item.label}</span>
+                                                        <ReactSVG className={`admin-nav__menu-section-toggle ${isSectionOpen ? 'open' : ''}`} src={`/svg/admin/nav_angle${sectionIsActive ? '-dark' : ''}.svg`} />
+                                                    </>
+                                                    : <></>}
+                                            </div>
+                                            {!isMenuMin && isSectionOpen ?
+                                                <div className='admin-nav__menu-section-links'>
+                                                    {item.links.map((link, idx) => {
+                                                        if (link.roles.includes(props.role)) {
+                                                            return (
+                                                                <Link key={idx} href={link.path} className={`admin-nav__menu-link ${router.pathname.startsWith(link.path) ? 'active' : ''}`}>
+                                                                    {link.label}
+                                                                </Link>
+                                                            )
+                                                        }
+                                                    })}
+                                                </div>
+                                                : <></>}
+                                        </div>
+                                    );
+                                } else {
+                                    return (
+                                        <a key={index} href={item.path} className={`admin-nav__menu-item ${sectionIsActive ? 'active' : ''}`}>
+                                            <ReactSVG className='admin-nav__menu-item-icon' src={`/svg/admin/${item.icon}${sectionIsActive ? '-dark' : ''}.svg`} />
                                             {!isMenuMin ?
                                                 <>
                                                     <span>{item.label}</span>
-                                                    <ReactSVG className={`admin-nav__menu-section-toggle ${isSectionOpen ? 'open' : ''}`} src={`/svg/admin/nav_angle${sectionIsActive ? '-dark' : ''}.svg`} />
+                                                    {item.notification && item.notification > 0 ? (
+                                                        <span className='admin-nav__menu-item-badge'>{item.notification}</span>
+                                                    ) : null}
                                                 </>
                                                 : <></>}
-                                        </div>
-                                        {!isMenuMin && isSectionOpen ?
-                                            <div className='admin-nav__menu-section-links'>
-                                                {item.links.map((link, idx) => (
-                                                    <Link key={idx} href={link.path} className={`admin-nav__menu-link ${router.pathname.startsWith(link.path) ? 'active' : ''}`}>
-                                                        {link.label}
-                                                    </Link>
-                                                ))}
-                                            </div>
-                                            : <></>}
-                                    </div>
-                                );
-                            } else {
-                                return (
-                                    <a key={index} href={item.path} className={`admin-nav__menu-item ${sectionIsActive ? 'active' : ''}`}>
-                                        <ReactSVG className='admin-nav__menu-item-icon' src={`/svg/admin/${item.icon}${sectionIsActive ? '-dark' : ''}.svg`} />
-                                        {!isMenuMin ?
-                                            <>
-                                                <span>{item.label}</span>
-                                                {item.notification && item.notification > 0 ? (
-                                                    <span className='admin-nav__menu-item-badge'>{item.notification}</span>
-                                                ) : null}
-                                            </>
-                                            : <></>}
-                                    </a>
-                                );
+                                        </a>
+                                    );
+                                }
                             }
                         })}
                     </div>

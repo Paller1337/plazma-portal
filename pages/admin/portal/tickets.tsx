@@ -35,7 +35,7 @@ export const getServerSideProps: GetServerSideProps = withAdminAuthServerSidePro
         console.error('Ошибка:', error);
         return { props: { orders: [], rooms: [] } };
     }
-}, ['admin'])
+}, ['admin', 'moderator'])
 
 type TNavItem = {
     status?: TSupportTicketStatus,

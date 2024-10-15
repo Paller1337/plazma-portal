@@ -70,7 +70,7 @@ const StoriesModal = ({ isOpen, onClose, stories }) => {
     useEffect(() => {
         if (isPaused || !isOpen || stories.length === 0) return;
 
-        const currentStory = stories[currentIndex];
+        const currentStory = stories ? stories[currentIndex] : null;
         const storyDuration = currentStory.attributes.duration * 1000;
 
         setDuration(storyDuration);
@@ -101,18 +101,18 @@ const StoriesModal = ({ isOpen, onClose, stories }) => {
             }
             return nextIndex;
         });
-    }, [stories.length, onClose]);
+    }, [stories?.length, onClose]);
 
     const handlePrev = useCallback(() => {
         setCurrentIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : 0));
     }, []);
 
-    if (!stories.length) {
+    if (!stories?.length) {
         return null; // Если нет историй, не рендерим компонент
     }
 
     const currentStory = stories[currentIndex];
-    const imageUrl = currentStory.attributes.media.data.attributes.url;
+    const imageUrl = currentStory?.attributes.media.data.attributes.url;
 
     return (
         <ReactModal
@@ -146,7 +146,7 @@ const StoriesModal = ({ isOpen, onClose, stories }) => {
                     <Image
                         className="Stories-Modal__media-img"
                         src={`${DEFAULTS.STRAPI.url}${imageUrl}`}
-                        alt={currentStory.attributes.media.data.attributes.alternativeText || 'Story Image'}
+                        alt={currentStory?.attributes.media.data.attributes.alternativeText || 'Story Image'}
                         layout="fill"
                         objectFit="cover"
                     />

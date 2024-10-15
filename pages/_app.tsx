@@ -69,6 +69,7 @@ const AppPart = ({ pageProps, children }) => {
         }
     }, [])
 
+    useEffect(() => console.log({ pageProps }), [pageProps])
     if (router.pathname.startsWith('/admin')) {
         // Рендеринг админ-панели без контекстов
         return (<>
@@ -77,7 +78,7 @@ const AppPart = ({ pageProps, children }) => {
                     <IikoProvider>
                         <Toaster />
                         {/* <AdminHeader /> */}
-                        <AdminWrapper navIsVisible={!router.asPath.includes('/login')}>
+                        <AdminWrapper navIsVisible={!router.asPath.includes('/login')} role={pageProps?.guestRole}>
                             {children}
                         </AdminWrapper>
                     </IikoProvider>

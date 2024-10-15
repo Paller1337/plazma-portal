@@ -3,13 +3,17 @@ import jwt from 'jsonwebtoken'
 import { SECRET_KEY } from './login'
 import axios from 'axios';
 import { axiosInstance } from './axiosInstance';
+import { NAV } from 'nav';
 
-type TUserRoles = 'admin' | 'moderator' | 'user' | 'sport' | 'banquet'
+type TUserRoles = 'admin' | 'moderator' | 'user' | 'sport' | 'banquet' | 'redirect'
 
-export function withAdminAuthServerSideProps(gssp: GetServerSideProps, roles: TUserRoles[]): GetServerSideProps {
+export function withAdminAuthServerSideProps(gssp: GetServerSideProps, roles?: TUserRoles[]): GetServerSideProps {
+    const r = roles && roles.length > 0 ? roles : ['admin', 'moderator', 'user', 'sport', 'banquet']
+
     return async (context: GetServerSidePropsContext): Promise<GetServerSidePropsResult<any>> => {
         const token = context.req.cookies.session_token
         const defaultProps = await gssp(context)
+
 
         if ('props' in defaultProps) {
             if (!token) {
@@ -43,7 +47,7 @@ export function withAdminAuthServerSideProps(gssp: GetServerSideProps, roles: TU
 
                 if (user.data) {
                     const guest = user.data.guest.attributes
-                    const isAllowed = roles.includes(guest.role)
+                    const isAllowed = r.includes(guest.role)
 
                     console.log('isAllowed?: ', isAllowed)
                     if (isAllowed) {
@@ -52,14 +56,35 @@ export function withAdminAuthServerSideProps(gssp: GetServerSideProps, roles: TU
                             props: {
                                 ...defaultProps.props,
                                 isAllowed: true,
+                                guestRole: guest?.role,
                             }
                         }
                     } else {
-                        return {
-                            ...defaultProps,
-                            props: {
-                                ...defaultProps.props,
-                                isAllowed: false,
+                        const menu = NAV.menuItems
+                        const target = menu.map(x => {
+                            if (x.links) {
+                                return x.links
+                                    .filter(link => link.roles.includes(guest?.role))
+                                    .map(y => y.path);
+                            } else {
+                                return x.roles.includes(guest?.role) ? x.path : '/admin/portal/tickets';
+                            }
+                        }).flat()
+                        if (target && target.length > 0) {
+                            return {
+                                redirect: {
+                                    destination: target[0],
+                                    permanent: false,
+                                },
+                            }
+                        } else {
+                            context.res.setHeader('Set-Cookie', 'session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT')
+
+                            return {
+                                redirect: {
+                                    destination: '/admin/login',
+                                    permanent: false,
+                                },
                             }
                         }
                     }

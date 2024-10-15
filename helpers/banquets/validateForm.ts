@@ -7,9 +7,9 @@ export const validateBanquet = (query, createState) => {
     const value = get(createState, query)
     switch (query) {
         case 'banquetData.estimatedStartTime':
-            console.log('date input: ' + DateTime.fromSQL(value as string)?.toJSDate())
-            console.log('date now: ' + DateTime.now().toJSDate())
-            console.log('date bool: ', (DateTime.fromSQL(value as string)?.toJSDate() <= DateTime.now().toJSDate()))
+            // console.log('date input: ' + DateTime.fromSQL(value as string)?.toJSDate())
+            // console.log('date now: ' + DateTime.now().toJSDate())
+            // console.log('date bool: ', (DateTime.fromSQL(value as string)?.toJSDate() <= DateTime.now().toJSDate()))
             message = DateTime.fromSQL(value as string)?.toJSDate() <= DateTime.now().toJSDate() ? 'Дата не может быть раньше текущей' : ''
             break
 

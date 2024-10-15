@@ -9,7 +9,7 @@ import { ISectionSelect } from 'pages/admin/banquet-management/[id]';
 import { fetchReserveRestaurantSections } from 'helpers/iiko/iikoClientApi'
 import { useDebouncedState } from '@mantine/hooks';
 
-const Modal = dynamic(() => import('@mantine/core').then((mod) => mod.Modal), { ssr: false });
+const Modal = dynamic(() => import('@mantine/core').then((mod) => mod.Modal), { ssr: false })
 
 interface SectionSelectModalProps {
     opened: boolean;
@@ -40,14 +40,13 @@ export default function SectionSelectModal({ opened, close, onChange }: SectionS
 
     useEffect(() => {
         if (terminalGroups && terminalGroups.length > 0) {
-            setTerminalOptions(terminalGroups[0].items.map(t => ({ value: t.id, label: t.name })))
+            setTerminalOptions(terminalGroups[0].items.filter(x => x.name === 'Ресторан').map(t => ({ value: t.id, label: t.name })))
         }
     }, [terminalGroups])
 
     useEffect(() => console.log(
         { selectedTerminalId, terminalOptions, selectedSectionId, selectedSectionOptions, selectedTableId, tableOptions }
-    )
-        , [selectedTerminalId, terminalOptions, selectedSectionId, selectedSectionOptions, selectedTableId, tableOptions])
+    ), [selectedTerminalId, terminalOptions, selectedSectionId, selectedSectionOptions, selectedTableId, tableOptions])
 
     // Обработка выбора терминала
     const handleTerminalChange = async (value: string) => {
@@ -66,10 +65,12 @@ export default function SectionSelectModal({ opened, close, onChange }: SectionS
         const refetch = async () => {
             if (selectedTerminalId) {
                 const reserveRestaurantSections = await fetchReserveRestaurantSections({ terminalGroupIds: [selectedTerminalId] })
-                setSelectedSectionOptions(reserveRestaurantSections.restaurantSections.map(r => ({
-                    value: r.id,
-                    label: r.name
-                })))
+                setSelectedSectionOptions(reserveRestaurantSections.restaurantSections
+                    .filter(x => x.name === 'Банкетный зал')
+                    .map(r => ({
+                        value: r.id,
+                        label: r.name
+                    })))
 
                 setTablesForSections(
                     reserveRestaurantSections.restaurantSections.reduce((acc, p) => {

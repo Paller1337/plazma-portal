@@ -65,6 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 });
             }
 
+            console.log({ body: body.eventInfo.errorInfo })
             // Формирование сообщения для Telegram
             let message = `<b>[IIKO API BOT]</b>\n`;
             message += `<b>Тип события:</b> ${body?.eventType}\n`;

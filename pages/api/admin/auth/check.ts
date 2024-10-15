@@ -34,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 'Authorization': `Bearer ${STRAPI_API_TOKEN}`
             }
         });
-        // console.log('admin data: ', response.data)
+
         const guest = response.data.data.length > 0 ? response.data.data[0] : null
 
         if (!guest) {
@@ -42,13 +42,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return
         }
 
-        const token = generateToken(
-            guest.id,
-            guest.attributes.phone,
-            guest.attributes.name,
-        )
+        const adminRes = await axios.post(`${DEFAULTS.STRAPI.url}/api/admin/isfirstlogin`, { id: guest.id }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${STRAPI_API_TOKEN}`
+            }
+        });
+        res.status(200).json({ admin: adminRes.data, guest: { id: guest.id, status: guest ? true : false } })
 
-        res.status(200).json({ guest, token })
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: error.message });
