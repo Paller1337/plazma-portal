@@ -1,6 +1,7 @@
 import { Config } from './IikoApi/config'
 import { IikoAPI } from './IikoApi/IikoAPI'
 
+console.log(process.env.IIKO_EXTERNAL_API_KEY)
 const iikoApiConfig: Config = {
     apiKey: process.env.IIKO_EXTERNAL_API_KEY || '',
     baseURL: process.env.IIKO_BASE_URL || 'https://api-ru.iiko.services',
