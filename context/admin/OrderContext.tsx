@@ -303,6 +303,7 @@ export const OrderProvider = ({ children }) => {
 
                 socket.on('orderCreate', (data) => {
                     const newOrder = data.newOrder;
+                    console.log('orderCreate event: ', data.event)
                     dispatch({
                         type: 'CREATE_ORDER',
                         payload: { order: newOrder },
@@ -323,6 +324,7 @@ export const OrderProvider = ({ children }) => {
                 socket.on('supportTicketCreate', (data) => {
                     const newTicket = data.newTicket;
                     console.log('Новая заявка на поддержку: ', newTicket)
+                    console.log('Event: ', data.event)
                     dispatch({
                         type: 'CREATE_TICKET',
                         payload: { ticket: newTicket },

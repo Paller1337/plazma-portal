@@ -40,6 +40,7 @@ interface AuthContextType {
     }
     openAuthModal: () => void
     closeAuthModal: () => void
+    visitorId: string
 }
 
 const AuthContext = createContext<AuthContextType>(null!);
@@ -292,6 +293,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             currentUser,
             openAuthModal,
             closeAuthModal,
+            visitorId,
         }}>
             <AuthModal isOpen={authModalIsOpen} onClose={closeAuthModal} />
             {/* <AuthModal isOpen={notifyModalIsOpen} onClose={closeNotifyModal} />

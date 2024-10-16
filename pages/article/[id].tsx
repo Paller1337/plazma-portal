@@ -72,12 +72,14 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
         })
 
         console.log('article  ', article.data)
-        const action_button = article.data.data.attributes?.action_button
-        const button = {
-            title: action_button?.data?.attributes?.title,
-            link: action_button?.data?.attributes?.link,
-            external: action_button?.data?.attributes?.external,
-        }
+        console.log('article title ', article.data.data.attributes.title)
+        console.log('article button ', article.data.data.attributes.action_button)
+        const action_button = article.data.data.attributes?.action_button.data
+        const button = action_button ? {
+            title: action_button?.attributes?.title,
+            link: action_button?.attributes?.link,
+            external: action_button?.attributes?.external,
+        } : null
         console.log('button ', button)
         return {
             props: {

@@ -28,6 +28,8 @@ export async function telegramSendFeedback(stars: string) {
 export async function telegramSendTicket(ticket: ISupportTicket) {
     let message = `<b>[PORTAL SUPPORT]</b>\n`
     message += `Нужна помощь гостю: <b>${ticket.guest.name}</b>\n`
+    message += `Номер проживания: <b>${ticket.room.label}</b>\n`
+    message += `Телефон: <b>${ticket.guest.phone}</b>\n`
     message += `Сообщение: <pre>${ticket.messages[0].message}</pre>\n`
 
     const res = await telegramSend(message, -1002259481861, 12)

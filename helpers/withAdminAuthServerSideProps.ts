@@ -49,6 +49,17 @@ export function withAdminAuthServerSideProps(gssp: GetServerSideProps, roles?: T
                     const guest = user.data.guest.attributes
                     const isAllowed = r.includes(guest.role)
 
+                    if (guest.role === 'user') {
+                        context.res.setHeader('Set-Cookie', 'session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT')
+
+                        return {
+                            redirect: {
+                                destination: '/admin/login',
+                                permanent: false,
+                            },
+                        }
+                    }
+                    
                     console.log('isAllowed?: ', isAllowed)
                     if (isAllowed) {
                         return {

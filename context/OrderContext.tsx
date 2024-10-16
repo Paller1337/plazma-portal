@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState, useRef } from 'react'
 import axios from 'axios';
-import { io } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { checkOrderStatus } from 'helpers/order/order';
 import toast from 'react-hot-toast';
@@ -106,10 +106,11 @@ const OrderContext = createContext<{
 }>({ state: initialState, dispatch: () => null, ordersIsLoading: true, ticketsIsLoading: true });
 
 export const OrderProvider = ({ children }) => {
+    const ws = useRef<Socket>(null)
     const [state, dispatch] = useReducer(orderReducer, initialState)
     const [ordersIsLoading, setOrdersIsLoading] = useState(true)
     const [ticketsIsLoading, setTicketsIsLoading] = useState(true)
-    const { isAuthenticated, currentUser } = useAuth()
+    const { isAuthenticated, currentUser, visitorId } = useAuth()
 
     useEffect(() => { console.log(state) }, [state])
     useEffect(() => {
@@ -182,53 +183,65 @@ export const OrderProvider = ({ children }) => {
     }, [currentUser.id, isAuthenticated])
 
     useEffect(() => {
-        if (isAuthenticated && currentUser.id !== 0) {
-            const socket = io(DEFAULTS.SOCKET.URL, {
+        if (visitorId) {
+            ws.current = io(DEFAULTS.SOCKET.URL, {
                 query: {
-                    userId: 'u_' + currentUser.id,
-                    role: currentUser.role,
+                    visitorId: visitorId,
+                    userId: currentUser.id !== 0 ? 'u_' + currentUser.id : null,
+                    role: currentUser.id !== 0 ? currentUser.role : null,
                 },
             });
+        }
+    }, [currentUser.id, currentUser.role, isAuthenticated, visitorId])
 
+    useEffect(() => {
+        if (visitorId && ws.current) {
+            const socket = ws.current
             socket.on('connect', () => {
                 console.log('Connected to Strapi WebSocket')
             });
 
-            socket.on('orderStatusChange', (data) => {
-                const { newStatus, orderId } = data
-                console.log('status change data ', data)
-                console.log('orderId ', orderId)
-                console.log('state.orders ', state.orders)
-                console.log('status old data ', state.orders.find(x => x.id == orderId))
-                dispatch({
-                    type: 'UPDATE_ORDER_STATUS',
-                    payload: { orderId, status: newStatus, previous_status: state.orders.find(x => x.id == orderId)?.status },
-                })
 
-                const textStatus = checkOrderStatus(newStatus);
-                toast.success(<span>Новый статус заказа ({textStatus})</span>);
+            socket.on('checkSocket', (data) => {
+                console.log('checkSocket ', data)
             });
 
-            socket.on('orderCreate', (data) => {
-                const newOrder = data.newOrder;
-                dispatch({
-                    type: 'CREATE_ORDER',
-                    payload: { order: newOrder },
+            if (isAuthenticated && currentUser.id !== 0) {
+                socket.on('orderStatusChange', (data) => {
+                    const { newStatus, orderId } = data
+                    console.log('status change data ', data)
+                    console.log('orderId ', orderId)
+                    console.log('state.orders ', state.orders)
+                    console.log('status old data ', state.orders.find(x => x.id == orderId))
+                    dispatch({
+                        type: 'UPDATE_ORDER_STATUS',
+                        payload: { orderId, status: newStatus, previous_status: state.orders.find(x => x.id == orderId)?.status },
+                    })
+
+                    const textStatus = checkOrderStatus(newStatus);
+                    toast.success(<span>Новый статус заказа ({textStatus})</span>);
                 });
 
-                toast.success(<span>Новый заказ услуг</span>);
-            });
+                socket.on('orderCreate', (data) => {
+                    const newOrder = data.newOrder;
+                    dispatch({
+                        type: 'CREATE_ORDER',
+                        payload: { order: newOrder },
+                    });
 
-            socket.on('supportTicketStatusChange', (data) => {
-                const { newStatus, ticketId } = data
-                console.log('ticket data: ', data)
-                dispatch({
-                    type: 'UPDATE_TICKET_STATUS',
-                    payload: { ticketId, status: newStatus },
+                    toast.success(<span>Новый заказ услуг</span>);
                 });
-                toast.success(`Новый статус заявки (${ticketStatus(newStatus)})`)
-            });
-            
+
+                socket.on('supportTicketStatusChange', (data) => {
+                    const { newStatus, ticketId } = data
+                    console.log('ticket data: ', data)
+                    dispatch({
+                        type: 'UPDATE_TICKET_STATUS',
+                        payload: { ticketId, status: newStatus },
+                    });
+                    toast.success(`Новый статус заявки (${ticketStatus(newStatus)})`)
+                });
+            }
             socket.on('connect_error', (error) => {
                 console.error('Connection error:', error);
             });
@@ -237,10 +250,11 @@ export const OrderProvider = ({ children }) => {
                 socket.off('connect');
                 socket.off('orderStatusChange');
                 socket.off('orderCreate');
+                socket.off('supportTicketStatusChange');
                 socket.disconnect();
             };
         }
-    }, [isAuthenticated, currentUser, state.orders]);
+    }, [isAuthenticated, currentUser, state.orders, visitorId]);
 
     return (
         <OrderContext.Provider value={{ state, dispatch, ordersIsLoading, ticketsIsLoading }}>

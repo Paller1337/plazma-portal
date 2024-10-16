@@ -38,6 +38,11 @@ export default function NavBar(props: NavBarProps) {
     const isPWA = useIsPwa()
     const router = useRouter()
     const { isPwaBannerHidden, setIsPwaBannerHidden } = useAuth()
+    const [isBasket, setIsBasket] = useState(false)
+
+    useEffect(() => {
+        setIsBasket(() => router.asPath.includes('basket'))
+    }, [router.asPath])
 
     return (<>
         <div className='navbar'>
@@ -61,7 +66,9 @@ export default function NavBar(props: NavBarProps) {
 
             <div className='navbar__wrapper'>
                 {PAGES.map(x =>
-                    <Link key={'nav-' + x.logo} className={`navbar__button ${x.path === props.page ? 'active' : ''}`}
+                    <Link key={'nav-' + x.logo} className={`navbar__button ${x.path === props.page
+                        || (router.asPath.includes('basket') && x.path === 'basket/history')
+                        ? 'active' : ''}`}
                         href={`/${x.path === 'index' ? '' : x.path}`}
                     >
                         <div className='navbar__logo'>

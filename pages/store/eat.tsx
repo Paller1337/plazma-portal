@@ -287,53 +287,85 @@ export default function CustomStorePage(props: EatPageProps) {
                 {isActive ?
                     <Stack p={'190px 0 150px'}>
                         {currentMenu && currentMenu?.itemCategories.length > 0 && currentMenu?.itemCategories.filter(c => c.items.length > 0).length > 0
-                            ? currentMenu?.itemCategories.filter(c => c.items.length > 0).map((cat, i) => (
-                                <Stack key={cat.name + cat.id} gap={0} mt={i > 0 ? '24px' : '0px'}>
-                                    <Text size='xl' fw={600} mb={4}>{cat.name}</Text>
-                                    {cat.description ? <Text size='sm' fw={500}>{cat.description}</Text> : <></>}
-                                    <div className='store-content__products' style={{ marginTop: '16px', marginBottom: '16px' }}>
-                                        {cat.items.length > 0 ?
-                                            cat.items.map(item => {
-                                                const price = item.itemSizes[0].prices[0].price
-                                                const itemData = item.itemSizes[0]
+                            ? currentMenu?.itemCategories.filter(c => c.items.length > 0).map((cat, i) => {
+                                const itemsWithImage = cat.items.reduce((acc, item) => {
+                                    if (item.itemSizes[0].buttonImageUrl || item.itemSizes[0].buttonImageCroppedUrl) {
+                                        return acc + 1;
+                                    }
+                                    return acc;
+                                }, 0)
 
+                                return (
+                                    <Stack key={cat.name + cat.id} gap={0} mt={i > 0 ? '24px' : '0px'}>
+                                        <Text size='xl' fw={600} mb={4}>{cat.name}</Text>
+                                        {cat.description ? <Text size='sm' fw={500}>{cat.description}</Text> : <></>}
+                                        <div
+                                            className={`store-content__products${itemsWithImage === 0 ? ' one-inline' : ''}`}
+                                            style={{ marginTop: '16px', marginBottom: '16px' }}
+                                        >
+                                            {cat.items.length > 0 ?
+                                                itemsWithImage > 0
+                                                    ? cat.items.map(item => {
+                                                        const price = item.itemSizes[0].prices[0].price
+                                                        const itemData = item.itemSizes[0]
 
-                                                // if (itemData.buttonImageUrl) {
-                                                //     await axios.get(`${itemData.buttonImageUrl}`, {
-                                                //         onUploadProgress: progressEvent => console.log(progressEvent)
-                                                //     })
-                                                // }
-                                                return (
-                                                    <div key={item.name + item.itemId} className='store-content__product'
-                                                        onClick={() => openProductModal(item)}
-                                                    >
-                                                        <div className={`store-content__product-image${price && price > 0 ? ' with-price' : ''}`}>
-                                                            <ImageLoader src={itemData.buttonImageUrl} />
-                                                            {price && price > 0 ? <span className='store-content__product-price'>{price} ₽</span> : <></>}
-                                                        </div>
-                                                        <div className='store-content__product-info'>
-                                                            <span className='store-content__product-name'>{item.name}</span>
-                                                            {/* {item.tags.length > 0 ? <span className='store-content__product-memo_text'>
-                                                        {item.tags?.map(tag => (`${tag.}`))}
-                                                    </span> : <></>} */}
-                                                        </div>
-                                                    </div>
-                                                )
-                                            })
-                                            : <></>}
-                                    </div>
-                                </Stack>
-                            )) : <></>}
+                                                        const isImage = item.itemSizes[0].buttonImageUrl || item.itemSizes[0].buttonImageCroppedUrl ? true : false
+                                                        // if (itemData.buttonImageUrl) {
+                                                        //     await axios.get(`${itemData.buttonImageUrl}`, {
+                                                        //         onUploadProgress: progressEvent => console.log(progressEvent)
+                                                        //     })
+                                                        // }
+                                                        return (
+                                                            <div key={item.name + item.itemId} className='store-content__product'
+                                                                onClick={() => openProductModal(item)}
+                                                            >
+                                                                <div className={`store-content__product-image${price && price > 0 ? ' with-price' : ''}`}>
+                                                                    <ImageLoader src={itemData.buttonImageUrl} />
+                                                                    {price && price > 0 ? <span className='store-content__product-price'>{price} ₽</span> : <></>}
+                                                                </div>
+                                                                <div className='store-content__product-info'>
+                                                                    <span className='store-content__product-name'>{item.name}</span>
+                                                                    {/* {item.tags.length > 0 ? <span className='store-content__product-memo_text'>
+                                                            {item.tags?.map(tag => (`${tag.}`))}
+                                                        </span> : <></>} */}
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    })
+                                                    : cat.items.map(item => {
+                                                        const price = item.itemSizes[0].prices[0].price
+                                                        const itemData = item.itemSizes[0]
+                                                        return (
+                                                            <div
+                                                                key={item.name + item.itemId}
+                                                                className='store-content__product inline'
+                                                                onClick={() => openProductModal(item)}
+                                                            >
+                                                                <div className={`store-content__product-image${tprice && tprice > 0 ? ' with-price' : ''}`}                                                            >
+                                                                    <div className='store-content__product-info'>
+                                                                        <span className='store-content__product-name'>{item.name}</span>
+                                                                        <span className='store-content__product-size'> </span>
+                                                                    </div>
+                                                                    {price && price > 0 ? <span className='store-content__product-price'>{price} ₽</span> : <></>}
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    })
+                                                : <></>}
+                                        </div>
+                                    </Stack>
+                                )
+                            }) : <></>}
 
-                        <div className='store-content__product'>
+                        {/* <div className='store-content__product inline'>
                             <div className={`store-content__product-image${tprice && tprice > 0 ? ' with-price' : ''}`}>
-                                <Image src={``} alt='' fallbackSrc='/images/fallback.png' />
+                                <div className='store-content__product-info'>
+                                    <span className='store-content__product-name'>Название</span>
+                                    <span className='store-content__product-size'> </span>
+                                </div>
                                 {tprice && tprice > 0 ? <span className='store-content__product-price'>{tprice} ₽</span> : <></>}
                             </div>
-                            <div className='store-content__product-info'>
-                                <span className='store-content__product-name'>Название</span>
-                            </div>
-                        </div>
+                        </div> */}
                     </Stack>
 
                     : <Stack p={'190px 0 150px'} align='center'>
