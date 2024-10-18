@@ -76,7 +76,7 @@ export class IikoAPI {
         this.authToken = response.data.token;
 
         // Сохраняем новый токен в кэше
-        await this.cacheManager.set('iiko:authToken', this.authToken, 3600 - 60); // Expires in 1 hour minus 60 seconds
+        await this.cacheManager.set(`${this.prefix}---authToken`, this.authToken, 3600 - 60); // Expires in 1 hour minus 60 seconds
         this.logger.info('[IIKO API] Токен авторизации сохранен в кэше');
 
         return this.authToken;
