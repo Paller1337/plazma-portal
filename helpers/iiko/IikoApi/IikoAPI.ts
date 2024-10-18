@@ -80,7 +80,7 @@ export class IikoAPI {
         });
 
         this.authToken = response.data.token;
-        const dateTimeToken = DateTime.now()
+        this.authTokenDate = DateTime.now()
 
         // Сохраняем новый токен в кэше
         await this.cacheManager.set(`${this.prefix}---authToken`, this.authToken, 3600 - 60); // Expires in 1 hour minus 60 seconds
