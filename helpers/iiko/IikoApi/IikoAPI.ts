@@ -63,6 +63,10 @@ export class IikoAPI {
             return cachedToken;
         }
 
+        if(!this.apiKey){
+            this.logger.error('[IIKO API] Невозможно выполнить запрос без ключа API')
+            return
+        }
         // Получаем новый токен
         this.logger.info('[IIKO API] Запрашиваем новый токен авторизации');
         const response = await this.client.post<AuthResponse>('/api/1/access_token', {
