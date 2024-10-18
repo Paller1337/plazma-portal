@@ -2,6 +2,7 @@
 
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { Config, defaultConfig } from './config';
+
 // import * as Types from './types';
 import { CacheManager } from './cacheManager';
 import { Logger } from './logger';
@@ -11,12 +12,14 @@ import {
     MenuV2ByIdRequest, MenuV2ByIdResponse, NomenclatureResponse, OrganizationResponse,
     PaymentType, ReserveCreateRequest, ReserveCreateResponse, ReserveStatusByIdResponse, RestaurantSectionsWorkloadResponse, TerminalGroupsResponse
 } from './types';
+import { DateTime } from 'luxon';
 
 export class IikoAPI {
     private client: AxiosInstance;
     private apiKey: string;
     private prefix: string;
     private authToken?: string;
+    private authTokenDate?: DateTime<true>;
     private cacheManager: CacheManager;
     private logger: Logger;
     private maxAttempts: number;
@@ -52,9 +55,12 @@ export class IikoAPI {
 
     /** Авторизация */
     private async getAuthToken(): Promise<string> {
-        if (this.authToken) {
+        const currentTime = DateTime.now()
+        if (this.authToken && this.authTokenDate && currentTime.diff(this.authTokenDate, 'minutes').minutes < 10) {
             return this.authToken;
         }
+        this.authToken = ''
+
         // Проверка токена в кэше
         const cachedToken = await this.cacheManager.get(`${this.prefix}---authToken`);
         if (cachedToken) {
@@ -74,6 +80,7 @@ export class IikoAPI {
         });
 
         this.authToken = response.data.token;
+        const dateTimeToken = DateTime.now()
 
         // Сохраняем новый токен в кэше
         await this.cacheManager.set(`${this.prefix}---authToken`, this.authToken, 3600 - 60); // Expires in 1 hour minus 60 seconds
