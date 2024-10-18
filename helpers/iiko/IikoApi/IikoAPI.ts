@@ -56,16 +56,16 @@ export class IikoAPI {
             return this.authToken;
         }
         // Проверка токена в кэше
-        const cachedToken = await this.cacheManager.get(`${this.prefix}authToken`);
+        const cachedToken = await this.cacheManager.get(`${this.prefix}---authToken`);
         if (cachedToken) {
             this.authToken = cachedToken;
             this.logger.info('[IIKO API] Токен авторизации, извлеченный из кэша');
             return cachedToken;
         }
 
-        if(!this.apiKey){
+        if (!this.apiKey) {
             this.logger.error('[IIKO API] Невозможно выполнить запрос без ключа API')
-            return
+            return ''
         }
         // Получаем новый токен
         this.logger.info('[IIKO API] Запрашиваем новый токен авторизации');
@@ -120,6 +120,12 @@ export class IikoAPI {
         const token = await this.getAuthToken();
 
         try {
+            if (!token) {
+                this.logger.error(`[IIKO API] Токен отсутствует: ${{ token }}`);
+                return
+            }
+
+            this.logger.info(`[IIKO API] Получен токен: ${token}`);
             this.logger.info(`[IIKO API] Отправка запроса: ${method} ${url}, попытка ${attempt}`);
             if (this.logger) {
                 this.logger.debug(`[IIKO API] Тело ответа: ${JSON.stringify(data)}`);
