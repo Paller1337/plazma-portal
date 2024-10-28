@@ -212,11 +212,11 @@ function BanquetManagementPage(props: BanquetManagementPageProps) {
         <Table.Tr key={index} h={80} bg={'rgb(0 149 18 / 8%)'}>
             <Table.Td miw={190}>{DateTime.fromSQL(banquet?.reserve.estimatedStartTime).toLocaleString(DateTime.DATE_MED_WITH_WEEKDAY)}</Table.Td>
             <Table.Td miw={110}>{DateTime.fromSQL(banquet?.reserve.estimatedStartTime).toLocaleString(DateTime.TIME_24_SIMPLE)}</Table.Td>
-            <Table.Td>{banquet?.reserve.guestsCount}</Table.Td>
-            <Table.Td miw={160}>{banquet?.reserve.customer.name}</Table.Td>
-            <Table.Td miw={130}>{banquet?.reserve.phone}</Table.Td>
-            <Table.Td>{banquet?.reserve.comment}</Table.Td>
-            <Table.Td>{Math.floor(banquet.reserve.durationInMinutes / 60)} ч. {banquet.reserve.durationInMinutes % 60} мин.</Table.Td>
+            <Table.Td>{banquet?.reserve?.guestsCount}</Table.Td>
+            <Table.Td miw={160}>{banquet?.reserve?.customer?.name}</Table.Td>
+            <Table.Td miw={130}>{banquet?.reserve?.phone}</Table.Td>
+            <Table.Td>{banquet?.reserve?.comment}</Table.Td>
+            <Table.Td>{Math.floor((banquet.reserve?.durationInMinutes ? banquet.reserve?.durationInMinutes : 0) / 60)} ч. {(banquet.reserve?.durationInMinutes ? banquet.reserve?.durationInMinutes : 0) % 60} мин.</Table.Td>
             <Table.Td>{banquet?.reserve?.order?.number}</Table.Td>
             <Table.Td>
                 {/* {
