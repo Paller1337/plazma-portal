@@ -51,7 +51,7 @@ interface BanquetManagementPageProps {
 
 interface IActionMenu {
     data: Reserve | IReserveByPortal
-    type: 'portal' | 'iiko'
+    type: 'portal' | 'portalError' | 'iiko'
 }
 
 export const getServerSideProps: GetServerSideProps = withAdminAuthServerSideProps(async (context) => {
@@ -105,8 +105,9 @@ function BanquetManagementPage(props: BanquetManagementPageProps) {
     const [org, setOrg] = useState('')
     const [corId, setCorId] = useState('')
 
-    const onDeletedBanquet = (id: string, type: 'iiko' | 'portal') => {
+    const onDeletedBanquet = (id: string, type: 'iiko' | 'portal' | 'portalError') => {
         if (type === 'portal') setBanquetsPortal(banquetsPortal.filter(banquet => banquet.id !== id))
+        else if (type === 'portalError') setBanquetsError(banquetsError.filter(banquet => banquet.id !== id))
         else setBanquetsInWork(banquetsInWork.filter(banquet => banquet.id !== id))
     }
 
@@ -178,7 +179,7 @@ function BanquetManagementPage(props: BanquetManagementPageProps) {
             </Table.Td>
             <Table.Td>{banquet.payments?.reduce((result, { sum }) => result + (sum as number), 0) || 0}</Table.Td>
             <Table.Td>
-                <ActionsMenu data={banquet} type='portal' />
+                <ActionsMenu data={banquet} type='portalError' />
             </Table.Td>
         </Table.Tr>
     )) : []

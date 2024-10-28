@@ -10,6 +10,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const response = await prisma.banquet.findMany({
             where: {
                 iikoStatus: 'Error',
+                isDeleted: false,
             },
         })
         
