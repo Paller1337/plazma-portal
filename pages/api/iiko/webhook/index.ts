@@ -1,6 +1,9 @@
+import { patchBanquet } from 'helpers/banquets/db';
 import { NextApiRequest, NextApiResponse } from 'next';
 import TelegramBot from 'node-telegram-bot-api';
 import nodemailer from 'nodemailer'
+import prisma from 'prisma/client';
+import { IReserveByPortal } from 'types/admin/banquets';
 
 // Токен Telegram бота и ID чата для отправки сообщений
 const TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -55,7 +58,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
 
             // Преобразуем модифицированный объект в форматированную строку JSON
-            const sendString = JSON.stringify(clonedBody, null, 2);
+            const sendString = JSON.stringify(clonedBody, null, 2)
+
+            console.log({ body: clonedBody })
+            if (clonedBody) {
+                const banquet: IReserveByPortal = await prisma.banquet.findFirst({ where: { iikoId: clonedBody.eventInfo.id } }).then(res => {
+                    return {
+                        ...res,
+                        payments: JSON.parse(res.payments as string),
+                        banquetData: JSON.parse(res.banquetData as string),
+                    } as IReserveByPortal
+                })
+
+                if (banquet) {
+                    await patchBanquet({
+                        ...banquet,
+                        iikoStatus: clonedBody.eventInfo.creationStatus,
+                        iikoMessage: sendString,
+                    })
+                }
+            }
+
             const send = async (toEmail: string) => {
                 await transporter.sendMail({
                     from: 'noreply@kplazma.ru',

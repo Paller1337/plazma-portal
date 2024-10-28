@@ -18,9 +18,19 @@ enum BanquetStatus {
   not_sent
 }
 
+enum BanquetIikoStatus {
+  new
+  Error
+  Success
+  InProgress
+}
+
 model Banquet {
   id             String        @id
   idN            String?
+  iikoId         String?
+  iikoMessage    String?
+  iikoStatus     BanquetIikoStatus? @default(new)
   createdAt      String?
   editedAt       String?
   serviceNote    String?

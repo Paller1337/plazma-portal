@@ -28,7 +28,7 @@ import { Box, Button, Flex, Menu, Text, Title } from '@mantine/core'
 import { IconUserCircle, IconSend } from '@tabler/icons-react'
 import ClientProviderLayout from '@/components/ClientProviderLayout'
 import { fetchCommandStatus, fetchNomenclature, fetchOrganizations, fetchReserveOrganizations, fetchReserveRestaurantSections, fetchReserveStatusById, fetchReserveTerminalGroups, fetchRestaurantSectionsWorkload } from 'helpers/iiko/iikoClientApi'
-import { getBanquetsNow } from 'helpers/banquets/db'
+import { getBanquetsError, getBanquetsNow } from 'helpers/banquets/db'
 import { IReserveByPortal } from 'types/admin/banquets'
 import { getBanquetInWork } from 'helpers/iiko/getBanquetsInWork'
 import { NomenclatureResponse, Reserve, ReserveCreateRequest, ReserveStatusByIdResponse } from 'helpers/iiko/IikoApi/types'
@@ -44,6 +44,7 @@ import { axiosInstance } from 'helpers/axiosInstance'
 interface BanquetManagementPageProps {
     banquetsPortal: IReserveByPortal[]
     banquetsDrafts?: IReserveByPortal[]
+    banquetsError?: IReserveByPortal[]
     banquetsInWork: Reserve[]
     nomenclature: NomenclatureResponse
 }
@@ -56,7 +57,8 @@ interface IActionMenu {
 export const getServerSideProps: GetServerSideProps = withAdminAuthServerSideProps(async (context) => {
     try {
         const banquetsPortal = await getBanquetsNow()
-
+        const banquetsError = await getBanquetsError()
+        console.log({ banquetsError })
         // const banquetsDrafts = await getBanquetsDrafts()
 
         const banquetsInWork = await getBanquetInWork()
@@ -68,6 +70,7 @@ export const getServerSideProps: GetServerSideProps = withAdminAuthServerSidePro
         return {
             props: {
                 banquetsPortal: banquetsPortal,
+                banquetsError: banquetsError,
                 // banquetsDrafts: banquetsDrafts,
                 banquetsInWork: reserves,
                 nomenclature: nomenclature
@@ -88,6 +91,7 @@ export const getServerSideProps: GetServerSideProps = withAdminAuthServerSidePro
 function BanquetManagementPage(props: BanquetManagementPageProps) {
     // const [banquetsDraft, setBanquetsDraft] = useState<IReserveByPortal[]>([])
     const [banquetsPortal, setBanquetsPortal] = useState<IReserveByPortal[]>([])
+    const [banquetsError, setBanquetsError] = useState<IReserveByPortal[]>([])
     const [banquetsInWork, setBanquetsInWork] = useState<Reserve[]>([])
 
     const [isOverlayL, overlayL] = useDisclosure(false)
@@ -154,6 +158,30 @@ function BanquetManagementPage(props: BanquetManagementPageProps) {
     }
 
     const rowsDraft = []
+
+    const rowsError = banquetsError ? banquetsError?.map((banquet, index) => (
+        <Table.Tr key={index} h={80} style={{ border: '1px solid #E5E5E5', borderRadius: 24, background: '#ffb1b1' }}>
+            <Table.Td miw={190}>{DateTime.fromSQL(banquet?.banquetData.estimatedStartTime).toLocaleString(DateTime.DATE_MED_WITH_WEEKDAY)}</Table.Td>
+            <Table.Td miw={110}>{DateTime.fromSQL(banquet?.banquetData.estimatedStartTime).toLocaleString(DateTime.TIME_24_SIMPLE)}</Table.Td>
+            <Table.Td>{banquet?.banquetData.guests.count}</Table.Td>
+            <Table.Td miw={160}>{banquet?.banquetData.customer.name}</Table.Td>
+            <Table.Td miw={130}>{banquet?.banquetData.phone}</Table.Td>
+            <Table.Td>{banquet?.banquetData.comment}</Table.Td>
+            <Table.Td>{Math.floor(banquet.banquetData.durationInMinutes / 60)} ч. {banquet.banquetData.durationInMinutes % 60} мин.</Table.Td>
+            <Table.Td>{banquet.idN || banquet.id}</Table.Td>
+            <Table.Td>
+                {
+                    (banquet.banquetData.order?.items || []).reduce(
+                        (acc, { price, amount }) => acc + (Number(price) * Number(amount)), 0
+                    ).toFixed(2)
+                }
+            </Table.Td>
+            <Table.Td>{banquet.payments?.reduce((result, { sum }) => result + (sum as number), 0) || 0}</Table.Td>
+            <Table.Td>
+                <ActionsMenu data={banquet} type='portal' />
+            </Table.Td>
+        </Table.Tr>
+    )) : []
 
     const rowsPortal = banquetsPortal?.map((banquet, index) => (
         <Table.Tr key={index} h={80}>
@@ -244,6 +272,11 @@ function BanquetManagementPage(props: BanquetManagementPageProps) {
     //     console.log('commandStatus', commandStatus)
     // }
 
+    useEffect(() => setBanquetsPortal(props.banquetsPortal), [props.banquetsPortal])
+    useEffect(() => setBanquetsError(props.banquetsError), [props.banquetsError])
+    useEffect(() => setBanquetsInWork(props.banquetsInWork), [props.banquetsInWork])
+
+
     useEffect(() => {
         //init banquets
         setBanquetsInWork(props.banquetsInWork)
@@ -320,7 +353,34 @@ function BanquetManagementPage(props: BanquetManagementPageProps) {
                     {/* 
                 <Divider my={'md'}/> */}
 
+
                     <Stack px={24} py={12}>
+                        {rowsError.length > 0 ? <>
+                            <Text mx={'auto'} fw={700} fz={20} mt={48}>Ошибки</Text>
+                            <Divider my={'sm'} />
+                            <Table>
+                                <Table.Thead>
+                                    <Table.Tr>
+                                        <Table.Th>Дата</Table.Th>
+                                        <Table.Th>Время</Table.Th>
+                                        <Table.Th>Кол-во гостей</Table.Th>
+                                        <Table.Th>Имя гостя</Table.Th>
+                                        <Table.Th>Телефон</Table.Th>
+                                        <Table.Th>Комментарий</Table.Th>
+                                        <Table.Th>Длительность</Table.Th>
+                                        <Table.Th>Номер заказа</Table.Th>
+                                        <Table.Th>Сумма</Table.Th>
+                                        <Table.Th>Внесено</Table.Th>
+                                        <Table.Th></Table.Th>
+                                    </Table.Tr>
+                                </Table.Thead>
+                                <Table.Tbody>{rowsError}</Table.Tbody>
+                            </Table>
+                        </>
+                            : <></>}
+
+
+
                         {rowsDraft.length > 0 ? <>
                             <Text mx={'auto'} fw={700} fz={20} mt={48}>Черновики</Text>
                             <Divider my={'sm'} />

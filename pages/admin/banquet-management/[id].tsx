@@ -1,4 +1,4 @@
-import { Button, Divider, Grid, Group, Input, InputBase, LoadingOverlay, NumberInput, Select, Stack, Textarea } from '@mantine/core'
+import { Alert, Button, Divider, Grid, Group, Input, InputBase, LoadingOverlay, NumberInput, Select, Stack, Textarea } from '@mantine/core'
 
 import { getRooms } from 'helpers/bnovo/getRooms'
 import { withAdminAuthServerSideProps } from 'helpers/withAdminAuthServerSideProps'
@@ -20,7 +20,7 @@ import { ReserveCreateRequest } from 'helpers/iiko/IikoApi/types'
 import { useDebouncedState, useDisclosure } from '@mantine/hooks'
 import { useIiko } from 'context/IikoContext'
 import { getBanquetById, patchBanquet } from 'helpers/banquets/db'
-import { IconError404 } from '@tabler/icons-react'
+import { IconError404, IconInfoCircle } from '@tabler/icons-react'
 import BanquetCalc from '@/components/PlazmaBanquet/BanquetCalc'
 import BanquetSaveButton from '@/components/PlazmaBanquet/BanquetSaveButton'
 import { validateBanquet } from 'helpers/banquets/validateForm'
@@ -234,12 +234,17 @@ function BanquetEditPage(props: BanquetPortalPageProps) {
             status: 'sent',
         })
         await postCreateReserve(createState)
-            .then(res => {
+            .then(async res => {
                 if ('reserveInfo' in res) {
                     overlay.close()
-
                     // console.log('Ответ: ', res)
-                    router.push('/admin/banquet-management', null, { shallow: true })
+                    await patchBanquet({
+                        ...createState,
+                        iikoId: res.reserveInfo.id,
+                        iikoStatus: res.reserveInfo.creationStatus,
+                    }).then(() =>
+                        router.push('/admin/banquet-management', null, { shallow: true })
+                    )
                 } else {
                     //Report Telegram Bot
                 }
@@ -251,9 +256,10 @@ function BanquetEditPage(props: BanquetPortalPageProps) {
         console.log('createState: ', createState)
     }, [createState])
 
-    // useEffect(() => {
-    //     console.log('createState.status: ', createState.status)
-    // }, [createState.status])
+    const errorMessage = props.banquet?.iikoMessage ? (JSON.parse(props.banquet?.iikoMessage)).eventInfo.errorInfo.message.description : 'Неизвестная ошибка'
+    useEffect(() => {
+        console.log('errorMessage: ', errorMessage)
+    }, [errorMessage])
 
     if (!props.banquet || Object.keys(props.banquet).length === 0) return (
         <>
@@ -311,7 +317,12 @@ function BanquetEditPage(props: BanquetPortalPageProps) {
                         <div className='admin-main__vs' />
                     </div>
 
-
+                    {props.banquet?.iikoStatus === 'Error' ?
+                        <Stack px={24} py={12}>
+                            <Alert radius={'md'} variant="light" color="red" title="Возникла ошибка при передаче банкета" icon={<IconInfoCircle />}>
+                                {props.banquet?.iikoMessage ? errorMessage : 'Неизвестная ошибка'}
+                            </Alert>
+                        </Stack> : <></>}
                     <Grid columns={12} px={24} py={12} gutter="xl">
                         <Grid.Col span={4}>
                             <Stack>

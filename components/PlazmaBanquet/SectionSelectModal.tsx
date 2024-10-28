@@ -66,7 +66,7 @@ export default function SectionSelectModal({ opened, close, onChange }: SectionS
             if (selectedTerminalId) {
                 const reserveRestaurantSections = await fetchReserveRestaurantSections({ terminalGroupIds: [selectedTerminalId] })
                 setSelectedSectionOptions(reserveRestaurantSections.restaurantSections
-                    .filter(x => x.name === 'Банкетный зал')
+                    // .filter(x => x.name === 'Банкетный зал')
                     .map(r => ({
                         value: r.id,
                         label: r.name

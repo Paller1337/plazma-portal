@@ -87,7 +87,7 @@ export function OrderTable(props: OrderTableProps) {
                     const value = event.target.value
                     props.onOrderChanged(p => {
                         let newItems = [...p.order.items]
-                        newItems[cell.row.index].amount = parseInt(value ? value : '1')
+                        newItems[cell.row.index].amount = parseFloat(value ? value : '1')
                         return ({
                             ...p,
                             order: {

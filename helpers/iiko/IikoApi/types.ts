@@ -757,7 +757,7 @@ export interface ReserveCreateResponse {
         externalNumber: string
         organizationId: string
         timestamp: string
-        creationStatus: string
+        creationStatus: 'Error' | 'Success' | 'InProgress'
         errorInfo: {
             code: any,
             message: string,

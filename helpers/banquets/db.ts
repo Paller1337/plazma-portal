@@ -14,6 +14,18 @@ export async function getBanquetsNow() {
     return banquets
 }
 
+export async function getBanquetsError() {
+    const banquets: IReserveByPortal[] = await fetch(`${url}/api/iiko/db/banquets-error`)
+        .then((res) => {
+            if (!res.ok) {
+                throw new Error(`Банкеты не получены, ошибка ${res.status}`)
+            }
+            return res.json()
+        })
+        .then((res) => res as IReserveByPortal[])
+    return banquets
+}
+
 export async function getBanquetById(banquetId: string): Promise<IReserveByPortal> {
     const banquet = await fetch(`${url}/api/iiko/db/${banquetId}`)
         .then((res) => {
@@ -32,7 +44,7 @@ export async function getBanquetById(banquetId: string): Promise<IReserveByPorta
 }
 
 export async function patchBanquet(data: IReserveByPortal) {
-    console.log('patchBanquet: ', data.status)
+    console.log('patchBanquet: ', data)
     const response = await fetch(`${url}/api/iiko/db/${data.id}`, {
         method: 'PATCH',
         body: JSON.stringify(data),
