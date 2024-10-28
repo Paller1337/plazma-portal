@@ -122,7 +122,7 @@ function BanquetManagementPage(props: BanquetManagementPageProps) {
 
                 <Menu.Dropdown>
                     <Menu.Label>Управление банкетом</Menu.Label>
-                    {type === 'portal'
+                    {type === 'portal' || type === 'portalError'
                         ?
                         <Menu.Item leftSection={<IconListDetails color='#055' style={{ width: rem(18), height: rem(18) }} />}
                             onClick={() => {
