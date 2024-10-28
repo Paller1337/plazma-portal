@@ -240,6 +240,7 @@ function BanquetEditPage(props: BanquetPortalPageProps) {
                     // console.log('Ответ: ', res)
                     await patchBanquet({
                         ...createState,
+                        status: 'sent',
                         iikoId: res.reserveInfo.id,
                         iikoStatus: res.reserveInfo.creationStatus,
                     }).then(() =>
