@@ -217,7 +217,7 @@ function BanquetManagementPage(props: BanquetManagementPageProps) {
             <Table.Td miw={130}>{banquet?.reserve.phone}</Table.Td>
             <Table.Td>{banquet?.reserve.comment}</Table.Td>
             <Table.Td>{Math.floor(banquet.reserve.durationInMinutes / 60)} ч. {banquet.reserve.durationInMinutes % 60} мин.</Table.Td>
-            <Table.Td>{banquet?.reserve.order.number}</Table.Td>
+            <Table.Td>{banquet?.reserve?.order?.number}</Table.Td>
             <Table.Td>
                 {/* {
                     (banquet.reserve.order?.items || []).reduce(
