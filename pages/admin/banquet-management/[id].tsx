@@ -142,7 +142,8 @@ function BanquetEditPage(props: BanquetPortalPageProps) {
                 banquetData: {
                     ...p.banquetData,
                     terminalGroupId: sectionState.terminalGroupId.value,
-                    tableIds: sectionState.tableIds.map(t => t.value)
+                    tableIds: sectionState.tableIds.map(t => t.value),
+                    organizationId: sectionState.organizationId
                 }
             }))
         }
@@ -157,8 +158,9 @@ function BanquetEditPage(props: BanquetPortalPageProps) {
                     organizationId: iiko.organizations[0].id
                 }))
             }
-            if (iiko.terminalGroups && props.banquet?.banquetData.terminalGroupId) {
-                const group = iiko.terminalGroups.find(t => t.organizationId === props.banquet.banquetData.organizationId)
+            if (iiko.organizations?.length > 0 && iiko.terminalGroups && props.banquet?.banquetData.terminalGroupId) {
+                const group = iiko.terminalGroups.find(t => t.organizationId === (props.banquet.banquetData.organizationId || iiko.organizations[0].id))
+                console.log({ group })
                 setSectionState(p => ({
                     ...p,
                     terminalGroupId: {
