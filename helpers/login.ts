@@ -37,7 +37,12 @@ export const decodeToken = (token) => {
         return decoded as JwtPayload
 
     } catch (error) {
-        console.error('Ошибка при декодировании токена:', error);
+        console.error('Ошибка при декодировании токена:', error)
+        if (error.toString().includes('TokenExpiredError')) {
+            return {
+                isExpired: true,
+            } as JwtPayload
+        }
         // return error
     }
 }

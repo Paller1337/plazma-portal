@@ -15,22 +15,40 @@ import { GetServerSideProps } from 'next'
 import { withAuthServerSideProps } from 'helpers/withAuthServerSideProps'
 import { axiosInstance } from 'helpers/axiosInstance'
 import Cookies from 'js-cookie'
-import { Input, InputBase, Loader, LoadingOverlay, Select, Textarea } from '@mantine/core'
+import { Button, Group, Text, InputBase, Loader, LoadingOverlay, Paper, Select, Stack, Textarea } from '@mantine/core'
 import { IMaskInput } from 'react-imask'
 import { IGuestAccount } from 'types/session'
 import Link from 'next/link'
 import { telegramSendOrder } from 'helpers/telegram'
 import { getOrdersByGuestId } from 'helpers/order/order'
 import { findItemInCache } from 'helpers/cartContext'
+import { RiErrorWarningLine } from 'react-icons/ri'
+import { notify } from 'utils/notify'
+import { FaCheckCircle } from 'react-icons/fa'
+import { getStoreResult } from 'helpers/getStoreResult'
+import { getStoreStatus, IStoreStatus } from 'utils/storeStatus'
+import { metrika } from 'utils/metrika'
+import { IStore } from 'pages/store/[id]'
+import { FaFile, FaGear, FaPencil } from 'react-icons/fa6'
 
 
 export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(async (context) => {
     const id = 'eat'
+
+    const storeData = (await axiosInstance.get(`/api/store/custom/eat`)).data
+    const data = storeData.data?.length > 0 ? storeData.data[0] : null
+    const store = getStoreResult(data)
+    console.log({ store })
+
+    const storeStatus = getStoreStatus(store.storeWorktime)
+    // TODO Блокировка заказа в зависимости от времени работы
     try {
 
         return {
             props: {
-                id: id
+                id: id,
+                store,
+                storeStatus
             }
         }
     } catch (error) {
@@ -43,6 +61,8 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
 
 
 export default function OrderServices(props) {
+    const storeStatus = props?.storeStatus as IStoreStatus
+    const store = props?.store as IStore
     const { isAuthenticated, openAuthModal, currentUser } = useAuth()
     const [modalIsOpen, setModalIsOpen] = useState(false)
     const { state, dispatch, productsInfo, storesInfo, hotelRooms, menuCache, iikoMenuIsFetched } = useCart()
@@ -98,7 +118,6 @@ export default function OrderServices(props) {
     }
 
     useEffect(() => {
-        // console.log('props.id: ', props.id)
         // console.log('state.stores[props.id]: ', state)
         // state.stores[props.id]
         console.log('currentStoreState: ', props)
@@ -131,7 +150,11 @@ export default function OrderServices(props) {
         // console.log('orderPhone: ', orderPhone)
         // if (currentStoreState) return
         if (!currentUser.approved) {
-            toast.error('Ваш аккаунт заблокирован. Вы не можете оформлять заказы')
+            notify({
+                icon: <RiErrorWarningLine />,
+                title: 'Заказ не оформлен.',
+                message: 'Ваш аккаунт заблокирован. Вы не можете оформлять заказы.',
+            })
             return
         }
         if (!room.label || !room.value) {
@@ -174,7 +197,11 @@ export default function OrderServices(props) {
 
 
             if (serviceOrder.length === 0) {
-                toast.error('Ваша корзина пуста!')
+                notify({
+                    icon: <RiErrorWarningLine />,
+                    title: 'Ваша корзина пуста.',
+                    message: 'Перед оформлением необходимо добавить товары в корзину.',
+                })
                 return
             }
             try {
@@ -254,7 +281,12 @@ export default function OrderServices(props) {
                 const response = await telegramSendOrder(targetOrder) // Предполагается, что здесь вызывается функция отправки заказа
                 // console.log('tg response: ', response)
                 if (response && orderIsPlace) {
-                    toast.success('Заказ успешно отправлен!')
+                    // notify({
+                    //     icon: <FaCheckCircle />,
+                    //     title: 'Заказ оформлен!',
+                    //     message: 'Спасибо за заказ.',
+                    // })
+                    metrika.eatOrder()
                     setOrderComment('')
                     dispatch({ type: 'CLEAR_CART', storeId: props.id })
                     router.push(`/basket/${Object.keys(storesInfo).find(x => x != props.id) || 0}`)
@@ -265,7 +297,11 @@ export default function OrderServices(props) {
 
 
             } catch (error) {
-                toast.error('Ошибка при отправке заказа.')
+                notify({
+                    icon: <RiErrorWarningLine />,
+                    title: 'Заказ не оформлен.',
+                    message: 'Ошибка при оформлении заявки.',
+                })
             }
         }
     }
@@ -426,14 +462,44 @@ export default function OrderServices(props) {
                             onInput={(v) => setOrderComment(v.target.value)}
                             disabled={currentStoreState?.order.length === 0}
                         />
+                        {!props.storeStatus?.isOpen ?
+                            <Stack align='flex-end'>
+                                {storeStatus?.untilClose_min && storeStatus?.untilClose_min < 45 ?
+                                    <Paper mt={8} px={12} py={4} radius={'lg'} bg={'orange'} w={'fit-content'}>
+                                        <Text fw={600} fz={14} c={'white'}>До закрытия {storeStatus?.untilClose}</Text>
+                                    </Paper>
+                                    : <></>
+                                }
+                                {storeStatus?.untilOpen_min ?
+                                    <Paper mt={8} px={12} py={4} bg={'green'} radius={'lg'} w={'fit-content'}>
+                                        <Text fw={600} fz={14} c={'white'}>До открытия {storeStatus?.untilOpen}</Text>
+                                    </Paper>
+                                    : <></>
+                                }
+                            </Stack>
+                            : <></>}
 
                         <div className='order-score'>
                             <div className='order-score__amount'>
                                 <span className='order-score__title'>Сумма заказа</span>
                                 <span className='order-score__sum'>{total > 0 ? `${total} ₽` : 'Бесплатно'}</span>
                             </div>
-                            <div
-                                className='order-score__button'
+                            <Button
+                                bg={currentStoreState?.order.length === 0 || !storeStatus?.isOpen || props.settings?.isDisableOrders
+                                    ? '#aaa' : '#56754B'}
+                                p={12} variant='filled'
+                                c={'white'}
+                                size='sm' h={'fit-content'} radius={'md'}
+                                onClick={isAuthenticated ? () => handleCheckout() : () => openAuthModal()}
+                                disabled={currentStoreState?.order.length === 0 || !storeStatus?.isOpen || props.settings?.isDisableOrders}
+                            >
+                                <Group gap={12}>
+                                    <ReactSVG src='/svg/cart-white.svg' />
+                                    {props.settings?.isDisableOrders ? 'Заказы приостановлены' : !storeStatus?.isOpen ? 'Магазин закрыт' : isAuthenticated ? 'Оформить заказ' : 'Войти и оформить заказ'}
+                                </Group>
+                            </Button>
+                            {/* <div
+                                className={`order-score__button`}
                                 onClick={isAuthenticated ? () => handleCheckout() : () => openAuthModal()}
                                 style={currentStoreState?.order.length === 0 ? {
                                     pointerEvents: 'none',
@@ -442,8 +508,28 @@ export default function OrderServices(props) {
                             >
                                 <ReactSVG src='/svg/cart-white.svg' />
                                 {isAuthenticated ? 'Оформить заказ' : 'Войти и оформить заказ'}
-                            </div>
+                            </div> */}
                         </div>
+                        {store?.requisites ?
+
+                            <Paper radius={'md'} p={12} style={{ border: '1px solid rgb(86, 117, 75)' }} mt={24}>
+                                <Group>
+                                    <Stack
+                                        bg={'rgb(86, 117, 75)'}
+                                        p={8}
+                                        style={{ borderRadius: 32 }}
+                                        justify='center'
+                                        align='center'
+                                    >
+                                        <FaPencil size={16} color='white' />
+                                    </Stack>
+                                    <Stack gap={2}>
+                                        <Text fz={14} fw={500}>Реквизиты</Text>
+                                        <Text fz={16}>ООО «Командор», ИНН 7114009105, ОГРН 1027101374850</Text>
+                                    </Stack>
+                                </Group>
+                            </Paper>
+                            : <></>}
                     </div>
                 </div>
             </div>

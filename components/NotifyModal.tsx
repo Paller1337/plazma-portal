@@ -12,6 +12,8 @@ import toast from 'react-hot-toast'
 import axios from 'axios'
 import { axiosInstance } from 'helpers/axiosInstance'
 import { useAuth } from 'context/AuthContext'
+import { FaCheckCircle } from 'react-icons/fa'
+import { notify } from 'utils/notify'
 
 ReactModal.setAppElement('#__next')
 
@@ -97,12 +99,16 @@ const AuthModal = (props: IProps) => {
         return code;
     }
 
-    useEffect(() => {
-        if (codeIsSend) {
-            console.log('Ваш SMS код: ', smsCode)
-            toast.success(`Ваш SMS код: ${smsCode}`)
-        }
-    }, [codeIsSend, smsCode])
+    // useEffect(() => {
+    //     if (codeIsSend) {
+    //         console.log('Ваш SMS код: ', smsCode)
+    //         notify({
+    //             icon: <FaCheckCircle />,
+    //             title: 'Ваш SMS код',
+    //             message: smsCode,
+    //         })
+    //     }
+    // }, [codeIsSend, smsCode])
 
     const sendCode = () => {
         if (codeIsSend && codeTimer) {
@@ -146,9 +152,13 @@ const AuthModal = (props: IProps) => {
     const register = async () => {
         if (emailRegex.test(email)) {
             console.log({ name, email, phone });
-            const result = await registerGuest(phone, name, email)
+            const result = await registerGuest(phone, name, email, false)
             if (result.data.id) {
-                toast.success('Регистрация прошла успешно')
+                notify({
+                    icon: <FaCheckCircle />,
+                    title: 'Добро пожаловать!',
+                    message: 'Вы зарегистрированы.',
+                })
                 props.onClose()
             }
             console.log('register result: ', result)

@@ -6,11 +6,15 @@ import { DEFAULTS } from 'defaults'
 import { axiosInstance } from 'helpers/axiosInstance'
 import { getStoreById } from 'helpers/cartContext'
 import { withAuthServerSideProps } from 'helpers/withAuthServerSideProps'
+import { DateTime } from 'luxon'
 import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { ReactSVG } from 'react-svg'
+import { getStoreStatus } from 'utils/storeStatus'
+import { Paper, Text } from '@mantine/core'
+import { getStoreResult } from 'helpers/getStoreResult'
 
 export interface IProduct {
     id: number,
@@ -23,12 +27,34 @@ export interface IProduct {
     warning_text?: string,
 }
 
-interface IStore {
+export interface IStoreWorkTime {
+    weekday: {
+        day: string,
+        name: string
+    }
+    start: string
+    end: string
+}
+export interface IStore {
     id?: string,
     title?: string
     description?: string
+    requisites?: string
     image?: string
     products?: IProduct[]
+    preview_size?: string
+    category: {
+        id: number
+        name: string
+    },
+    storeType?: {
+        label: string,
+        value: string,
+    }
+    storeWorktime?: IStoreWorkTime[]
+    isActive?: boolean
+    isCustom?: boolean
+    customId?: string
 }
 
 interface StorePageProps {
@@ -39,35 +65,23 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
     const { id } = context.params
     console.log('id ', id)
     try {
-        const store = await axiosInstance.get(`/api/store/${id}`)
+        if ((id as string) != '0') {
+            const storeData = (await axiosInstance.get(`/api/store/${id}`)).data
+            const store = getStoreResult(storeData)
 
-        console.log('store  ', store.data)
+            console.log({ store })
 
-        return {
-            props: {
-                // article: article.data,
-                store: {
-                    id: id,
-                    title: store.data.data.attributes.title || '',
-                    description: store.data.data.attributes.description || '',
-                    image: store.data.data.attributes.image.data.attributes.url || '',
-                    preview_size: store.data.data.attributes.preview_size || 'min',
-                    category: {
-                        id: store.data.data.attributes.category.data.id || 0,
-                        name: store.data.data.attributes.category.data.attributes.name || '',
-                    },
-                    products: store.data.data.attributes.products.data ? store.data.data.attributes.products.data.map(p => ({
-                        id: p.id,
-                        name: p.attributes.name || 'Без имени',
-                        description: p.attributes.description || '',
-                        price: p.attributes.price || 0,
-                        for_sale: p.attributes.for_sale || false,
-                        memo_text: p.attributes.memo_text || '',
-                        warning_text: p.attributes.warning_text || '',
-                        image: p.attributes.image.data.attributes.url || '',
-                    })) : []
-                }
-            } as StorePageProps
+            return {
+                props: {
+                    store: store
+                } as StorePageProps
+            }
+        } else {
+            return {
+                props: {
+                    store: null
+                } as StorePageProps
+            }
         }
     } catch (error) {
         console.error('Ошибка при получении статьи:', error)
@@ -86,6 +100,9 @@ export default function StorePage(props: StorePageProps) {
     const { state, productsInfo, storesInfo } = useCart()
     const router = useRouter()
 
+
+    const storeStatus = getStoreStatus(props.store.storeWorktime)
+    useEffect(() => console.log({ worktime: getStoreStatus(props.store.storeWorktime) }), [])
     // @ts-ignore
     const currentStoreState = state.stores[props.store.id]
     const total = currentStoreState?.order?.reduce((acc, curr) => acc + productsInfo[curr.id.toString()]?.price * curr.quantity, 0) || 0
@@ -113,7 +130,7 @@ export default function StorePage(props: StorePageProps) {
     }
 
     return (<>
-        <ProductModal isOpen={productModalIsOpen} onClose={closeProductModal} product={currentProduct} storeId={props.store?.id} />
+        <ProductModal isOpen={productModalIsOpen} onClose={closeProductModal} product={currentProduct} storeId={props.store?.id} storeStatus={storeStatus} />
         <div className='index-preview'>
             <div className='store-header'>
                 <div className='store-header__content'>
@@ -133,6 +150,18 @@ export default function StorePage(props: StorePageProps) {
                 <div className='store-content__info'>
                     <span className='store-content__title' onClick={fetch}>{props.store?.title}</span>
                     <span className='store-content__description'>{props.store?.description}</span>
+                    {storeStatus.untilClose_min && storeStatus.untilClose_min < 45 ?
+                        <Paper mt={8} px={12} py={4} radius={'lg'} bg={'orange'} w={'fit-content'}>
+                            <Text fw={600} fz={14} c={'white'}>До закрытия {storeStatus.untilClose}</Text>
+                        </Paper>
+                        : <></>
+                    }
+                    {storeStatus.untilOpen_min ?
+                        <Paper mt={8} px={12} py={4} bg={'green'} radius={'lg'} w={'fit-content'}>
+                            <Text fw={600} fz={14} c={'white'}>До открытия {storeStatus.untilOpen}</Text>
+                        </Paper>
+                        : <></>
+                    }
                     {/* <span className='store-content__description'>{'Для оформления заказа необходимо авторизоваться'}</span> */}
                 </div>
                 <div className='store-content__products'>
@@ -153,11 +182,11 @@ export default function StorePage(props: StorePageProps) {
             </div>
             {currentStoreState && currentStoreState?.order.length > 0 ?
                 <div className='store-cart-button'>
-                    <Link className='portal-button portal-button_stretch' href={`/basket/${props.store?.id}`}
+                    <Link className={`portal-button portal-button_stretch ${!storeStatus.isOpen ? ' portal-button_disabled' : ''}`} href={`/basket/${props.store?.id}`}
                         style={{ backgroundColor: 'rgb(86, 117, 75)' }}
                         prefetch
                     >
-                        Перейти к заказу {total ? `${total}₽` : ''}
+                        {!storeStatus.isOpen ? 'До открытия ' + storeStatus.untilOpen : `Перейти к заказу ${total ? `${total}₽` : ''}`}
                     </Link>
                     {/* <Button text='' bgColor='' stretch onClick={() => router.push(`/basket/${props.store?.id}`)} /> */}
                 </div>

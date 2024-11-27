@@ -3,7 +3,8 @@ import { useCartDetails } from 'helpers/cartContext';
 import { getRooms } from 'helpers/bnovo/getRooms';
 import { axiosInstance } from 'helpers/axiosInstance';
 import { IProduct, IStoreType } from 'types/order';
-import { MenuV2ByIdResponse } from 'helpers/iiko/IikoApi/types';
+import { MenuV2ByIdResponse, NomenclatureResponse } from 'helpers/iiko/IikoApi/types';
+import axios from 'axios';
 
 // Типы
 type CartItem = {
@@ -60,7 +61,11 @@ const CartContext = createContext<{
     hotelRooms: any,
     menuCache: { [key: string]: MenuV2ByIdResponse }
     iikoMenuIsFetched: boolean
-}>({ state: defaultState, dispatch: () => null, storesInfo: {}, productsInfo: {}, hotelRooms: null, menuCache: {}, iikoMenuIsFetched: false });
+    nomenclature: NomenclatureResponse
+}>({
+    state: defaultState, dispatch: () => null, storesInfo: {}, productsInfo: {},
+    hotelRooms: null, menuCache: {}, iikoMenuIsFetched: false, nomenclature: null
+});
 
 const cartReducer = (state: CartState, action: CartAction): CartState => {
     switch (action.type) {
@@ -149,7 +154,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
 export const CartProvider = ({ children }) => {
     const [isMounted, setIsMounted] = useState(false);
     const [state, dispatch] = useReducer(cartReducer, defaultState)
-    const { storesInfo, productsInfo, menuCache, iikoMenuIsFetched } = useCartDetails(state)
+    const { storesInfo, productsInfo, menuCache, iikoMenuIsFetched, nomenclature } = useCartDetails(state)
     const [hotelRooms, setHotelRooms] = useState(null)
 
     useEffect(() => {
@@ -185,7 +190,7 @@ export const CartProvider = ({ children }) => {
 
     useEffect(() => {
         const initRooms = async () => {
-            const rooms = await axiosInstance.get('/api/rooms')
+            const rooms = await axios.get('/api/rooms')
             const availableRooms = rooms.data
                 .filter(x => x.tags !== '')
                 .sort((a, b) => a.tags.localeCompare(b.tags))
@@ -197,7 +202,7 @@ export const CartProvider = ({ children }) => {
     }, [])
 
     return (
-        <CartContext.Provider value={{ state, dispatch, storesInfo, productsInfo, hotelRooms, menuCache, iikoMenuIsFetched }}>
+        <CartContext.Provider value={{ state, dispatch, storesInfo, productsInfo, hotelRooms, menuCache, iikoMenuIsFetched, nomenclature }}>
             {children}
         </CartContext.Provider>
     );

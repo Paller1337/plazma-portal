@@ -3,6 +3,10 @@
         padding: 24px
         background-image: none !important
         height: 100vh
+        @media (max-width: 1024px)
+            padding: 0 !important
+
+            
     &-main
         border-radius: 48px
         height: 100%
@@ -12,6 +16,8 @@
         display: flex
         flex-flow: row nowrap
         overflow: hidden
+        @media (max-width: 1024px)
+            border-radius: 0
         &__vs
             width: 100%
             height: 1px

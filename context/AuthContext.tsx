@@ -13,9 +13,13 @@ import AuthModal from '@/components/AuthModal'
 import Button from '@/components/Button'
 import { useSubscribe } from 'helpers/push/subscribe'
 import FingerprintJS from '@fingerprintjs/fingerprintjs'
+import { FaCheckCircle } from 'react-icons/fa'
+import { notify } from 'utils/notify'
+import { LiaHandPeace } from "react-icons/lia"
 
 interface AuthContextType {
     isAuthenticated: boolean
+    isAuthProcessed: boolean
     isPwaBannerHidden: boolean
     setIsPwaBannerHidden: Dispatch<SetStateAction<boolean>>
     login?: (surname: string, roomNumber: string) => Promise<{
@@ -26,10 +30,11 @@ interface AuthContextType {
         status: boolean;
         message: string;
     }>
-    registerGuest: (phone: string, name: string, email: string) => Promise<{
+    registerGuest: (phone: string, name: string, email: string, isSubscribe: boolean) => Promise<{
         status: boolean
         message: string
         data?: any
+        isSubscribe?: boolean
     }>
     currentUser?: {
         id: number
@@ -50,13 +55,14 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const router = useRouter()
     const [isAuthenticated, setIsAuthenticated] = useState(false)
+    const [isAuthProcessed, setIsAuthProcessed] = useState(true)
     const [isPwaBannerHidden, setIsPwaBannerHidden] = useState(false)
     const [currentUser, setCurrentUser] = useState({ id: 0, phone: '', name: '', role: '', approved: false })
 
     const [showWelcomeScreen, setShowWelcomeScreen] = useState(false)
     const [endWelcomeScreen, setEndWelcomeScreen] = useState(false)
     const [visitorId, setVisitorId] = useState(null)
-    
+
     const [authModalIsOpen, setAuthModalIsOpen] = useState(false)
     const closeAuthModal = () => setAuthModalIsOpen(false)
     const openAuthModal = () => setAuthModalIsOpen(true)
@@ -65,26 +71,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const closeNotifyModal = () => setNotifyModalIsOpen(false)
     const openNotifyModal = () => setNotifyModalIsOpen(true)
 
-    // const login = async (surname: string, roomNumber: string) => {
-    //     const auth = await axios.post('/api/login', {
-    //         data: {
-    //             surname,
-    //             roomNumber
-    //         }
-    //     })
-
-    //     if (auth.data.data.status == true) {
-    //         setIsAuthenticated(true)
-    //         Cookies.set('session_token', auth.data.sessionToken)
-    //         // console.log('auth.data.sessionToken: ', auth.data.sessionToken)
-    //         toast.success(auth.data.data.message)
-    //         return auth.data.data
-    //     } else {
-    //         setIsAuthenticated(false)
-    //         toast.error(auth.data.data.message)
-    //         return auth.data.data
-    //     }
-    // }
+    useEffect(() => console.log({ currentUser }), [currentUser])
+    useEffect(() => console.log({ isAuthProcessed }), [isAuthProcessed])
 
     const authGuestByPhone = async (phone: string) => {
         try {
@@ -103,11 +91,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 })
                 Cookies.set('session_token', response.data.token)
 
-                toast.success('Авторизован')
+                notify({
+                    icon: <LiaHandPeace />,
+                    title: 'С возвращением!',
+                    message: 'Вы вошли в портал.',
+                })
                 return response.data.guest
             } else if (response.status === 204) {
                 setIsAuthenticated(false)
-                toast.error('Переходим к регистрации')
                 return null
             } else {
                 throw new Error('Failed to log in')
@@ -118,10 +109,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     }
 
-    const registerGuest = async (phone: string, name: string, email: string) => {
+    const registerGuest = async (phone: string, name: string, email: string, isSubscribe: boolean) => {
         try {
             const response = await axios.post('/api/sms-auth/register', {
-                data: { phone, name, email, role: 'user', },
+                data: { phone, name, email, role: 'user', isSubscribe },
             });
 
             if (response.status === 201) {
@@ -140,20 +131,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     async function checkAuthToken() {
+        // setIsAuthProcessed(true)
         const token = Cookies.get('session_token')
 
         if (!token) {
             setIsAuthenticated(false)
+            setIsAuthProcessed(false)
             return
         }
         const res = await axios.post('/api/token/decode', {
             token
         })
+
+        // console.log({ decodeStatus: res.status })
+
         if (res.status === 200) {
             const decodedToken = res.data
+            // console.log({ decodedToken })
             if (decodedToken.isExpired) {
                 Cookies.remove('session_token')
                 setIsAuthenticated(false)
+                setIsAuthProcessed(false)
                 return
             }
 
@@ -172,6 +170,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         approved: user.data.guest.attributes.approved
                     })
                     setIsAuthenticated(true)
+                    setIsAuthProcessed(false)
                 }
             }
         }
@@ -286,6 +285,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return (
         <AuthContext.Provider value={{
             isAuthenticated,
+            isAuthProcessed,
             isPwaBannerHidden,
             setIsPwaBannerHidden,
             authGuestByPhone,

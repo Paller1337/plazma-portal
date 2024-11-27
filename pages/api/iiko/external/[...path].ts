@@ -2,6 +2,8 @@ import { iikoExternalServerApi } from 'helpers/iiko/iikoExternalServerApi'
 import { NextApiRequest, NextApiResponse } from 'next'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  res.setHeader('Access-Control-Allow-Origin', 'http://portal-plazma.ru.tuna.am')
+  
   const { path } = req.query
 
   let organizationIds, organizationId, terminalGroupIds, restaurantSectionIds, dateFrom, dateTo, reserveIds, sourceKeys, correlationId, externalMenuId

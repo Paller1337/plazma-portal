@@ -13,7 +13,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
         const store = await axios.get(`${DEFAULTS.STRAPI.url}/api/stores/${id}`, {
             params: {
-                'populate': 'deep,3',
+                'populate': 'deep,4',
             },
             headers: {
                 'Content-Type': 'application/json',

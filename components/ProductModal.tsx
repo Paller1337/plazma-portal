@@ -6,6 +6,7 @@ import { useRouter } from 'next/router'
 import { IProduct } from 'pages/store/[id]'
 import { DEFAULTS } from 'defaults'
 import { useCart } from 'context/CartContext'
+import { IStoreStatus } from 'utils/storeStatus'
 
 ReactModal.setAppElement('#__next'); // Для Next.js обычно это #__next, для create-react-app это #root
 
@@ -14,6 +15,7 @@ interface IProps {
     onClose: () => void,
     storeId?: string,
     product?: IProduct
+    storeStatus?: IStoreStatus
 }
 
 
@@ -59,7 +61,9 @@ const ProductModal = (props: IProps) => {
                     {props.product?.price && props.product?.price > 0 ? <span className='Product-Modal__info-price'>{props.product?.price} руб.</span> : <></>}
                 </div>
                 <div className="Product-Modal__actions">
-                    <Button text='Добавить' stretch bgColor='#56754B' color='#fff' onClick={handleAddToCart} />
+                    <Button text={props.storeStatus.isOpen ? 'Добавить' : 'До открытия ' + props.storeStatus.untilOpen}
+                        stretch bgColor='#56754B' color='#fff' onClick={handleAddToCart} disabled={!props.storeStatus.isOpen}
+                    />
                 </div>
             </div>
         </ReactModal>

@@ -11,6 +11,9 @@ import WelcomeScreen from '@/components/WelcomeScreen';
 import { useRouter } from 'next/router';
 import AuthModal from '@/components/AuthModal';
 import Button from '@/components/Button';
+import { notify } from 'utils/notify';
+import { LiaHandPeace } from 'react-icons/lia';
+import FingerprintJS from '@fingerprintjs/fingerprintjs'
 
 interface AuthContextType {
     isAuthenticated: boolean
@@ -30,6 +33,7 @@ interface AuthContextType {
         role: string
         approved: boolean
     }
+    visitorId: string
 }
 
 const AuthContext = createContext<AuthContextType>(null!);
@@ -41,32 +45,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [isPwaBannerHidden, setIsPwaBannerHidden] = useState(false)
     const [currentUser, setCurrentUser] = useState({ id: 0, phone: '', name: '', role: '', approved: false })
+    const [visitorId, setVisitorId] = useState(null)
 
     const [showWelcomeScreen, setShowWelcomeScreen] = useState(false)
     const [endWelcomeScreen, setEndWelcomeScreen] = useState(false)
 
     const [authModalIsOpen, setAuthModalIsOpen] = useState(false)
 
-    // const login = async (surname: string, roomNumber: string) => {
-    //     const auth = await axios.post('/api/login', {
-    //         data: {
-    //             surname,
-    //             roomNumber
-    //         }
-    //     })
 
-    //     if (auth.data.data.status == true) {
-    //         setIsAuthenticated(true)
-    //         Cookies.set('session_token', auth.data.sessionToken)
-    //         // console.log('auth.data.sessionToken: ', auth.data.sessionToken)
-    //         toast.success(auth.data.data.message)
-    //         return auth.data.data
-    //     } else {
-    //         setIsAuthenticated(false)
-    //         toast.error(auth.data.data.message)
-    //         return auth.data.data
-    //     }
-    // }
     const logOut = () => {
         Cookies.remove('session_token')
         setIsAuthenticated(false)
@@ -124,12 +110,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     approved: response.data.guest.attributes.approved
                 })
                 Cookies.set('session_token', response.data.token)
-
-                toast.success('Авторизован')
+                
+                notify({
+                    icon: <LiaHandPeace />,
+                    title: 'С возвращением!',
+                    message: 'Вы вошли в портал.',
+                })
                 return response.data.guest
             } else if (response.status === 204) {
                 setIsAuthenticated(false)
-                toast.error('Переходим к регистрации')
                 return null
             } else {
                 throw new Error('Failed to log in')
@@ -179,6 +168,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     }
 
+   useEffect(() => {
+        FingerprintJS.load()
+            .then(fp => fp.get())
+            .then(result => {
+                setVisitorId(result.visitorId)
+                console.log('visitorId: ', result)
+            })
+
+    }, [])
+
     useEffect(() => {
         checkAuthToken()
         // Проверка, находится ли пользователь на странице аутентификации
@@ -214,6 +213,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             authAdminByIdPassword,
             currentUser,
             logOut,
+            visitorId
         }}>
             {children}
         </AuthContext.Provider>

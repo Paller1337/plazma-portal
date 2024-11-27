@@ -23,8 +23,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${STRAPI_API_TOKEN}`
                 }
-            });
-        console.log('admin data: ', response.data)
+            })
+            .catch(e => e)
 
         const resGuest = await axios.get(`${DEFAULTS.STRAPI.url}/api/guests`, {
             params: {
@@ -47,6 +47,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         if (response.status === 200) {
             res.status(200).json({ token: response.data.token, guest })
+        } else if (response.status === 401) {
+            res.status(401).json({ message: 'Неверный пароль' })
         } else {
             res.status(204).json({ message: 'Администратор не найден' })
         }

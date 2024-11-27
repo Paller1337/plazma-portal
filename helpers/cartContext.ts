@@ -4,7 +4,7 @@ import { DEFAULTS } from 'defaults'
 import { axiosInstance } from './axiosInstance'
 import { IProduct } from 'types/order'
 import * as iiko from '../helpers/iiko/iikoExternalClientApi'
-import { MenusV2Response, MenuV2ByIdResponse } from './iiko/IikoApi/types'
+import { MenusV2Response, MenuV2ByIdResponse, NomenclatureResponse } from './iiko/IikoApi/types'
 
 
 
@@ -146,7 +146,8 @@ function useIikoMenu() {
     const [menus, setMenus] = useState<{ [key: string]: MenuV2ByIdResponse }>({});
     const [menusV2, setMenusV2] = useState<MenusV2Response>(null);
     const [orgId, setOrgId] = useState<string>('');
-    const [isFetchingMenus, setIsFetchingMenus] = useState(false);
+    const [isFetchingMenus, setIsFetchingMenus] = useState(false)
+    const [nomenclature, setNomenclature] = useState<NomenclatureResponse>(null)
 
     // Функция для загрузки меню по ID с проверкой кеша
     const fetchIikoMenu = async (menuId: string) => {
@@ -185,6 +186,22 @@ function useIikoMenu() {
 
         initOrg();
     }, []); // Пустой массив зависимостей - эффект выполняется один раз
+
+    // 1.1. Получение nomen при монтировании компонента
+    useEffect(() => {
+        if (orgId && !nomenclature) {
+            const initNomen = async () => {
+                try {
+                    const response = await iiko.fetchNomenclature({ organizationId: orgId })
+                    setNomenclature(response);
+                } catch (error) {
+                    console.error('Ошибка при получении nomenclature:', error);
+                }
+            };
+
+            initNomen()
+        }
+    }, [orgId]); // Пустой массив зависимостей - эффект выполняется один раз
 
     // 2. Получение menusV2 после получения orgId
     useEffect(() => {
@@ -228,7 +245,7 @@ function useIikoMenu() {
         }
     }, [orgId, menusV2]); // Зависимости необходимые для запуска эффекта
 
-    return { menuCache: menus, iikoMenuIsFetched };
+    return { menuCache: menus, iikoMenuIsFetched, nomenclature };
 }
 
 
@@ -236,7 +253,7 @@ function useIikoMenu() {
 export const useCartDetails = (cartState) => {
     const [storesInfo, setStoresInfo] = useState({})
     const [productsInfo, setProductsInfo] = useState({})
-    const { menuCache, iikoMenuIsFetched } = useIikoMenu()
+    const { menuCache, iikoMenuIsFetched, nomenclature } = useIikoMenu()
 
 
 
@@ -291,5 +308,5 @@ export const useCartDetails = (cartState) => {
         loadDetails();
     }, [cartState, iikoMenuIsFetched]);
 
-    return { storesInfo, productsInfo, menuCache, iikoMenuIsFetched }
+    return { storesInfo, productsInfo, menuCache, iikoMenuIsFetched, nomenclature }
 }

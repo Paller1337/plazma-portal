@@ -15,24 +15,48 @@ import { GetServerSideProps } from 'next'
 import { withAuthServerSideProps } from 'helpers/withAuthServerSideProps'
 import { axiosInstance } from 'helpers/axiosInstance'
 import Cookies from 'js-cookie'
-import { Input, InputBase, Loader, LoadingOverlay, Select, Textarea } from '@mantine/core'
+import { Button, Group, Text, InputBase, Loader, LoadingOverlay, Paper, Select, Stack, Textarea } from '@mantine/core'
 import { IMaskInput } from 'react-imask'
 import { IGuestAccount } from 'types/session'
 import Link from 'next/link'
 import { telegramSendOrder } from 'helpers/telegram'
 import { getOrdersByGuestId } from 'helpers/order/order'
 import { DEFAULTS } from 'defaults'
+import { RiErrorWarningLine } from 'react-icons/ri'
+import { notify } from 'utils/notify'
+import { FaCheckCircle } from 'react-icons/fa'
+import { getStoreResult } from 'helpers/getStoreResult'
+import { getStoreStatus, IStoreStatus } from 'utils/storeStatus'
+import { metrika } from 'utils/metrika'
 
 
 export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(async (context) => {
     const { id } = context.params
-    try {
 
-        return {
-            props: {
-                id: id
+
+
+    try {
+        if ((id as string) != '0') {
+            const storeData = (await axiosInstance.get(`/api/store/${id}`)).data
+            const data = storeData?.data ? storeData.data : null
+            const store = getStoreResult(data)
+            const storeStatus = getStoreStatus(store.storeWorktime)
+
+            return {
+                props: {
+                    id: id,
+                    storeStatus
+                }
+            }
+        } else {
+            return {
+                redirect: {
+                    destination: '/',
+                    permanent: false,
+                }
             }
         }
+
     } catch (error) {
         console.error('Ошибка ...:', error)
         return {
@@ -42,6 +66,7 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
 })
 
 export default function OrderServices(props) {
+    const storeStatus = props?.storeStatus as IStoreStatus
     const { isAuthenticated, openAuthModal, currentUser } = useAuth()
     const [modalIsOpen, setModalIsOpen] = useState(false)
     const { state, dispatch, productsInfo, storesInfo, hotelRooms } = useCart()
@@ -57,7 +82,7 @@ export default function OrderServices(props) {
         error: '',
     })
 
-
+    useEffect(() => console.log(props.storeStatus))
     const [orderPhone, setOrderPhone] = useState({
         value: currentUser.phone || '',
         error: ''
@@ -147,7 +172,11 @@ export default function OrderServices(props) {
         // console.log('orderPhone: ', orderPhone)
         // if (currentStoreState) return
         if (!currentUser.approved) {
-            toast.error('Ваш аккаунт заблокирован. Вы не можете оформлять заказы')
+            notify({
+                icon: <RiErrorWarningLine />,
+                title: 'Заказ не оформлен.',
+                message: 'Ваш аккаунт заблокирован. Вы не можете оформлять заказы.',
+            })
             return
         }
         if (!room.label || !room.value) {
@@ -186,7 +215,11 @@ export default function OrderServices(props) {
 
 
             if (serviceOrder.length === 0) {
-                toast.error('Ваша корзина пуста!')
+                notify({
+                    icon: <RiErrorWarningLine />,
+                    title: 'Ваша корзина пуста.',
+                    message: 'Перед оформлением необходимо добавить товары в корзину.',
+                })
                 return
             }
             try {
@@ -235,7 +268,12 @@ export default function OrderServices(props) {
                 const response = await telegramSendOrder(targetOrder) // Предполагается, что здесь вызывается функция отправки заказа
                 // console.log('tg response: ', response)
                 if (response && orderIsPlace) {
-                    toast.success('Заказ успешно отправлен!')
+                    // notify({
+                    //     icon: <FaCheckCircle />,
+                    //     title: 'Заказ оформлен!',
+                    //     message: 'Спасибо за заказ.',
+                    // })
+                    metrika.serviceOrder()
                     setOrderComment('')
                     dispatch({ type: 'CLEAR_CART', storeId: props.id })
                     router.push(`/basket/${Object.keys(storesInfo).find(x => x != props.id) || 0}`)
@@ -246,7 +284,11 @@ export default function OrderServices(props) {
 
 
             } catch (error) {
-                toast.error('Ошибка при отправке заказа.')
+                notify({
+                    icon: <RiErrorWarningLine />,
+                    title: 'Заказ не оформлен.',
+                    message: 'Ошибка при оформлении заявки.',
+                })
             }
         }
     }
@@ -413,13 +455,28 @@ export default function OrderServices(props) {
                             onInput={(v) => setOrderComment(v.target.value)}
                             disabled={currentStoreState?.order.length === 0}
                         />
-
+                        {!props.storeStatus?.isOpen ?
+                            <Stack align='flex-end'>
+                                {storeStatus?.untilClose_min && storeStatus?.untilClose_min < 45 ?
+                                    <Paper mt={8} px={12} py={4} radius={'lg'} bg={'orange'} w={'fit-content'}>
+                                        <Text fw={600} fz={14} c={'white'}>До закрытия {storeStatus?.untilClose}</Text>
+                                    </Paper>
+                                    : <></>
+                                }
+                                {storeStatus?.untilOpen_min ?
+                                    <Paper mt={8} px={12} py={4} bg={'green'} radius={'lg'} w={'fit-content'}>
+                                        <Text fw={600} fz={14} c={'white'}>До открытия {storeStatus?.untilOpen}</Text>
+                                    </Paper>
+                                    : <></>
+                                }
+                            </Stack>
+                            : <></>}
                         <div className='order-score'>
                             <div className='order-score__amount'>
                                 <span className='order-score__title'>Сумма заказа</span>
                                 <span className='order-score__sum'>{total > 0 ? `${total} ₽` : 'Бесплатно'}</span>
                             </div>
-                            <div
+                            {/* <div
                                 className='order-score__button'
                                 onClick={isAuthenticated ? () => handleCheckout() : () => openAuthModal()}
                                 style={currentStoreState?.order.length === 0 ? {
@@ -429,7 +486,21 @@ export default function OrderServices(props) {
                             >
                                 <ReactSVG src='/svg/cart-white.svg' />
                                 {isAuthenticated ? 'Оформить заказ' : 'Войти и оформить заказ'}
-                            </div>
+                            </div> */}
+                            <Button
+                                bg={currentStoreState?.order.length === 0 || !storeStatus?.isOpen || props.settings?.isDisableOrders
+                                    ? '#aaa' : '#56754B'}
+                                p={12} variant='filled'
+                                c={'white'}
+                                size='sm' h={'fit-content'} radius={'md'}
+                                onClick={isAuthenticated ? () => handleCheckout() : () => openAuthModal()}
+                                disabled={currentStoreState?.order.length === 0 || !storeStatus?.isOpen || props.settings?.isDisableOrders}
+                            >
+                                <Group gap={12}>
+                                    <ReactSVG src='/svg/cart-white.svg' />
+                                    {props.settings?.isDisableOrders ? 'Заказы приостановлены' : !storeStatus?.isOpen ? 'Магазин закрыт' : isAuthenticated ? 'Оформить заказ' : 'Войти и оформить заказ'}
+                                </Group>
+                            </Button>
                         </div>
                     </div>
                 </div>

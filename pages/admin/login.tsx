@@ -52,6 +52,7 @@ export default function AuthPage() {
 
     const [loginStep, setLoginStep] = useState(0)
 
+    const [passError, setPassError] = useState('')
     const [regPass1, setRegPass1] = useState('')
     const [regPass2, setRegPass2] = useState('')
 
@@ -136,6 +137,9 @@ export default function AuthPage() {
                 toast.error('Неверный номер телефона')
             }
         }).catch((error) => {
+            if (error.status === 401) {
+                setPassError(error.response.data.message)
+            }
             console.error('Error fetching guest by phone:', error)
         });
 
@@ -269,7 +273,7 @@ export default function AuthPage() {
                         <div className='admin-login__form'>
                             <div className='Auth-Modal__form'>
                                 <InputBase
-                                    label='Номер для связи'
+                                    label='Номер телефона'
                                     withAsterisk
                                     component={IMaskInput}
                                     mask="+7 (000) 000-00-00"
@@ -329,8 +333,12 @@ export default function AuthPage() {
                                             w={'100%'}
                                             label="Пароль"
                                             placeholder="Введите пароль"
-                                            // @ts-ignore
-                                            onInput={e => setPassword(e.target.value)}
+                                            onInput={e => {
+                                                // @ts-ignore
+                                                setPassword(e.target.value)
+                                                setPassError('')
+                                            }}
+                                            error={passError.length > 0 ? passError : ''}
                                         />
                                         : <></>
                                 }

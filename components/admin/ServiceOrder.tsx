@@ -27,6 +27,7 @@ export interface ICServiceOrderProps {
     order: IOrder
     products: IProduct[]
     isVisualNew?: boolean
+    onClick: () => void
 }
 
 interface ServiceOrderItemProps {
@@ -117,7 +118,10 @@ export default function ServiceOrder(props: ICServiceOrderProps) {
         <AdminOrderModal isOpen={modalIsOpen} onClose={() => setModalIsOpen(false)} order={props} />
 
         <div className='admin-serviceCard__outer'>
-            <div className={`admin-serviceCard${props.isVisualNew ? ' admin-serviceCard_new' : ''}`} onClick={() => openModal(props.order.id)}>
+            <div className={`admin-serviceCard${props.isVisualNew ? ' admin-serviceCard_new' : ''}`} onClick={() => {
+                openModal(props.order.id)
+                props.onClick()
+            }}>
                 <ServiceOrderBadge status={props.order.status} id={props.order.id} date={props.order.create_at} />
 
                 <div className='admin-serviceCard__header'>
@@ -146,7 +150,7 @@ export default function ServiceOrder(props: ICServiceOrderProps) {
                         <span className='admin-serviceCard__blockTitle'>{props.order.phone ? props.order.phone : 'Не указан'}</span>
                     </Flex>
                 </div>
-              
+
             </div>
         </div>
     </>

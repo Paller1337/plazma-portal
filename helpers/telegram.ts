@@ -4,8 +4,6 @@ import { IOrder } from 'types/order';
 import { DateTime } from 'luxon';
 
 export async function telegramSend(message: string, chat_id, message_thread_id) {
-    console.log(`telegramSend: `, { message, chat_id, message_thread_id })
-
     const status = await axiosInstance.post('/api/telegram/send', {
         message,
         chat_id,
@@ -17,9 +15,13 @@ export async function telegramSend(message: string, chat_id, message_thread_id) 
 }
 
 
-export async function telegramSendFeedback(stars: string) {
+export async function telegramSendFeedback(stars: string, review?: string, name?: string, phone?: string, id?: number) {
     let message = `<b>[PORTAL RATING]</b>\n`
     message += `Новая оценка: <b>${stars}</b>\n`
+    message += name ? `Имя: <b>${name}</b>\n` : ''
+    message += phone ? `Телефон: <b>${phone}</b>\n` : ''
+    message += id ? `ID гостя: <b>#${id}</b>\n` : ''
+    message += review ? `Отзыв: <pre>${review}</pre>\n` : ''
 
     const res = await telegramSend(message, -1002259481861, 2)
     return res

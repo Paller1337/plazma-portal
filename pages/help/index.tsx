@@ -21,7 +21,10 @@ import { ISupportTicket, TSupportTicketStatus } from 'types/support'
 import { useOrders } from 'context/OrderContext'
 import { useCart } from 'context/CartContext'
 import { telegramSendTicket } from 'helpers/telegram'
-
+import { notify } from 'utils/notify'
+import { RiErrorWarningLine } from "react-icons/ri"
+import { FaCheckCircle } from 'react-icons/fa'
+import { metrika } from 'utils/metrika'
 
 interface HelpPageProps {
     faqs: any
@@ -111,7 +114,11 @@ export default function HelpPage(props: HelpPageProps) {
         setSupportFormClicked(true)
 
         if (!currentUser.approved) {
-            toast.error('Ваш аккаунт заблокирован. Вы не можете оформлять заказы')
+            notify({
+                icon: <RiErrorWarningLine />,
+                title: 'Заявка не отправлена.',
+                message: 'Ваш аккаунт заблокирован. Вы не можете отправлять заявки.',
+            })
             return
         }
 
@@ -190,7 +197,7 @@ export default function HelpPage(props: HelpPageProps) {
                 const response = await telegramSendTicket(targetTicket).then(res => {
                     // console.log({ res })
                     return res
-                }) 
+                })
 
                 // const ticketToTelegram = {
                 //     id: ticketIsPlace.data.data.id,
@@ -206,7 +213,12 @@ export default function HelpPage(props: HelpPageProps) {
 
                 // const response = await sendOrderToTelegram(orderToTelegram) // Предполагается, что здесь вызывается функция отправки заказа
                 if (response && ticketIsPlace) {
-                    toast.success('Заявка отправлена!')
+                    metrika.supportTicket()
+                    notify({
+                        icon: <FaCheckCircle />,
+                        title: 'Заявка отправлена!',
+                        message: 'Спасибо за обращение.',
+                    })
                     setModalIsOpen(true)
                     setVisibleLoadingOverlay(false)
                     setSupportComment('')
@@ -214,7 +226,11 @@ export default function HelpPage(props: HelpPageProps) {
                     // console.log('responseStrapi: ', responseStrapi)
                 }
             } catch (error) {
-                toast.error('Ошибка при отправке заказа.')
+                notify({
+                    icon: <RiErrorWarningLine />,
+                    title: 'Заявка не отправлена.',
+                    message: 'Ошибка при отправке заявки.',
+                })
                 setVisibleLoadingOverlay(false)
             }
         }

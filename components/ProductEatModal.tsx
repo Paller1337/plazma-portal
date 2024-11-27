@@ -5,8 +5,9 @@ import { ReactSVG } from 'react-svg'
 import { useRouter } from 'next/router'
 import { DEFAULTS } from 'defaults'
 import { useCart } from 'context/CartContext'
-import { ItemMenuV2 } from 'helpers/iiko/IikoApi/types'
+import { ItemMenuV2, Product } from 'helpers/iiko/IikoApi/types'
 import { Image } from '@mantine/core'
+import { IStoreStatus } from 'utils/storeStatus'
 
 ReactModal.setAppElement('#__next'); // Для Next.js обычно это #__next, для create-react-app это #root
 
@@ -15,6 +16,8 @@ interface IProps {
     onClose: () => void,
     storeId?: string,
     product?: ItemMenuV2
+    productNomenclature?: Product
+    storeStatus?: IStoreStatus
 }
 
 
@@ -38,7 +41,7 @@ const ProductEatModal = (props: IProps) => {
         props.onClose()
     }
 
-    
+
     const price = props.product?.itemSizes[0].prices[0].price
     const itemData = props.product?.itemSizes[0]
 
@@ -58,13 +61,15 @@ const ProductEatModal = (props: IProps) => {
 
                 <div className='Product-Modal__info'>
                     {/* {props.product?.memo_text ? <span className='Product-Modal__info-memo'>{props.product?.memo_text}</span> : <></>} */}
-                    {props.product?.name ? <span className='Product-Modal__info-title'>{props.product?.name}</span> : <></>}
+                    {props.productNomenclature?.seoTitle ? <span className='Product-Modal__info-title'>{props.productNomenclature?.seoTitle}</span> : <></>}
                     {/* {props.product?.warning_text ? <span className='Product-Modal__info-warning_text'>{props.product?.warning_text}</span> : <></>} */}
-                    {props.product?.description ? <span className='Product-Modal__info-description'>{props.product?.description}</span> : <></>}
+                    {props.productNomenclature?.seoDescription ? <span className='Product-Modal__info-description'>{props.productNomenclature?.seoDescription}</span> : <></>}
                     {price && price > 0 ? <span className='Product-Modal__info-price'>{price} руб.</span> : <></>}
                 </div>
                 <div className="Product-Modal__actions">
-                    <Button text='Добавить' stretch bgColor='#56754B' color='#fff' onClick={handleAddToCart} />
+                    <Button text={props.storeStatus.isOpen ? 'Добавить' : 'До открытия ' + props.storeStatus.untilOpen}
+                        stretch bgColor='#56754B' color='#fff' onClick={handleAddToCart} disabled={!props.storeStatus.isOpen}
+                    />
                 </div>
             </div>
         </ReactModal>

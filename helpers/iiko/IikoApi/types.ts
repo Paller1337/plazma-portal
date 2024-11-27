@@ -74,7 +74,7 @@ interface Terminal {
 }
 
 /** Продукт меню */
-interface Product {
+export interface Product {
     /** Уникальный идентификатор продукта */
     id: string;
     /** Код продукта */
@@ -125,16 +125,24 @@ interface Product {
     doNotPrintInCheque?: boolean;
     /** Порядок отображения */
     order?: number;
+    seoDescription: string
+    seoKeywords: string
+    seoText: string
+    seoTitle: string
 }
 
 /** Цена для размера */
 interface SizePrice {
     /** Идентификатор размера */
     sizeId: string;
-    /** Название размера */
-    sizeName: string;
     /** Цена */
-    price: number;
+    price: {
+        currentPrice: number
+        isIncludedInMenu: boolean
+        nextDatePrice: number
+        nextIncludedInMenu: boolean
+        nextPrice: number
+    };
 }
 
 /** Модификатор */

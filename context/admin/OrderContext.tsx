@@ -1,7 +1,7 @@
 import axios from 'axios'
 import React, { createContext, useContext, useReducer, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { io } from 'socket.io-client'
+import { io, Socket } from 'socket.io-client'
 import { useAuth } from './AuthContext'
 import { DEFAULTS } from 'defaults'
 import { ISupportTicket } from 'types/support'
@@ -106,14 +106,18 @@ const OrderContext = createContext<{
         count: number
         list: any[]
     }
-}>({ state: initialState, dispatch: () => null, ordersIsLoading: true, ticketsIsLoading: true, productsList: [] })
+    socketRef: React.MutableRefObject<Socket>
+}>({
+    state: initialState, dispatch: () => null, ordersIsLoading: true,
+    ticketsIsLoading: true, productsList: [], socketRef: null
+})
 
 export const OrderProvider = ({ children }) => {
     const [state, dispatch] = useReducer(orderReducer, initialState)
-    const { isAuthenticated, currentUser } = useAuth()
+    const { isAuthenticated, currentUser, visitorId } = useAuth()
     const [ordersIsLoading, setOrdersIsLoading] = useState(true)
     const [ticketsIsLoading, setTicketsIsLoading] = useState(true)
-    const socketRef = useRef(null)
+    const socketRef = useRef<Socket>(null)
     const [online, setOnline] = useState(0)
     const [clientsList, setClientsList] = useState([])
 
@@ -269,11 +273,12 @@ export const OrderProvider = ({ children }) => {
 
     useEffect(() => {
         if (isAuthenticated && currentUser.id) {
-            if (!socketRef.current) {
+            if (!socketRef.current || !visitorId) {
                 socketRef.current = io(DEFAULTS.SOCKET.URL, {
                     query: {
-                        userId: 'a_' + currentUser.id,
+                        userId: 'admin_' + currentUser.id,
                         role: currentUser.role,
+                        visitorId: visitorId,
                     }
                 });
 
@@ -298,7 +303,7 @@ export const OrderProvider = ({ children }) => {
                     //         previous_status: response.data.newData.data.attributes.previous_status,
                     //     },
                     // })
-                    toast.success(`Новый статус заказа (${checkOrderStatus(newStatus)})`)
+                    // toast.success(`Новый статус заказа (${checkOrderStatus(newStatus)})`)
                 })
 
                 socket.on('orderCreate', (data) => {
@@ -318,7 +323,7 @@ export const OrderProvider = ({ children }) => {
                         type: 'UPDATE_TICKET_STATUS',
                         payload: { ticketId, status: newStatus },
                     });
-                    toast.success(`Новый статус заявки (${ticketStatus(newStatus)})`)
+                    // toast.success(`Новый статус заявки (${ticketStatus(newStatus)})`)
                 });
 
                 socket.on('supportTicketCreate', (data) => {
@@ -350,6 +355,8 @@ export const OrderProvider = ({ children }) => {
         }
     }, [isAuthenticated, currentUser])
 
+
+
     return (
         <OrderContext.Provider value={{
             state,
@@ -357,7 +364,8 @@ export const OrderProvider = ({ children }) => {
             ordersIsLoading,
             ticketsIsLoading,
             productsList,
-            clients: { count: online, list: clientsList }
+            clients: { count: online, list: clientsList },
+            socketRef
         }}>
             {children}
         </OrderContext.Provider>

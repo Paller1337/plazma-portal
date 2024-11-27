@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return
     }
 
-    const { phone, name, email, role } = req.body.data;
+    const { phone, name, email, role, isSubscribe } = req.body.data;
 
     try {
         const isGuest = await axios.get(`${DEFAULTS.STRAPI.url}/api/guests/`, {
@@ -42,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 email,
                 role,
                 approved: true,
-                mailing: false
+                mailing: isSubscribe ? isSubscribe : false
             }
         }, {
             headers: {

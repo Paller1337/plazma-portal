@@ -6,13 +6,15 @@ import { useRouter } from 'next/router'
 // import { IProduct } from 'pages/store/[id]'
 import { DEFAULTS } from 'defaults'
 import { useCart } from 'context/CartContext'
-import { InputBase, PinInput, TextInput } from '@mantine/core'
+import { InputBase, Paper, PinInput, Text, Stack, Switch, TextInput, Group } from '@mantine/core'
 import { IMaskInput } from 'react-imask'
 import toast from 'react-hot-toast'
 import axios from 'axios'
 import { axiosInstance } from 'helpers/axiosInstance'
 import { useAuth } from 'context/AuthContext'
 import { sendAuthCode } from 'helpers/send-code'
+import { FaCheckCircle, FaSms } from 'react-icons/fa'
+import { notify } from 'utils/notify'
 
 ReactModal.setAppElement('#__next')
 
@@ -46,6 +48,7 @@ const AuthModal = (props: IProps) => {
 
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
+    const [isSubscribe, setIsSubscribe] = useState(false)
     const [error, setError] = useState('')
 
     const [guest, setGuest] = useState(null)
@@ -59,6 +62,11 @@ const AuthModal = (props: IProps) => {
         } else {
             setError('Неправилньый адрес почты')
         }
+    }
+
+    const handleSubscribeChange = (event) => {
+        console.log({ event })
+        setIsSubscribe(event.target.checked)
     }
 
     const handleNameChange = (event) => setName(event.target.value)
@@ -85,20 +93,6 @@ const AuthModal = (props: IProps) => {
         return n
     }
 
-
-
-    // useEffect(() => console.log('phone: ', phone), [phone])
-
-
-
-    
-
-    // useEffect(() => {
-    //     if (codeIsSend) {
-    //         console.log('Ваш SMS код: ', smsCode)
-    //         toast.success(`Ваш SMS код: ${smsCode}`)
-    //     }
-    // }, [codeIsSend, smsCode])
 
     const sendCode = async () => {
         if (codeIsSend && codeTimer) {
@@ -144,9 +138,13 @@ const AuthModal = (props: IProps) => {
     const register = async () => {
         if (emailRegex.test(email)) {
             console.log({ name, email, phone });
-            const result = await registerGuest(phone, name, email)
+            const result = await registerGuest(phone, name, email, isSubscribe)
             if (result.data.id) {
-                toast.success('Регистрация прошла успешно')
+                notify({
+                    icon: <FaCheckCircle />,
+                    title: 'Добро пожаловать',
+                    message: 'Вы зарегистрировались.',
+                })
                 props.onClose()
             }
             console.log('register result: ', result)
@@ -181,6 +179,10 @@ const AuthModal = (props: IProps) => {
     useEffect(() => {
         if (pinValue.length != 0) setCodeIsFailed(false)
     }, [pinValue])
+
+    useEffect(() => {
+        console.log({ isSubscribe })
+    }, [isSubscribe])
 
     return (
         <ReactModal
@@ -229,6 +231,7 @@ const AuthModal = (props: IProps) => {
                                 <div className='Auth-Modal__form-hidden'>
                                     <span>Введите код из SMS</span>
                                     <PinInput
+                                        autoFocus
                                         type={/^[0-9]*$/}
                                         inputType="tel"
                                         inputMode="numeric"
@@ -245,7 +248,20 @@ const AuthModal = (props: IProps) => {
                                     />
                                     <span className={`error${codeIsFailed ? ' visible' : ''}`}>неверный код</span>
                                 </div> :
-                                <></>
+                                <Paper mt={12} radius={'md'} p={12} style={{ border: '1px solid rgb(86, 117, 75)' }}>
+                                    <Group gap={12} wrap='nowrap'>
+                                        <Stack
+                                            bg={'rgb(86, 117, 75)'}
+                                            p={6}
+                                            style={{ borderRadius: 32 }}
+                                            justify='center'
+                                            align='center'
+                                        >
+                                            <FaSms size={18} color='white' />
+                                        </Stack>
+                                        <Text fz={15} fw={500}  >Мы отправим вам SMS сообщение с кодом для входа</Text>
+                                    </Group>
+                                </Paper>
                             }
                         </div>
                         <div className="Auth-Modal__actions">
@@ -268,29 +284,47 @@ const AuthModal = (props: IProps) => {
                             <span className='description'>Это нужно чтобы мы могли нормально коммуницировать</span>
                         </div>
                         <div className='Auth-Modal__form'>
-                            <TextInput
-                                label="Как к вам обращаться?"
-                                withAsterisk
-                                placeholder="Имя"
-                                inputWrapperOrder={['label', 'input', 'error']}
-                                w={'100%'}
-                                size='md'
-                                radius='md'
-                                value={name}
-                                onChange={handleNameChange}
-                            />
+                            <Stack gap={12}>
+                                <TextInput
+                                    label="Как к вам обращаться?"
+                                    withAsterisk
+                                    placeholder="Имя"
+                                    inputWrapperOrder={['label', 'input', 'error']}
+                                    w={'100%'}
+                                    size='md'
+                                    radius='md'
+                                    value={name}
+                                    onChange={handleNameChange}
+                                />
 
-                            <TextInput
-                                label="Почта"
-                                inputWrapperOrder={['label', 'input', 'error']}
-                                w={'100%'}
-                                size='md'
-                                radius='md'
-                                placeholder="ваша-почта@yandex.ru"
-                                value={email}
-                                onChange={handleEmailChange}
-                                error={error}
-                            />
+                                <TextInput
+                                    label="Почта"
+                                    inputWrapperOrder={['label', 'input', 'error']}
+                                    w={'100%'}
+                                    size='md'
+                                    radius='md'
+                                    placeholder="ваша-почта@yandex.ru"
+                                    value={email}
+                                    onChange={handleEmailChange}
+                                    error={error}
+                                />
+
+                                <Paper radius={'md'} p={12} style={{ border: '1px solid rgb(86, 117, 75)' }}>
+                                    <Switch
+                                        defaultValue={isSubscribe.toString()}
+                                        onChange={handleSubscribeChange}
+                                        label='Я хочу получать информацию об акциях и специальных предложениях'
+                                        styles={{
+                                            label: {
+                                                fontSize: 13,
+                                            },
+                                            body: {
+                                                alignItems: 'center'
+                                            }
+                                        }}
+                                    />
+                                </Paper>
+                            </Stack>
                         </div>
                         <div className="Auth-Modal__actions">
                             <Button text='Зарегистрироваться' stretch bgColor='#56754B' color='#fff' onClick={() => register()} />

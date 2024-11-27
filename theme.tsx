@@ -1,4 +1,4 @@
-import { Button, createTheme, CSSVariablesResolver } from "@mantine/core"
+import { Button, createTheme, CSSVariablesResolver, Switch } from "@mantine/core"
 
 export const plazmaTheme = createTheme({
     components: {
@@ -9,6 +9,11 @@ export const plazmaTheme = createTheme({
                 py: 12,
             },
         }),
+        Switch: Switch.extend({
+            defaultProps: {
+                color: 'rgb(86, 117, 75)'
+            },
+        })
     },
 })
 
@@ -18,6 +23,7 @@ export const resolver: CSSVariablesResolver = (themeColor) => ({
         '--portal-color-text': '#262626',
         '--portal-color-text-secondary': '#485066',
     },
-    light: {},
+    light: {
+    },
     dark: {},
 })

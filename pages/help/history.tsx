@@ -14,7 +14,8 @@ import { withAuthServerSideProps } from 'helpers/withAuthServerSideProps'
 import { useOrders } from 'context/OrderContext'
 import { ISupportTicket } from 'types/support'
 import SupportTicketItem from '@/components/SupportTicketListItem'
-import { Loader } from '@mantine/core'
+import { Loader, Paper, Stack, Switch, Text, Title } from '@mantine/core'
+import Button from '@/components/Button'
 
 
 
@@ -48,6 +49,8 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
 
 export default function SupportTickets(props: SupportTicketsProps) {
     const { state, ticketsIsLoading } = useOrders()
+    const { openAuthModal, isAuthenticated } = useAuth()
+
     const tickets = state.tickets
     useEffect(() => console.log('tickets: ', state))
     return (<>
@@ -55,12 +58,21 @@ export default function SupportTickets(props: SupportTicketsProps) {
         <main className='--gray-main'>
             <div className='page-wrapper'>
                 <div className='order-list'>
-                    {ticketsIsLoading ? <Loader color='gray' size={24} style={{margin: '48px auto'}} /> :
+                    {isAuthenticated ? ticketsIsLoading ? <Loader color='gray' size={24} style={{ margin: '48px auto' }} /> :
                         tickets?.length > 0 ? tickets.sort((a, b) => b.id - a.id).map((x, i) =>
                             <SupportTicketItem key={(x.id + x.create_at).toString()} ticket={x} />
                         )
                             :
                             <div className='order-list__nothing'>У вас нет заявок</div>
+
+                        :
+                        // eslint-disable-next-line react/jsx-no-undef
+                        <Paper radius={'md'} p={12} style={{ border: '1px solid rgb(86, 117, 75)' }} mt={48}>
+                            <Stack align='center'>
+                                <Title size={'18'} c={'#252525'}>Необходимо авторизоваться</Title>
+                                <Button text='Авторизоваться' stretch bgColor='#56754B' color='#fff' onClick={() => openAuthModal()} />
+                            </Stack>
+                        </Paper>
                     }
                 </div>
             </div>

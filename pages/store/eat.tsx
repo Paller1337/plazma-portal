@@ -12,37 +12,40 @@ import { useEffect, useState } from 'react'
 import { ReactSVG } from 'react-svg'
 import * as iiko from '../../helpers/iiko/iikoExternalClientApi'
 import { MenusV2Response, MenuV2ByIdResponse } from 'helpers/iiko/IikoApi/types'
-import { Box, Image, Loader, SegmentedControl, Stack, Text } from '@mantine/core'
+import { Box, Image, Loader, Paper, SegmentedControl, Skeleton, Stack, Text } from '@mantine/core'
 import { useMove } from '@mantine/hooks'
 // import { Carousel } from '@mantine/carousel'
 import dynamic from 'next/dynamic'
 import ProductEatModal from '@/components/ProductEatModal'
 import Id from 'pages/admin/banquet-management/[id]'
 import { default as NextImage } from 'next/image'
+import { IStore } from './[id]'
+import { getStoreStatus } from 'utils/storeStatus'
+import { getStoreResult } from 'helpers/getStoreResult'
 
 const EatMenuControl = dynamic(() => import('@/components/EatMenuControl').then((mod) => mod.default), { ssr: false })
 
-export interface IProduct {
-    id: number,
-    name: string,
-    memo_text?: string,
-    description?: string,
-    price?: number,
-    for_sale?: boolean,
-    image?: string,
-    warning_text?: string,
-}
+// export interface IProduct {
+//     id: number,
+//     name: string,
+//     memo_text?: string,
+//     description?: string,
+//     price?: number,
+//     for_sale?: boolean,
+//     image?: string,
+//     warning_text?: string,
+// }
 
-interface IStore {
-    id?: string,
-    title?: string
-    description?: string
-    image?: string
-    products?: IProduct[]
-    isActive?: boolean
-    isCustom?: boolean
-    customId?: string
-}
+// interface IStore {
+//     id?: string,
+//     title?: string
+//     description?: string
+//     image?: string
+//     products?: IProduct[]
+//     isActive?: boolean
+//     isCustom?: boolean
+//     customId?: string
+// }
 
 interface EatPageProps {
     menus?: MenusV2Response
@@ -55,8 +58,9 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
 
 
     const storeData = (await axiosInstance.get(`/api/store/custom/eat`)).data
-    const store = storeData.data.length > 0 ? storeData.data[0] : null
-    // console.log(store)
+    const data = storeData.data?.length > 0 ? storeData.data[0] : null
+    const store = getStoreResult(data)
+
     try {
         const menus = await iiko.fetchMenusV2()
         const targetId = menus.externalMenus.find(m => m.id === id)?.id
@@ -64,30 +68,7 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
             props: {
                 menus: menus,
                 targetId: targetId ? targetId : menus.externalMenus[0].id,
-                store: {
-                    id: store?.id,
-                    title: store?.attributes?.title || '',
-                    description: store?.attributes?.description || '',
-                    image: store?.attributes?.image?.data?.attributes?.url || '',
-                    preview_size: store?.attributes?.preview_size || 'min',
-                    category: {
-                        id: store?.attributes?.category?.data?.id || 0,
-                        name: store?.attributes?.category?.data?.attributes?.name || '',
-                    },
-                    products: store?.attributes?.products?.data ? store?.attributes?.products?.data?.map(p => ({
-                        id: p.id,
-                        name: p.attributes?.name || 'Без имени',
-                        description: p.attributes?.description || '',
-                        price: p.attributes?.price || 0,
-                        for_sale: p.attributes?.for_sale || false,
-                        memo_text: p.attributes?.memo_text || '',
-                        warning_text: p.attributes?.warning_text || '',
-                        image: p.attributes?.image?.data.attributes.url || '',
-                    })) : [],
-                    customId: store?.attributes?.customId || '',
-                    isActive: store?.attributes?.isActive || false,
-                    isCustom: store?.attributes?.isCustom || false,
-                }
+                store: store
             } as EatPageProps
         }
     } catch (error) {
@@ -150,6 +131,7 @@ const ImageLoader = ({ src }) => {
                     alt=''
                     objectFit='cover'
                     fill
+                    fetchPriority='high'
                     placeholder="blur"
                     blurDataURL={rgbDataURL(38, 46, 74)}
                 />
@@ -163,6 +145,7 @@ export default function CustomStorePage(props: EatPageProps) {
 
     const [productModalIsOpen, setProductModalIsOpen] = useState(false)
     const [currentProduct, setCurrentProduct] = useState(null)
+    const [currentProductNomenclature, setCurrentProductNomenclature] = useState(null)
 
     const [currentMenuId, setCurrentMenuId] = useState(null)
     const [currentMenu, setCurrentMenu] = useState<MenuV2ByIdResponse>(null)
@@ -170,9 +153,15 @@ export default function CustomStorePage(props: EatPageProps) {
     const [isShadow, setIsShadow] = useState(false)
 
     const [isActive, setIsActive] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
 
+    const storeStatus = getStoreStatus(props.store.storeWorktime)
+    const paddingOffset = (storeStatus.untilClose_min && storeStatus.untilClose_min < 45) || storeStatus.untilOpen_min ? 240 : 190
+    const firstCat = currentMenu?.itemCategories.filter(c => c.items.length > 0)[0]
 
-    const { state, productsInfo, storesInfo, menuCache, iikoMenuIsFetched } = useCart()
+    useEffect(() => console.log({ worktime: getStoreStatus(props.store.storeWorktime) }), [])
+
+    const { state, productsInfo, nomenclature, menuCache, iikoMenuIsFetched } = useCart()
     const router = useRouter()
 
     // @ts-ignore
@@ -181,7 +170,7 @@ export default function CustomStorePage(props: EatPageProps) {
 
     const handleScroll = () => {
         const position = window.pageYOffset
-        if (position > 30) setIsShadow(true)
+        if (position > (paddingOffset - 160)) setIsShadow(true)
         else setIsShadow(false)
     }
 
@@ -199,7 +188,7 @@ export default function CustomStorePage(props: EatPageProps) {
 
         if (props.targetId && props.store?.isActive) {
             setCurrentMenuId(props.targetId)
-            fetchMenu()
+            fetchMenu().then(() => setIsLoading(false))
         }
     }, [props.targetId, props.store?.isActive, iikoMenuIsFetched])
 
@@ -211,10 +200,15 @@ export default function CustomStorePage(props: EatPageProps) {
     }, [])
 
 
-    // useEffect(() => {
-    //     console.log('props ', props)
-    //     // console.log('currentStoreState: ', currentStoreState)
-    // }, [])
+    useEffect(() => {
+        if (currentMenu && nomenclature) {
+            const product = nomenclature?.products.find(x => x.id === currentMenu?.itemCategories[0]?.items[14]?.itemId)
+            console.log({ product })
+            console.log({ menuCache })
+            console.log({ nomenclature })
+        }
+        // console.log('currentStoreState: ', currentStoreState)
+    }, [currentMenu, nomenclature])
 
     // useEffect(() => {
     //     console.log('currentMenuId ', currentMenuId)
@@ -227,9 +221,10 @@ export default function CustomStorePage(props: EatPageProps) {
     // }, [])
 
     const closeProductModal = () => setProductModalIsOpen(false)
-    const openProductModal = (product) => {
+    const openProductModal = (product, productNomen) => {
         setProductModalIsOpen(true)
         setCurrentProduct(product)
+        setCurrentProductNomenclature(productNomen)
     }
 
     useEffect(() => {
@@ -246,7 +241,14 @@ export default function CustomStorePage(props: EatPageProps) {
 
     const tprice = 10000
     return (<>
-        <ProductEatModal isOpen={productModalIsOpen} onClose={closeProductModal} product={currentProduct} storeId={customStoreId} />
+        <ProductEatModal
+            isOpen={productModalIsOpen}
+            onClose={closeProductModal}
+            product={currentProduct}
+            productNomenclature={currentProductNomenclature}
+            storeId={customStoreId}
+            storeStatus={storeStatus}
+        />
         {/* <div className='index-preview'>
             <div className='store-header'>
                 <div className='store-header__content'>
@@ -278,86 +280,119 @@ export default function CustomStorePage(props: EatPageProps) {
                                 <span className={'store-content__description'}>{props.store?.description}</span>
                             </Stack>
                         </Stack>
+                        <Stack gap={8}>
+                            {storeStatus.untilClose_min && storeStatus.untilClose_min < 45 ?
+                                <Paper mt={8} px={12} py={4} radius={'lg'} bg={'orange'} w={'fit-content'}>
+                                    <Text fw={600} fz={14} c={'white'}>До закрытия {storeStatus.untilClose}</Text>
+                                </Paper>
+                                : <></>
+                            }
+                            {storeStatus.untilOpen_min ?
+                                <Paper mt={8} px={12} py={4} bg={'green'} radius={'lg'} w={'fit-content'}>
+                                    <Text fw={600} fz={14} c={'white'}>До открытия {storeStatus.untilOpen}</Text>
+                                </Paper>
+                                : <></>
+                            }
 
-                        {/* <span className='store-content__description'>{'Для оформления заказа необходимо авторизоваться'}</span> */}
-
-                        {isActive ? <EatMenuControl data={props.menus} onChange={setCurrentMenuId} currentMenuId={currentMenuId} /> : <></>}
+                            {isLoading ? <Skeleton height={24} radius="xl" /> :
+                                isActive ? <EatMenuControl data={props.menus} onChange={setCurrentMenuId} currentMenuId={currentMenuId} /> : <></>
+                            }
+                        </Stack>
                     </Stack>
                 </div>
-                {isActive ?
-                    <Stack p={'190px 0 150px'}>
-                        {currentMenu && currentMenu?.itemCategories.length > 0 && currentMenu?.itemCategories.filter(c => c.items.length > 0).length > 0
-                            ? currentMenu?.itemCategories.filter(c => c.items.length > 0).map((cat, i) => {
-                                const itemsWithImage = cat.items.reduce((acc, item) => {
-                                    if (item.itemSizes[0].buttonImageUrl || item.itemSizes[0].buttonImageCroppedUrl) {
-                                        return acc + 1;
-                                    }
-                                    return acc;
-                                }, 0)
+                {isLoading || !firstCat ?
+                    <Stack p={`${paddingOffset}px 0 150px`} gap={24}>
+                        <Stack gap={8}>
+                            <Skeleton height={32} width={'30%'} radius="md" />
+                            <Skeleton height={12} width={'50%'} radius="md" />
+                            <Stack gap={8}>
+                                <Skeleton height={120} radius="md" />
+                                <Skeleton height={120} radius="md" />
+                                <Skeleton height={120} radius="md" />
+                            </Stack>
+                        </Stack>
+                        <Stack gap={8}>
+                            <Skeleton height={32} width={'30%'} radius="md" />
+                            <Skeleton height={12} width={'50%'} radius="md" />
+                            <Stack gap={8}>
+                                <Skeleton height={120} radius="md" />
+                                <Skeleton height={120} radius="md" />
+                                <Skeleton height={120} radius="md" />
+                            </Stack>
+                        </Stack>
+                    </Stack>
+                    : isActive ?
+                        <Stack p={`${paddingOffset}px 0 150px`}>
+                            {currentMenu && currentMenu?.itemCategories.length > 0 && currentMenu?.itemCategories.filter(c => c.items.length > 0).length > 0
+                                ? currentMenu?.itemCategories.filter(c => c.items.length > 0).map((cat, i) => {
+                                    const itemsWithImage = cat.items.reduce((acc, item) => {
+                                        if (item.itemSizes[0].buttonImageUrl || item.itemSizes[0].buttonImageCroppedUrl) {
+                                            return acc + 1;
+                                        }
+                                        return acc;
+                                    }, 0)
 
-                                return (
-                                    <Stack key={cat.name + cat.id} gap={0} mt={i > 0 ? '24px' : '0px'}>
-                                        <Text size='xl' fw={600} mb={4}>{cat.name}</Text>
-                                        {cat.description ? <Text size='sm' fw={500}>{cat.description}</Text> : <></>}
-                                        <div
-                                            className={`store-content__products${itemsWithImage === 0 ? ' one-inline' : ''}`}
-                                            style={{ marginTop: '16px', marginBottom: '16px' }}
-                                        >
-                                            {cat.items.length > 0 ?
-                                                itemsWithImage > 0
-                                                    ? cat.items.map(item => {
-                                                        const price = item.itemSizes[0].prices[0].price
-                                                        const itemData = item.itemSizes[0]
+                                    return (
+                                        <Stack key={cat.name + cat.id} gap={0} mt={i > 0 ? '24px' : '0px'}>
+                                            <Text size='xl' fw={600} mb={4}>{cat.name}</Text>
+                                            {cat.description ? <Text size='sm' fw={500}>{cat.description}</Text> : <></>}
+                                            <div
+                                                className={`store-content__products${itemsWithImage === 0 ? ' one-inline' : ''}`}
+                                                style={{ marginTop: '16px', marginBottom: '16px' }}
+                                            >
+                                                {cat.items.length > 0 ?
+                                                    itemsWithImage > 0
+                                                        ? cat.items.map(item => {
+                                                            const price = item.itemSizes[0].prices[0].price
+                                                            const itemData = item.itemSizes[0]
 
-                                                        const isImage = item.itemSizes[0].buttonImageUrl || item.itemSizes[0].buttonImageCroppedUrl ? true : false
-                                                        // if (itemData.buttonImageUrl) {
-                                                        //     await axios.get(`${itemData.buttonImageUrl}`, {
-                                                        //         onUploadProgress: progressEvent => console.log(progressEvent)
-                                                        //     })
-                                                        // }
-                                                        return (
-                                                            <div key={item.name + item.itemId} className='store-content__product'
-                                                                onClick={() => openProductModal(item)}
-                                                            >
-                                                                <div className={`store-content__product-image${price && price > 0 ? ' with-price' : ''}`}>
-                                                                    <ImageLoader src={itemData.buttonImageUrl} />
-                                                                    {price && price > 0 ? <span className='store-content__product-price'>{price} ₽</span> : <></>}
-                                                                </div>
-                                                                <div className='store-content__product-info'>
-                                                                    <span className='store-content__product-name'>{item.name}</span>
-                                                                    {/* {item.tags.length > 0 ? <span className='store-content__product-memo_text'>
+                                                            const isImage = item.itemSizes[0].buttonImageUrl || item.itemSizes[0].buttonImageCroppedUrl ? true : false
+                                                            const itemNomen = nomenclature.products.find(x => x.id === item.itemId)
+                                                            return (
+                                                                <div key={item.name + item.itemId} className='store-content__product'
+                                                                    onClick={() => openProductModal(item, itemNomen)}
+                                                                >
+                                                                    <div className={`store-content__product-image${price && price > 0 ? ' with-price' : ''}`}>
+                                                                        <ImageLoader src={itemData.buttonImageUrl} />
+                                                                        {price && price > 0 ? <span className='store-content__product-price'>{price} ₽</span> : <></>}
+                                                                    </div>
+                                                                    <div className='store-content__product-info'>
+                                                                        <span className='store-content__product-name'>{itemNomen.seoTitle}</span>
+                                                                        {/* {item.tags.length > 0 ? <span className='store-content__product-memo_text'>
                                                             {item.tags?.map(tag => (`${tag.}`))}
                                                         </span> : <></>} */}
-                                                                </div>
-                                                            </div>
-                                                        )
-                                                    })
-                                                    : cat.items.map(item => {
-                                                        const price = item.itemSizes[0].prices[0].price
-                                                        const itemData = item.itemSizes[0]
-                                                        return (
-                                                            <div
-                                                                key={item.name + item.itemId}
-                                                                className='store-content__product inline'
-                                                                onClick={() => openProductModal(item)}
-                                                            >
-                                                                <div className={`store-content__product-image${tprice && tprice > 0 ? ' with-price' : ''}`}                                                            >
-                                                                    <div className='store-content__product-info'>
-                                                                        <span className='store-content__product-name'>{item.name}</span>
-                                                                        <span className='store-content__product-size'> </span>
                                                                     </div>
-                                                                    {price && price > 0 ? <span className='store-content__product-price'>{price} ₽</span> : <></>}
                                                                 </div>
-                                                            </div>
-                                                        )
-                                                    })
-                                                : <></>}
-                                        </div>
-                                    </Stack>
-                                )
-                            }) : <></>}
+                                                            )
+                                                        })
+                                                        : cat.items.map(item => {
+                                                            const price = item.itemSizes[0].prices[0].price
+                                                            const itemData = item.itemSizes[0]
+                                                            const itemNomen = nomenclature.products.find(x => x.id === item.itemId)
+                                                            console.log({ itemN: itemNomen })
+                                                            return (
+                                                                <div
+                                                                    key={item.name + item.itemId}
+                                                                    className='store-content__product inline'
+                                                                    onClick={() => openProductModal(item, itemNomen)}
+                                                                >
+                                                                    <div className={`store-content__product-image${tprice && tprice > 0 ? ' with-price' : ''}`} style={{ background: itemNomen?.seoTitle ? 'green' : '#f1f3f5' }}>
+                                                                        <div className='store-content__product-info'>
+                                                                            <span className='store-content__product-name'>{itemNomen?.seoTitle ? itemNomen?.seoTitle : item.name}</span>
+                                                                            <span className='store-content__product-size'> </span>
+                                                                        </div>
+                                                                        {price && price > 0 ? <span className='store-content__product-price'>{price} ₽</span> : <></>}
+                                                                    </div>
+                                                                </div>
+                                                            )
+                                                        })
+                                                    : <></>}
+                                            </div>
+                                        </Stack>
+                                    )
+                                }) : <></>}
 
-                        {/* <div className='store-content__product inline'>
+                            {/* <div className='store-content__product inline'>
                             <div className={`store-content__product-image${tprice && tprice > 0 ? ' with-price' : ''}`}>
                                 <div className='store-content__product-info'>
                                     <span className='store-content__product-name'>Название</span>
@@ -366,23 +401,23 @@ export default function CustomStorePage(props: EatPageProps) {
                                 {tprice && tprice > 0 ? <span className='store-content__product-price'>{tprice} ₽</span> : <></>}
                             </div>
                         </div> */}
-                    </Stack>
+                        </Stack>
 
-                    : <Stack p={'190px 0 150px'} align='center'>
-                        <Text size='xl' fw={500}>Заказ еды сейчас не работает</Text>
+                        : <Stack p={'190px 0 150px'} align='center'>
+                            <Text size='xl' fw={500}>Заказ еды сейчас не работает</Text>
 
-                        <Button text='Вернуться на главную' bgColor='rgb(86, 117, 75)' onClick={() => router.push('/', undefined, { shallow: true })} />
-                    </Stack>}
+                            <Button text='Вернуться на главную' bgColor='rgb(86, 117, 75)' onClick={() => router.push('/', undefined, { shallow: true })} />
+                        </Stack>}
             </div>
 
 
             {currentStoreState && currentStoreState?.order.length > 0 ?
                 <div className='store-cart-button'>
-                    <Link className='portal-button portal-button_stretch' href={`/basket/${customStoreId}`}
+                    <Link className={`portal-button portal-button_stretch ${!storeStatus.isOpen ? ' portal-button_disabled' : ''}`} href={`/basket/${customStoreId}`}
                         style={{ backgroundColor: 'rgb(86, 117, 75)' }}
                         prefetch
                     >
-                        Перейти к заказу {total ? `${total}₽` : ''}
+                        {!storeStatus.isOpen ? 'До открытия ' + storeStatus.untilOpen : `Перейти к заказу ${total ? `${total}₽` : ''}`}
                     </Link>
                     {/* <Button text='' bgColor='' stretch onClick={() => router.push(`/basket/${props.store?.id}`)} /> */}
                 </div>

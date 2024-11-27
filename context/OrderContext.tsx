@@ -8,6 +8,10 @@ import { DEFAULTS } from 'defaults';
 import { ISupportTicket } from 'types/support'
 import { TOrderStatus } from 'types/order';
 import { ticketStatus } from 'helpers/support/tickets';
+import { notify } from 'utils/notify';
+import { FaCheckCircle } from "react-icons/fa"
+import { MdUpdate } from "react-icons/md"
+
 
 interface IOrderProduct {
     id: string;
@@ -103,14 +107,21 @@ const OrderContext = createContext<{
     dispatch: React.Dispatch<any>
     ordersIsLoading: boolean
     ticketsIsLoading: boolean
-}>({ state: initialState, dispatch: () => null, ordersIsLoading: true, ticketsIsLoading: true });
+    ws: React.MutableRefObject<Socket>
+}>({
+    state: initialState,
+    dispatch: () => null,
+    ordersIsLoading: true,
+    ticketsIsLoading: true,
+    ws: null
+});
 
 export const OrderProvider = ({ children }) => {
     const ws = useRef<Socket>(null)
     const [state, dispatch] = useReducer(orderReducer, initialState)
     const [ordersIsLoading, setOrdersIsLoading] = useState(true)
     const [ticketsIsLoading, setTicketsIsLoading] = useState(true)
-    const { isAuthenticated, currentUser, visitorId } = useAuth()
+    const { isAuthenticated, isAuthProcessed, currentUser, visitorId } = useAuth()
 
     useEffect(() => { console.log(state) }, [state])
     useEffect(() => {
@@ -181,24 +192,37 @@ export const OrderProvider = ({ children }) => {
             fetchOrdersAndTickets();
         }
     }, [currentUser.id, isAuthenticated])
+    useEffect(() => console.log({ ws: ws.current }), [ws.current])
 
     useEffect(() => {
-        if (visitorId) {
+        if (visitorId && !ws.current && !isAuthProcessed) {
+            console.log('Socket Init');
             ws.current = io(DEFAULTS.SOCKET.URL, {
                 query: {
                     visitorId: visitorId,
-                    userId: currentUser.id !== 0 ? 'u_' + currentUser.id : null,
+                    userId: currentUser.id !== 0 ? 'user_' + currentUser.id : null,
                     role: currentUser.id !== 0 ? currentUser.role : null,
                 },
             });
         }
-    }, [currentUser.id, currentUser.role, isAuthenticated, visitorId])
+
+        return () => {
+            if (ws.current) {
+                ws.current.disconnect();
+            }
+        };
+    }, [visitorId, isAuthProcessed]);
 
     useEffect(() => {
         if (visitorId && ws.current) {
             const socket = ws.current
+            console.log('Socket Start Connection')
             socket.on('connect', () => {
                 console.log('Connected to Strapi WebSocket')
+            });
+
+            socket.on('disconnect', (e) => {
+                console.log('disconnected to Strapi WebSocket', { e })
             });
 
 
@@ -219,7 +243,12 @@ export const OrderProvider = ({ children }) => {
                     })
 
                     const textStatus = checkOrderStatus(newStatus);
-                    toast.success(<span>Новый статус заказа ({textStatus})</span>);
+
+                    notify({
+                        icon: <MdUpdate />,
+                        title: 'Новый статус заказа',
+                        message: textStatus,
+                    })
                 });
 
                 socket.on('orderCreate', (data) => {
@@ -229,7 +258,11 @@ export const OrderProvider = ({ children }) => {
                         payload: { order: newOrder },
                     });
 
-                    toast.success(<span>Новый заказ услуг</span>);
+                    notify({
+                        icon: <FaCheckCircle />,
+                        title: 'Новый заказ',
+                        message: 'Ваш заказ принят',
+                    })
                 });
 
                 socket.on('supportTicketStatusChange', (data) => {
@@ -238,8 +271,13 @@ export const OrderProvider = ({ children }) => {
                     dispatch({
                         type: 'UPDATE_TICKET_STATUS',
                         payload: { ticketId, status: newStatus },
-                    });
-                    toast.success(`Новый статус заявки (${ticketStatus(newStatus)})`)
+                    })
+
+                    notify({
+                        icon: <MdUpdate />,
+                        title: 'Новый статус заявки',
+                        message: ticketStatus(newStatus),
+                    })
                 });
             }
             socket.on('connect_error', (error) => {
@@ -254,10 +292,17 @@ export const OrderProvider = ({ children }) => {
                 socket.disconnect();
             };
         }
-    }, [isAuthenticated, currentUser, state.orders, visitorId]);
+    }, [isAuthenticated, visitorId]);
 
+    useEffect(() => {
+        if (ws.current) {
+            console.log('Socket already initialized:', ws.current.id);
+        } else {
+            console.log('Initializing new socket connection');
+        }
+    }, []);
     return (
-        <OrderContext.Provider value={{ state, dispatch, ordersIsLoading, ticketsIsLoading }}>
+        <OrderContext.Provider value={{ state, dispatch, ordersIsLoading, ticketsIsLoading, ws }}>
             {children}
         </OrderContext.Provider>
     );

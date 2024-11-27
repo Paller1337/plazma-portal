@@ -215,7 +215,8 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                                                 <Table.Td></Table.Td>
                                                 <Table.Td style={{
                                                     fontWeight: 600,
-                                                    fontSize: 18
+                                                    fontSize: 18,
+                                                    whiteSpace: 'nowrap'
                                                 }}>
                                                     Итого {
                                                         props.order.order.store.store_type?.value === 'eat'
