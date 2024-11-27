@@ -27,7 +27,7 @@ export interface ICServiceOrderProps {
     order: IOrder
     products: IProduct[]
     isVisualNew?: boolean
-    onClick: () => void
+    onClick?: () => void
 }
 
 interface ServiceOrderItemProps {
