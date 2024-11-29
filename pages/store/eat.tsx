@@ -210,9 +210,9 @@ export default function CustomStorePage(props: EatPageProps) {
         // console.log('currentStoreState: ', currentStoreState)
     }, [currentMenu, nomenclature])
 
-    // useEffect(() => {
-    //     console.log('currentMenuId ', currentMenuId)
-    // }, [currentMenuId])
+    useEffect(() => {
+        console.log('currentMenu ', currentMenu)
+    }, [currentMenu])
 
     // useEffect(() => {
     //     console.log('state ', state)

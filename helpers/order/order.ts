@@ -57,7 +57,8 @@ export async function getOrdersByGuestId(id: number): Promise<IOrder[]> {
             store: {
                 id: order.attributes.store?.data?.id || 0,
                 title: order.attributes.store?.data?.attributes?.title || '-',
-            }
+            },
+            paid_for: order.attributes.paid_for,
         } as IOrder))
 
 

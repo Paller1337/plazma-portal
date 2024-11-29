@@ -1,6 +1,6 @@
 import { axiosInstance } from './axiosInstance'
 
-interface IPortalSettings {
+export interface IPortalSettings {
     isDisable: boolean
     isDisableOrders: boolean
     isDisableSMSAuth: boolean

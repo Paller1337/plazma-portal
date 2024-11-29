@@ -39,7 +39,11 @@ export interface IStore {
     id?: string,
     title?: string
     description?: string
-    requisites?: string
+    payment_system?: {
+        name: string,
+        title: string,
+        requisites: string,
+    }
     image?: string
     products?: IProduct[]
     preview_size?: string
@@ -67,7 +71,7 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
     try {
         if ((id as string) != '0') {
             const storeData = (await axiosInstance.get(`/api/store/${id}`)).data
-            const store = getStoreResult(storeData)
+            const store = getStoreResult(storeData.data)
 
             console.log({ store })
 
@@ -84,7 +88,7 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
             }
         }
     } catch (error) {
-        console.error('Ошибка при получении статьи:', error)
+        console.error('Ошибка при получении данных о магазине:', error)
         return {
             props: {
                 article: []
@@ -101,10 +105,10 @@ export default function StorePage(props: StorePageProps) {
     const router = useRouter()
 
 
-    const storeStatus = getStoreStatus(props.store.storeWorktime)
-    useEffect(() => console.log({ worktime: getStoreStatus(props.store.storeWorktime) }), [])
+    const storeStatus = getStoreStatus(props.store?.storeWorktime)
+    useEffect(() => console.log({ worktime: getStoreStatus(props.store?.storeWorktime) }), [])
     // @ts-ignore
-    const currentStoreState = state.stores[props.store.id]
+    const currentStoreState = state.stores[props.store?.id]
     const total = currentStoreState?.order?.reduce((acc, curr) => acc + productsInfo[curr.id.toString()]?.price * curr.quantity, 0) || 0
     useEffect(() => {
         // console.log('props.store ', props.store)
@@ -126,7 +130,7 @@ export default function StorePage(props: StorePageProps) {
     useEffect(() => { console.log('currentProduct: ', currentProduct) }, [currentProduct])
 
     const fetch = async () => {
-        await getStoreById(parseInt(props.store.id))
+        await getStoreById(parseInt(props.store?.id))
     }
 
     return (<>

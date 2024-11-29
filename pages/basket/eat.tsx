@@ -21,7 +21,7 @@ import { IGuestAccount } from 'types/session'
 import Link from 'next/link'
 import { telegramSendOrder } from 'helpers/telegram'
 import { getOrdersByGuestId } from 'helpers/order/order'
-import { findItemInCache } from 'helpers/cartContext'
+import { findItemInCache, findItemInNomenclature } from 'helpers/cartContext'
 import { RiErrorWarningLine } from 'react-icons/ri'
 import { notify } from 'utils/notify'
 import { FaCheckCircle } from 'react-icons/fa'
@@ -30,6 +30,8 @@ import { getStoreStatus, IStoreStatus } from 'utils/storeStatus'
 import { metrika } from 'utils/metrika'
 import { IStore } from 'pages/store/[id]'
 import { FaFile, FaGear, FaPencil } from 'react-icons/fa6'
+import { usePortal } from 'context/PortalContext'
+import { DEFAULTS } from 'defaults'
 
 
 export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(async (context) => {
@@ -38,7 +40,6 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
     const storeData = (await axiosInstance.get(`/api/store/custom/eat`)).data
     const data = storeData.data?.length > 0 ? storeData.data[0] : null
     const store = getStoreResult(data)
-    console.log({ store })
 
     const storeStatus = getStoreStatus(store.storeWorktime)
     // TODO Блокировка заказа в зависимости от времени работы
@@ -59,13 +60,21 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
     }
 })
 
+const DEFAULT_PAYMENT_TYPES = [
+    { value: 'cash', label: 'Наличные' },
+    { value: 'bank-card', label: 'Банковская карта' },
+]
 
 export default function OrderServices(props) {
     const storeStatus = props?.storeStatus as IStoreStatus
     const store = props?.store as IStore
+
+    const [paymentTypes, setPaymentTypes] = useState(DEFAULT_PAYMENT_TYPES)
+    const { yookassa } = usePortal()
+
     const { isAuthenticated, openAuthModal, currentUser } = useAuth()
     const [modalIsOpen, setModalIsOpen] = useState(false)
-    const { state, dispatch, productsInfo, storesInfo, hotelRooms, menuCache, iikoMenuIsFetched } = useCart()
+    const { state, dispatch, productsInfo, storesInfo, hotelRooms, menuCache, iikoMenuIsFetched, nomenclature } = useCart()
     const [visibleLoadingOverlay, setVisibleLoadingOverlay] = useState(false)
 
     const router = useRouter()
@@ -84,7 +93,6 @@ export default function OrderServices(props) {
         error: ''
     })
 
-    useEffect(() => console.log(storesInfo), [storesInfo])
     const rooms = hotelRooms?.map(room => ({
         value: room.id.toString(),
         label: room.tags
@@ -123,6 +131,11 @@ export default function OrderServices(props) {
         console.log('currentStoreState: ', props)
     }, [])
 
+    useEffect(() => {
+        if (store?.payment_system) {
+            setPaymentTypes(p => [...DEFAULT_PAYMENT_TYPES, { label: store?.payment_system?.title, value: store?.payment_system?.name }])
+        }
+    }, [store])
     useEffect(() => {
         if (isAuthenticated) {
             const initGuestInfo = async () => {
@@ -260,37 +273,28 @@ export default function OrderServices(props) {
                 if (!orderIsPlace.status) return
                 const orders = await getOrdersByGuestId(currentUser.id)
                 const targetOrder = orders.find(o => o.id === orderIsPlace.data.data.id)
-                // const orderToTelegram = {
-                //     id: orderIsPlace.data.data.id,
-                //     time: DateTime.fromISO(nowTime).toLocaleString(DateTime.DATETIME_MED),
-                //     comment: orderComment,
-                //     type: storesInfo[props.id]?.store_type.label,
-                //     phone: orderPhone.value,
-                //     room: {
-                //         label: room.label,
-                //         roomId: room.value,
-                //     },
-                //     payment: orderPayment,
-                //     items: serviceOrder,
-                //     total: total,
-                //     status: 'new',
-                //     store: storesInfo[props.id]?.title,
-                //     guest: guestAccount?.attributes.name
-                // }
 
-                const response = await telegramSendOrder(targetOrder) // Предполагается, что здесь вызывается функция отправки заказа
+                // const response = await telegramSendOrder(targetOrder)ы
                 // console.log('tg response: ', response)
-                if (response && orderIsPlace) {
+                if (
+                    // response &&
+                    orderIsPlace
+                ) {
                     // notify({
                     //     icon: <FaCheckCircle />,
                     //     title: 'Заказ оформлен!',
                     //     message: 'Спасибо за заказ.',
                     // })
+
                     metrika.eatOrder()
                     setOrderComment('')
                     dispatch({ type: 'CLEAR_CART', storeId: props.id })
-                    router.push(`/basket/${Object.keys(storesInfo).find(x => x != props.id) || 0}`)
-                    setModalIsOpen(true)
+                    if (targetOrder.paymentType === 'yookassa') {
+                        handlePayment({ orderId: targetOrder.id })
+                    } else {
+                        router.push(`/basket/${Object.keys(storesInfo).find(x => x != props.id) || 0}`)
+                        setModalIsOpen(true)
+                    }
                     setVisibleLoadingOverlay(false)
 
                 }
@@ -335,6 +339,51 @@ export default function OrderServices(props) {
 
         return n;
     }
+
+
+
+
+
+
+
+
+
+    const handlePayment = async ({ orderId, }) => {
+        if (!yookassa?.yooWidgetIsLoaded) {
+            alert('Виджет еще не загружен. Попробуйте позже.');
+            return;
+        }
+
+        try {
+            const paymentResponse = await axiosInstance.post('/api/order/create-payment', {
+                orderId,
+                guestId: currentUser.id,
+                amount: 1,
+                phone: orderPhone.value,
+                description: 'Оплата заказа еды',
+                items: currentStoreState.order.map(p => {
+                    const product = findItemInNomenclature(p.id, nomenclature)
+                    return ({
+                        name: product.seoTitle || product.name,
+                        quantity: p.quantity,
+                        price: product.sizePrices[0].price.currentPrice,
+                    })
+                }) || [],
+            });
+
+            console.log({ paymentResponse })
+            const token = paymentResponse.data.payment.confirmation.confirmation_token;
+
+            // Инициализация и отображение виджета
+            await yookassa.initializeWidget(
+                token,
+                `${DEFAULTS.GENERAL_URL.app}/basket/history/${orderId}`,
+            );
+        } catch (error) {
+            console.error('Ошибка при создании платежа:', error);
+            alert('Ошибка при создании платежа. Попробуйте позже.');
+        }
+    };
 
     return (<>
         <LoadingOverlay
@@ -444,12 +493,9 @@ export default function OrderServices(props) {
                             label='Способ оплаты'
                             size='md'
                             radius='md'
-                            data={[
-                                { value: 'cash', label: 'Наличные' },
-                                { value: 'bank-card', label: 'Банковская карта' },
-                            ]}
+                            data={paymentTypes}
                             onChange={(v) => setOrderPayment(v)}
-                            defaultValue={orderPayment}
+                            // defaultValue={orderPayment}
                             disabled={currentStoreState?.order.length === 0}
                         />
 
@@ -485,17 +531,27 @@ export default function OrderServices(props) {
                                 <span className='order-score__sum'>{total > 0 ? `${total} ₽` : 'Бесплатно'}</span>
                             </div>
                             <Button
-                                bg={currentStoreState?.order.length === 0 || !storeStatus?.isOpen || props.settings?.isDisableOrders
-                                    ? '#aaa' : '#56754B'}
+                                bg={currentStoreState?.order.length === 0
+                                    || !storeStatus?.isOpen
+                                    || props.settings?.isDisableOrders
+                                    || (orderPayment === 'yookassa' && !yookassa?.yooWidgetIsLoaded)
+                                    ? '#aaa'
+                                    : '#56754B'
+                                }
                                 p={12} variant='filled'
                                 c={'white'}
                                 size='sm' h={'fit-content'} radius={'md'}
                                 onClick={isAuthenticated ? () => handleCheckout() : () => openAuthModal()}
-                                disabled={currentStoreState?.order.length === 0 || !storeStatus?.isOpen || props.settings?.isDisableOrders}
+                                disabled={
+                                    currentStoreState?.order.length === 0
+                                    || !storeStatus?.isOpen
+                                    || props.settings?.isDisableOrders
+                                    || (orderPayment === 'yookassa' && !yookassa?.yooWidgetIsLoaded)
+                                }
                             >
                                 <Group gap={12}>
                                     <ReactSVG src='/svg/cart-white.svg' />
-                                    {props.settings?.isDisableOrders ? 'Заказы приостановлены' : !storeStatus?.isOpen ? 'Магазин закрыт' : isAuthenticated ? 'Оформить заказ' : 'Войти и оформить заказ'}
+                                    {props.settings?.isDisableOrders ? 'Заказы приостановлены' : !storeStatus?.isOpen ? 'Магазин закрыт' : isAuthenticated ? 'Оформить заказ' : 'Войти и заказать'}
                                 </Group>
                             </Button>
                             {/* <div
@@ -510,10 +566,26 @@ export default function OrderServices(props) {
                                 {isAuthenticated ? 'Оформить заказ' : 'Войти и оформить заказ'}
                             </div> */}
                         </div>
-                        {store?.requisites ?
+                        {/* {yookassa?.yooWidgetIsLoaded ?
+                            <Button
+                                bg={currentStoreState?.order.length === 0 || !storeStatus?.isOpen || props.settings?.isDisableOrders
+                                    ? '#aaa' : '#56754B'}
+                                p={12} variant='filled'
+                                c={'white'}
+                                size='sm' h={'fit-content'} radius={'md'}
+                                onClick={handlePayment}
+                            >
+                                <Group gap={12}>
+                                    <ReactSVG src='/svg/cart-white.svg' />
+                                    Тестовый платеж
+                                </Group>
+                            </Button>
+                            : <></>} */}
+
+                        {store?.payment_system && store?.payment_system?.requisites ?
 
                             <Paper radius={'md'} p={12} style={{ border: '1px solid rgb(86, 117, 75)' }} mt={24}>
-                                <Group>
+                                <Group wrap='nowrap'>
                                     <Stack
                                         bg={'rgb(86, 117, 75)'}
                                         p={8}
@@ -525,7 +597,7 @@ export default function OrderServices(props) {
                                     </Stack>
                                     <Stack gap={2}>
                                         <Text fz={14} fw={500}>Реквизиты</Text>
-                                        <Text fz={16}>ООО «Командор», ИНН 7114009105, ОГРН 1027101374850</Text>
+                                        <Text fz={16}>{store?.payment_system?.requisites}</Text>
                                     </Stack>
                                 </Group>
                             </Paper>

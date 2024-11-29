@@ -10,6 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@a2seven/yoo-checkout": "github:Paller1337/yoocheckout",
     "@emotion/styled": "^11.13.0",
     "@fingerprintjs/fingerprintjs": "^4.4.3",
     "@hello-pangea/dnd": "^16.6.0",

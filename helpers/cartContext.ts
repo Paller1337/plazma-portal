@@ -28,6 +28,17 @@ export const findItemInCache = (itemId, menuCached: { [key: string]: MenuV2ByIdR
     }
 }
 
+export const findItemInNomenclature = (itemId, nomenclature: NomenclatureResponse) => {
+    if (nomenclature) {
+        const foundItem = nomenclature?.products?.find(item => item.id === itemId)
+        if (foundItem) {
+            return foundItem; // Возвращаем найденный item
+        }
+        // Если не нашли, возвращаем null или сообщение
+        return null;
+    }
+}
+
 export const getStoreById = async (id: number) => {
     try {
         // const store = await axios.get(`${DEFAULTS.STRAPI.url}/api/stores/${id}`, {

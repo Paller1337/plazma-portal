@@ -32,6 +32,7 @@ import dynamic from 'next/dynamic'
 import { FaGear } from 'react-icons/fa6'
 // import { Notifications } from '@mantine/notifications'
 import { YMInitializer } from 'react-yandex-metrika'
+import { PortalProvider } from 'context/PortalContext'
 
 const Notifications = dynamic(() => import('@mantine/notifications').then((mod) => mod.Notifications), { ssr: false });
 
@@ -108,7 +109,6 @@ const AppPart = ({ pageProps, children }) => {
 
     return (
         <>
-
             <Head>
                 <link rel="icon" href="/favicon.ico" />
                 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
@@ -135,13 +135,15 @@ const AppPart = ({ pageProps, children }) => {
                 </Stack>
                 :
                 <AuthProvider>
-                    <OrderProvider>
-                        <CartProvider>
-                            <AppLayout asPath={router.asPath} pageProps={pageProps}>
-                                {children}
-                            </AppLayout>
-                        </CartProvider>
-                    </OrderProvider>
+                    <PortalProvider>
+                        <OrderProvider>
+                            <CartProvider>
+                                <AppLayout asPath={router.asPath} pageProps={pageProps}>
+                                    {children}
+                                </AppLayout>
+                            </CartProvider>
+                        </OrderProvider>
+                    </PortalProvider>
                 </AuthProvider>
             }
         </>

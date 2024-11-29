@@ -108,7 +108,6 @@ export default function ServiceOrder(props: ICServiceOrderProps) {
     const openModal = (index) => {
         setModalIsOpen(true)
     }
-    const paymentType = props.order.paymentType === 'bank-card' ? 'Банковская карта' : props.order.paymentType === 'cash' ? 'Наличные' : 'Не указан'
 
 
     // useEffect(() => {

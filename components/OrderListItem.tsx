@@ -9,6 +9,7 @@ import { useCart } from 'context/CartContext'
 import Router from 'next/router'
 import { findItemInCache, getProductById } from 'helpers/cartContext'
 import { ItemMenuV2 } from 'helpers/iiko/IikoApi/types'
+import { getPaymentType } from 'helpers/getPaymentType'
 
 interface OrderListItemProps {
     order?: IOrder
@@ -190,7 +191,7 @@ export default function OrderListItem(props: OrderListItemProps) {
 
                     <div className='guest-order__total-row'>
                         <span className='guest-order__total-label'>Способ оплаты</span>
-                        <span className='guest-order__total-amount'>{props.order.paymentType === 'bank-card' ? 'Банковская карта' : 'Наличные'}</span>
+                        <span className='guest-order__total-amount'>{getPaymentType(props.order.paymentType)}</span>
                     </div>
                     <div className='guest-order__total-row'>
                         <span className='guest-order__total-label'>Итого</span>

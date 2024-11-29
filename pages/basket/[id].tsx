@@ -28,6 +28,8 @@ import { FaCheckCircle } from 'react-icons/fa'
 import { getStoreResult } from 'helpers/getStoreResult'
 import { getStoreStatus, IStoreStatus } from 'utils/storeStatus'
 import { metrika } from 'utils/metrika'
+import { FaPencil } from 'react-icons/fa6'
+import { IStore } from 'pages/store/[id]'
 
 
 export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(async (context) => {
@@ -45,6 +47,7 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
             return {
                 props: {
                     id: id,
+                    store,
                     storeStatus
                 }
             }
@@ -67,6 +70,8 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
 
 export default function OrderServices(props) {
     const storeStatus = props?.storeStatus as IStoreStatus
+    const store = props?.store as IStore
+
     const { isAuthenticated, openAuthModal, currentUser } = useAuth()
     const [modalIsOpen, setModalIsOpen] = useState(false)
     const { state, dispatch, productsInfo, storesInfo, hotelRooms } = useCart()
@@ -498,10 +503,30 @@ export default function OrderServices(props) {
                             >
                                 <Group gap={12}>
                                     <ReactSVG src='/svg/cart-white.svg' />
-                                    {props.settings?.isDisableOrders ? 'Заказы приостановлены' : !storeStatus?.isOpen ? 'Магазин закрыт' : isAuthenticated ? 'Оформить заказ' : 'Войти и оформить заказ'}
+                                    {props.settings?.isDisableOrders ? 'Заказы приостановлены' : !storeStatus?.isOpen ? 'Магазин закрыт' : isAuthenticated ? 'Оформить заказ' : 'Войти и заказать'}
                                 </Group>
                             </Button>
                         </div>
+
+                        {store?.payment_system && store?.payment_system?.requisites ?
+                            <Paper radius={'md'} p={12} style={{ border: '1px solid rgb(86, 117, 75)' }} mt={24}>
+                                <Group wrap='nowrap'>
+                                    <Stack
+                                        bg={'rgb(86, 117, 75)'}
+                                        p={8}
+                                        style={{ borderRadius: 32 }}
+                                        justify='center'
+                                        align='center'
+                                    >
+                                        <FaPencil size={16} color='white' />
+                                    </Stack>
+                                    <Stack gap={2}>
+                                        <Text fz={14} fw={500}>Реквизиты</Text>
+                                        <Text fz={16}>{store?.payment_system?.requisites}</Text>
+                                    </Stack>
+                                </Group>
+                            </Paper>
+                            : <></>}
                     </div>
                 </div>
             </div>

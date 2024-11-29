@@ -10,6 +10,7 @@ import { axiosInstance } from 'helpers/axiosInstance'
 import { useAdminOrders } from 'context/admin/OrderContext'
 import toast from 'react-hot-toast'
 import { useIiko } from 'context/IikoContext'
+import { getPaymentType } from 'helpers/getPaymentType'
 
 ReactModal.setAppElement('#__next') // Для Next.js обычно это #__next, для create-react-app это #root
 
@@ -21,7 +22,7 @@ interface AdminOrderModalProps {
 
 const AdminOrderModal = (props: AdminOrderModalProps) => {
     const router = useRouter()
-    const paymentType = props.order.order?.paymentType === 'bank-card' ? 'Банковская карта' : props.order.order?.paymentType === 'cash' ? 'Наличные' : 'Не указан'
+    const paymentType = getPaymentType(props.order.order?.paymentType)
     const { dispatch } = useAdminOrders()
     const [visibleLoadingOverlay, setVisibleLoadingOverlay] = useState(false)
     const { nomenclature } = useIiko()
@@ -158,7 +159,7 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                             </div>
                             <div className='row'>
                                 <span className='title'>Способ оплаты</span>
-                                <span className='value'>{props.order.order.paymentType === 'bank-card' ? 'Банковская карта' : 'Наличные'}</span>
+                                <span className='value'>{getPaymentType(props.order.order.paymentType)}</span>
                             </div>
                             {/* <div className='row'>
                                 <span className='title'>Способ оплаты</span>

@@ -2,6 +2,7 @@ import { ISupportTicket } from 'types/support';
 import { axiosInstance } from './axiosInstance';
 import { IOrder } from 'types/order';
 import { DateTime } from 'luxon';
+import { getPaymentType } from './getPaymentType';
 
 export async function telegramSend(message: string, chat_id, message_thread_id) {
     const status = await axiosInstance.post('/api/telegram/send', {
@@ -44,7 +45,7 @@ export async function telegramSendOrder(order: IOrder) {
     // message += `<b>ID заказа:</b> ${order.id}\n`
     message += `Тип заказа: <b>${order.type.label}</b>\n`
     message += `Время заказа: <b>${DateTime.fromISO(order.create_at).toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)}</b>\n`
-    message += `Способ оплаты: <b>${order.paymentType === 'bank-card' ? 'Безналичный расчет' : 'Наличные'}</b>\n`
+    message += `Способ оплаты: <b>${getPaymentType(order.paymentType)}</b>\n`
     message += `Магазин: <b>${order.store.title}</b>\n\n`
     message += `Гость: <b>${order.guest.name}</b>\n`
     message += `Комната: <b>${order.room.label}</b>\n`

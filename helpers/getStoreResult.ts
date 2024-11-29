@@ -5,7 +5,7 @@ export const getStoreResult = (store): IStore => {
         id: store?.id,
         title: store?.attributes?.title || '',
         description: store?.attributes?.description || '',
-        requisites: store?.attributes?.requisites || '',
+        payment_system: store?.attributes?.payment_system?.data?.attributes || {},
         image: store?.attributes?.image?.data?.attributes?.url || '',
         preview_size: store?.attributes?.preview_size || 'min',
         category: {
@@ -23,10 +23,10 @@ export const getStoreResult = (store): IStore => {
             image: p.attributes?.image?.data.attributes.url || '',
         })) : [],
         storeType: {
-            label: store?.attributes.store_type.data?.attributes.label || '',
-            value: store?.attributes.store_type.data?.attributes.value || '',
+            label: store?.attributes.store_type?.data?.attributes.label || '',
+            value: store?.attributes.store_type?.data?.attributes.value || '',
         },
-        storeWorktime: store?.attributes.store_worktime?.length > 0 ? store.attributes.store_worktime.map(p => ({
+        storeWorktime: store?.attributes.store_worktime?.length > 0 ? store.attributes.store_worktime?.map(p => ({
             id: p.id,
             start: p.start || '',
             end: p.end || '',

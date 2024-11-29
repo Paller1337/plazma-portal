@@ -16,6 +16,9 @@ import { ReactSVG } from 'react-svg'
 import useSound from 'use-sound'
 import { useInterval } from '@mantine/hooks'
 import ReactJson from 'react18-json-view';
+import { notify } from 'utils/notify'
+import { FaCoffee } from 'react-icons/fa'
+import { FaFirstOrder } from 'react-icons/fa6'
 
 
 
@@ -86,7 +89,7 @@ function OrdersPage(props: AdminOrdersPageProps) {
     const [eatData, setEatData] = useState(null)
 
     const [currentLength, setCurrentLength] = useState(eatOrders.length)
-    const [socketStatus, setSocketStatus] = useState('disconnected')
+    const [socketStatus, setSocketStatus] = useState<'disconnected' | 'connected'>('disconnected')
 
     const router = useRouter()
     const query = router.query
@@ -103,17 +106,33 @@ function OrdersPage(props: AdminOrdersPageProps) {
     ]
 
     useEffect(() => {
-        if (socketRef.current) {
-            const socket = socketRef.current
-            socket.on('eatOrderCreate', (data) => {
-                console.log('new eatOrderCreate')
+        if (socketRef.current?.connected) {
+            const socket = socketRef.current;
+
+            const handleEatOrderCreate = (data) => {
+                console.log('new eatOrderCreate');
+                notify({
+                    title: 'Новый заказ',
+                    message: 'Необходимо принять заказ',
+                    icon: <FaFirstOrder />,
+                });
                 if (!isSfxPlaying) {
-                    playInterval.start()
-                    setIsSfxPlaying(true)
+                    playInterval.start();
+                    setIsSfxPlaying(true);
                 }
-            });
+            };
+
+            // Удаляем старую подписку перед добавлением новой
+            socket.off('eatOrderCreate', handleEatOrderCreate);
+            socket.on('eatOrderCreate', handleEatOrderCreate);
+
+            // Чистим обработчик при размонтировании
+            return () => {
+                socket.off('eatOrderCreate', handleEatOrderCreate);
+            };
         }
-    }, [socketRef])
+    }, [playInterval, socketRef.current, isSfxPlaying]);
+    
 
     const stopSfx = () => {
         setIsSfxPlaying(false)

@@ -66,12 +66,7 @@ export default function HelpDesk(props: HelpDeskProps) {
     const openModal = (index) => {
         setModalIsOpen(true)
     }
-    // const paymentType = props.order.paymentType === 'bank-card' ? 'Банковская карта' : props.order.paymentType === 'cash' ? 'Наличные' : 'Не указан'
 
-
-    // useEffect(() => {
-    //     console.log('ServiceOrder: ', props.orderInfo.customer.name, ': ', props)
-    // }, [props])
     return (<>
         <AdminHelpModal ticket={props.ticket} isOpen={modalIsOpen} onClose={() => setModalIsOpen(false)} />
 

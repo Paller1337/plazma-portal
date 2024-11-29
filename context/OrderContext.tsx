@@ -22,6 +22,7 @@ export interface IOrderContext {
     id: string
     order: IOrderProduct[]
     status: TOrderStatus
+    paid_for: boolean
 }
 
 type ITicketContext = ISupportTicket
@@ -52,6 +53,7 @@ const initialState: GlobalStateType = {
 };
 
 const orderReducer = (state: GlobalStateType, action: any) => {
+    let orderId, status, paid_for
     switch (action.type) {
         case 'INITIALIZE_ORDERS':
             return {
@@ -60,12 +62,26 @@ const orderReducer = (state: GlobalStateType, action: any) => {
             };
 
         case 'UPDATE_ORDER_STATUS':
-            const { orderId, status } = action.payload
+            orderId = action.payload.orderId
+            status = action.payload.status
+            paid_for = action.payload.paid_for
             return {
                 ...state,
                 orders: state.orders.map(order =>
                     order.id === orderId
-                        ? { ...order, status: status }
+                        ? { ...order, status: status, paid_for: paid_for }
+                        : order
+                ),
+            }
+
+        case 'UPDATE_ORDER_PAID_STATUS':
+            orderId = action.payload.orderId
+            paid_for = action.payload.paid_for
+            return {
+                ...state,
+                orders: state.orders.map(order =>
+                    order.id === orderId
+                        ? { ...order, paid_for: paid_for }
                         : order
                 ),
             }
@@ -121,6 +137,7 @@ export const OrderProvider = ({ children }) => {
     const [state, dispatch] = useReducer(orderReducer, initialState)
     const [ordersIsLoading, setOrdersIsLoading] = useState(true)
     const [ticketsIsLoading, setTicketsIsLoading] = useState(true)
+    const [isInitFetched, setIsInitFetched] = useState(false)
     const { isAuthenticated, isAuthProcessed, currentUser, visitorId } = useAuth()
 
     useEffect(() => { console.log(state) }, [state])
@@ -139,7 +156,8 @@ export const OrderProvider = ({ children }) => {
                     order: ord.attributes?.products?.map(product => ({
                         id: product.product.data.id,
                         quantity: product.quantity,
-                    }))
+                    })),
+                    paid_for: ord.attributes?.paid_for,
                 }) as IOrderContext)
 
                 // console.log('orders ', orders)
@@ -189,7 +207,7 @@ export const OrderProvider = ({ children }) => {
         }
 
         if (isAuthenticated) {
-            fetchOrdersAndTickets();
+            fetchOrdersAndTickets().then(() => setIsInitFetched(true))
         }
     }, [currentUser.id, isAuthenticated])
     useEffect(() => console.log({ ws: ws.current }), [ws.current])
@@ -230,26 +248,53 @@ export const OrderProvider = ({ children }) => {
                 console.log('checkSocket ', data)
             });
 
-            if (isAuthenticated && currentUser.id !== 0) {
+            if (isAuthenticated && currentUser.id !== 0 && isInitFetched) {
                 socket.on('orderStatusChange', (data) => {
-                    const { newStatus, orderId } = data
+                    const { newStatus, orderId, paid_for } = data
                     console.log('status change data ', data)
                     console.log('orderId ', orderId)
                     console.log('state.orders ', state.orders)
-                    console.log('status old data ', state.orders.find(x => x.id == orderId))
-                    dispatch({
-                        type: 'UPDATE_ORDER_STATUS',
-                        payload: { orderId, status: newStatus, previous_status: state.orders.find(x => x.id == orderId)?.status },
-                    })
-
+                    // console.log('status old data ', state.orders.find(x => x.id == orderId)
+                    const order = state.orders.find(x => x.id == orderId)
                     const textStatus = checkOrderStatus(newStatus);
 
-                    notify({
-                        icon: <MdUpdate />,
-                        title: 'Новый статус заказа',
-                        message: textStatus,
-                    })
+                    console.log({ status: order?.status, incomeStatus: newStatus })
+                    if (order?.status !== newStatus) {
+                        dispatch({
+                            type: 'UPDATE_ORDER_STATUS',
+                            payload: { orderId, status: newStatus, previous_status: state.orders.find(x => x.id == orderId)?.status, paid_for: paid_for },
+                        })
+
+                        notify({
+                            icon: <MdUpdate />,
+                            title: 'Новый статус заказа',
+                            message: textStatus,
+                        })
+                    }
                 });
+
+                socket.on('orderPaidStatusChange', (data) => {
+                    const { paid_for, orderId } = data
+                    console.log('status change data ', data)
+                    console.log('orderId ', orderId)
+                    console.log('paid_for ', paid_for)
+                    dispatch({
+                        type: 'UPDATE_ORDER_PAID_STATUS',
+                        payload: { orderId, paid_for },
+                    })
+                    const order = state.orders.find(x => x.id == orderId)
+                    if (order?.paid_for !== paid_for) {
+                        if (paid_for) {
+                            notify({
+                                icon: <MdUpdate />,
+                                title: 'Спасибо за покупку',
+                                message: `Поступила оплата за заказ #${orderId}`,
+                            })
+                        }
+                    }
+                });
+
+
 
                 socket.on('orderCreate', (data) => {
                     const newOrder = data.newOrder;
@@ -287,12 +332,12 @@ export const OrderProvider = ({ children }) => {
             return () => {
                 socket.off('connect');
                 socket.off('orderStatusChange');
+                socket.off('orderPaidStatusChange');
                 socket.off('orderCreate');
                 socket.off('supportTicketStatusChange');
-                socket.disconnect();
             };
         }
-    }, [isAuthenticated, visitorId]);
+    }, [isAuthenticated, visitorId, isInitFetched]);
 
     useEffect(() => {
         if (ws.current) {

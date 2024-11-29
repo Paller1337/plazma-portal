@@ -40,6 +40,7 @@ export interface IOrder {
     type: IStoreType
     store: IStore
     isVisualNew?: boolean
+    paid_for: boolean
 }
 
 export interface IRoomInfo {
@@ -96,4 +97,4 @@ export interface IStoreType {
 //     order: IServiceOrdered[]
 // }
 
-export type TOrderPaymentType = 'bank-card' | 'cash'
+export type TOrderPaymentType = 'bank-card' | 'cash' | 'yookassa'
