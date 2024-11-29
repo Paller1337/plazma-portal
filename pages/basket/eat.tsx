@@ -294,10 +294,10 @@ export default function OrderServices(props) {
                 const orders = await getOrdersByGuestId(currentUser.id)
                 const targetOrder = orders.find(o => o.id === orderIsPlace.data.data.id)
 
-                // const response = await telegramSendOrder(targetOrder)ы
+                const response = await telegramSendOrder(targetOrder)
                 // console.log('tg response: ', response)
                 if (
-                    // response &&
+                    response &&
                     orderIsPlace
                 ) {
                     // notify({
