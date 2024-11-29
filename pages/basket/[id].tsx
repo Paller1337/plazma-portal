@@ -68,6 +68,11 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
     }
 })
 
+export const DEFAULT_PAYMENT_TYPES = [
+    { value: 'cash', label: 'Наличные' },
+    { value: 'bank-card', label: 'Банковская карта' },
+]
+
 export default function OrderServices(props) {
     const storeStatus = props?.storeStatus as IStoreStatus
     const store = props?.store as IStore
@@ -76,6 +81,7 @@ export default function OrderServices(props) {
     const [modalIsOpen, setModalIsOpen] = useState(false)
     const { state, dispatch, productsInfo, storesInfo, hotelRooms } = useCart()
     const [visibleLoadingOverlay, setVisibleLoadingOverlay] = useState(false)
+    const [paymentTypes, setPaymentTypes] = useState(DEFAULT_PAYMENT_TYPES)
 
     const router = useRouter()
     const currentStoreState = state.stores[props.id]
@@ -442,12 +448,13 @@ export default function OrderServices(props) {
                             label='Способ оплаты'
                             size='md'
                             radius='md'
+                            allowDeselect={false}
+                            placeholder="Выберите способ оплаты"
                             data={[
                                 { value: 'cash', label: 'Наличные' },
                                 { value: 'bank-card', label: 'Банковская карта' },
                             ]}
                             onChange={(v) => setOrderPayment(v)}
-                            defaultValue={orderPayment}
                             disabled={currentStoreState?.order.length === 0}
                         />
 

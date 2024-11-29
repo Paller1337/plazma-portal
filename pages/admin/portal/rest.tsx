@@ -14,7 +14,7 @@ import { withAdminPage } from 'helpers/withAdminPage'
 import { useIiko } from 'context/IikoContext'
 import { ReactSVG } from 'react-svg'
 import useSound from 'use-sound'
-import { useInterval } from '@mantine/hooks'
+import { useInterval, useMediaQuery } from '@mantine/hooks'
 import ReactJson from 'react18-json-view';
 import { notify } from 'utils/notify'
 import { FaCoffee } from 'react-icons/fa'
@@ -85,6 +85,8 @@ function OrdersPage(props: AdminOrdersPageProps) {
     const { getNomenclature, organizations, nomenclature } = useIiko()
 
     const playInterval = useInterval(() => play(), 2000)
+
+    const isTablet = useMediaQuery('(max-width: 1024px)')
 
     const [eatData, setEatData] = useState(null)
 
@@ -220,7 +222,7 @@ function OrdersPage(props: AdminOrdersPageProps) {
             <Paper
                 bg={socketRef.current?.connected ? 'green' : 'red'}
                 radius={'xl'} w={12} h={12}
-                pos={'absolute'} right={0} top={0}
+                pos={'absolute'} right={isTablet ? 0 : 24} top={0}
                 style={{ zIndex: 10000, color: 'white', fontSize: 10 }}
             />
             <Stack

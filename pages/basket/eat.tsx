@@ -1,6 +1,7 @@
 import NavBar from '@/components/NavBar'
 import { ReactSVG } from 'react-svg'
 import Image from 'next/image'
+import { Image as MImage } from '@mantine/core'
 import OrderItem from '@/components/OrderItem'
 import { useCart } from 'context/CartContext'
 import Router, { useRouter } from 'next/router'
@@ -15,7 +16,7 @@ import { GetServerSideProps } from 'next'
 import { withAuthServerSideProps } from 'helpers/withAuthServerSideProps'
 import { axiosInstance } from 'helpers/axiosInstance'
 import Cookies from 'js-cookie'
-import { Button, Group, Text, InputBase, Loader, LoadingOverlay, Paper, Select, Stack, Textarea } from '@mantine/core'
+import { Button, Group, Text, InputBase, Loader, LoadingOverlay, Paper, Select, Stack, Textarea, SelectProps } from '@mantine/core'
 import { IMaskInput } from 'react-imask'
 import { IGuestAccount } from 'types/session'
 import Link from 'next/link'
@@ -29,9 +30,11 @@ import { getStoreResult } from 'helpers/getStoreResult'
 import { getStoreStatus, IStoreStatus } from 'utils/storeStatus'
 import { metrika } from 'utils/metrika'
 import { IStore } from 'pages/store/[id]'
-import { FaFile, FaGear, FaPencil } from 'react-icons/fa6'
+import { FaFile, FaGear, FaMoneyBill, FaPencil } from 'react-icons/fa6'
 import { usePortal } from 'context/PortalContext'
 import { DEFAULTS } from 'defaults'
+import { DEFAULT_PAYMENT_TYPES } from './[id]'
+import { IconCashBanknote, IconCheck, IconCreditCard } from '@tabler/icons-react'
 
 
 export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(async (context) => {
@@ -60,10 +63,27 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
     }
 })
 
-const DEFAULT_PAYMENT_TYPES = [
-    { value: 'cash', label: 'Наличные' },
-    { value: 'bank-card', label: 'Банковская карта' },
-]
+const iconProps = {
+    stroke: 1.5,
+    color: 'currentColor',
+    opacity: 0.6,
+    size: 18,
+};
+
+const icons: Record<string, React.ReactNode> = {
+    'cash': <IconCashBanknote {...iconProps} />,
+    'bank-card': <IconCreditCard {...iconProps} />,
+    'yookassa': <MImage src={'/images/payment_yookassa.png'} h={18} />,
+};
+
+const renderSelectOption: SelectProps['renderOption'] = ({ option, checked }) => (
+    <Group flex="1" gap="xs">
+        {icons[option.value]}
+        <Text fw={400}>{option.label}</Text>
+        {option.value === 'yookassa' && <MImage ml={'auto'} src={'/images/payment_types.png'} h={24} />}
+        {/* {checked && <IconCheck style={{ marginInlineStart: 'auto' }} {...iconProps} />} */}
+    </Group>
+);
 
 export default function OrderServices(props) {
     const storeStatus = props?.storeStatus as IStoreStatus
@@ -133,7 +153,7 @@ export default function OrderServices(props) {
 
     useEffect(() => {
         if (store?.payment_system) {
-            setPaymentTypes(p => [...DEFAULT_PAYMENT_TYPES, { label: store?.payment_system?.title, value: store?.payment_system?.name }])
+            setPaymentTypes(p => [{ label: store?.payment_system?.title, value: store?.payment_system?.name }, ...DEFAULT_PAYMENT_TYPES])
         }
     }, [store])
     useEffect(() => {
@@ -494,7 +514,11 @@ export default function OrderServices(props) {
                             size='md'
                             radius='md'
                             data={paymentTypes}
+                            allowDeselect={false}
                             onChange={(v) => setOrderPayment(v)}
+                            placeholder="Выберите способ оплаты"
+                            leftSection={icons[orderPayment]}
+                            renderOption={renderSelectOption}
                             // defaultValue={orderPayment}
                             disabled={currentStoreState?.order.length === 0}
                         />

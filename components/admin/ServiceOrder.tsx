@@ -50,7 +50,11 @@ export const ServiceOrderItem = (props: ServiceOrderItemProps) => {
     )
 }
 
-export const ServiceOrderBadge = (props: { status: TOrderStatus, id: number, date: string }) => {
+export const ServiceOrderBadge = (props: { status: TOrderStatus, order: IOrder, date: string }) => {
+    const [isIdVisible, setIsIdVisible] = useState(false)
+
+    const toggleIdVisible = () => setIsIdVisible(p => !p)
+
     const checkOrderStatus = (status) => {
         // if (!props.status) return
         switch (props.status) {
@@ -92,13 +96,28 @@ export const ServiceOrderBadge = (props: { status: TOrderStatus, id: number, dat
     const date = DateTime.fromISO(props.date).toLocaleString({ weekday: 'short', month: 'long', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 
     return (
-        <Flex direction={'row'} justify={'space-between'}>
-            <span className='admin-serviceCard__date'>{date}</span>
-            <span className='admin-serviceCard__id'>ID:{props.id}</span>
-            <Badge autoContrast variant="light" color={badge.color} className='admin-serviceCard__badge' >
-                {badge.name}
-            </Badge>
-        </Flex>
+        <Group wrap='nowrap' w='100%' justify='flex-end' pos={'absolute'} top={0}>
+            {/* <span className='admin-serviceCard__date'>{isIdVisible ? `ID: ${props.order?.id}` : date}</span> */}
+            <span
+                onMouseEnter={() => setIsIdVisible(true)}
+                onMouseLeave={() => setIsIdVisible(false)}
+                className='admin-serviceCard__id'
+                style={{ width: '150px' }}
+            >
+                {isIdVisible ? `ID: ${props.order?.id}` : date}
+            </span>
+            <Group wrap='nowrap' p={4} gap={4} pos={'absolute'} right={4} top={4}>
+                {props.order?.paymentType === 'yookassa' && props.order?.store?.store_type?.value === 'eat' ?
+                    <Badge autoContrast variant="light" color={props.order?.paid_for ? 'teal' : 'orange'}
+                        className='admin-serviceCard__badge'>
+                        {props.order?.paid_for ? 'оплачен' : 'онлайн оплата'}
+                    </Badge>
+                    : <></>}
+                <Badge autoContrast variant="light" color={badge.color} className='admin-serviceCard__badge' >
+                    {badge.name}
+                </Badge>
+            </Group>
+        </Group>
     )
 }
 
@@ -121,8 +140,8 @@ export default function ServiceOrder(props: ICServiceOrderProps) {
                 openModal(props.order.id)
                 props.onClick()
             }}>
-                <ServiceOrderBadge status={props.order.status} id={props.order.id} date={props.order.create_at} />
-
+                <ServiceOrderBadge status={props.order.status} order={props.order} date={props.order.create_at} />
+                <Stack></Stack>
                 <div className='admin-serviceCard__header'>
                     <div className='admin-serviceCard__status'>
                         <div className='admin-serviceCard__status_order' />

@@ -3,7 +3,7 @@ import ReactModal from 'react-modal'
 import { ReactSVG } from 'react-svg'
 import { useRouter } from 'next/router'
 import { ICServiceOrderProps, ServiceOrderBadge, ServiceOrderItem } from './ServiceOrder'
-import { Button, Flex, LoadingOverlay, Stack, Table } from '@mantine/core'
+import { Button, Text, LoadingOverlay, Stack, Table } from '@mantine/core'
 import { DEFAULTS } from 'defaults'
 import { TOrderStatus } from 'types/order'
 import { axiosInstance } from 'helpers/axiosInstance'
@@ -77,7 +77,7 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                 return (
                     <Table.Tr key={product?.name + i + x.quantity * x?.price}>
                         <Table.Td>{product?.name}</Table.Td>
-                        <Table.Td>{x.quantity}</Table.Td>
+                        <Table.Td mah={50}>{x.quantity}</Table.Td>
                         <Table.Td>{x?.price}</Table.Td>
                         <Table.Td>{x.quantity * x?.price}</Table.Td>
                     </Table.Tr>
@@ -88,7 +88,7 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                 return (
                     <Table.Tr key={product?.name + i + x.quantity * product?.price}>
                         <Table.Td>{product?.name}</Table.Td>
-                        <Table.Td>{x.quantity}</Table.Td>
+                        <Table.Td mah={50}>{x.quantity}</Table.Td>
                         <Table.Td>{product?.price}</Table.Td>
                         <Table.Td>{x.quantity * product?.price}</Table.Td>
                     </Table.Tr>
@@ -121,7 +121,7 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                     <div className='OrderAdmin-Modal__info AdminModal-block'>
                         {/* {props.order.order.status + ' ' + props.order.order.id} */}
                         <Stack style={{ position: 'relative', borderRadius: 0, borderBottom: '1px solid rgb(38, 46, 74)' }} h={37} px={0} mt={-10}>
-                            <ServiceOrderBadge status={props.order.order.status} id={props.order.order.id} date={props.order.order.create_at} />
+                            <ServiceOrderBadge status={props.order.order.status} order={props.order.order} date={props.order.order.create_at} />
                         </Stack>
                         <div className='OrderAdmin-Modal__info-header'>
                             <span className='OrderAdmin-Modal__info-title'>Заказ от {props.order.order.guest?.name ? props.order.order.guest?.name : 'гостя'}</span>
@@ -172,11 +172,11 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                             <span className='AdminModal-block__header-title'>Действия</span>
                         </div>
                         <div className='OrderAdmin-Modal__actions-content'>
-                            <Button onClick={() => updateStatus(props.order.order.status, 'inwork')} variant="filled" color="blue" size='md' radius={'md'}
+                            <Button px={12} onClick={() => updateStatus(props.order.order.status, 'inwork')} variant="filled" color="blue" size='md' radius={'md'}
                                 style={{ fontSize: 14, fontWeight: 500 }}>Принять</Button>
-                            <Button onClick={() => updateStatus(props.order.order.status, 'delivered')} variant="filled" color="orange" size='md' radius={'md'}
+                            <Button px={12} onClick={() => updateStatus(props.order.order.status, 'delivered')} variant="filled" color="orange" size='md' radius={'md'}
                                 style={{ fontSize: 14, fontWeight: 500 }}>Доставка</Button>
-                            <Button onClick={() => updateStatus(props.order.order.status, 'done')} variant="filled" color={'green'} size='md' radius={'md'}
+                            <Button px={12} onClick={() => updateStatus(props.order.order.status, 'done')} variant="filled" color={'green'} size='md' radius={'md'}
                                 style={{ fontSize: 14, fontWeight: 500 }}>Выполнен</Button>
                         </div>
                     </div>
@@ -203,9 +203,9 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                                         <Table.Thead>
                                             <Table.Tr>
                                                 <Table.Th>Название</Table.Th>
-                                                <Table.Th>Количество</Table.Th>
+                                                <Table.Th style={{ maxWidth: 70, wordBreak: 'break-all' }}>Кол-во</Table.Th>
                                                 <Table.Th>Цена за ед.</Table.Th>
-                                                <Table.Th>Сумма</Table.Th>
+                                                <Table.Th style={{ maxWidth: 100, wordBreak: 'break-all' }}>Сумма</Table.Th>
                                             </Table.Tr>
                                         </Table.Thead>
                                         <Table.Tbody>
@@ -217,7 +217,10 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                                                 <Table.Td style={{
                                                     fontWeight: 600,
                                                     fontSize: 18,
-                                                    whiteSpace: 'nowrap'
+                                                    whiteSpace: 'nowrap',
+                                                    maxWidth: 100,
+                                                    display: 'flex',
+                                                    justifyContent: 'flex-end',
                                                 }}>
                                                     Итого {
                                                         props.order.order.store.store_type?.value === 'eat'
@@ -240,7 +243,7 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                     </div>
                 </div>
             </div>
-        </ReactModal>
+        </ReactModal >
     )
 }
 

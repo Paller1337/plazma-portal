@@ -10,6 +10,8 @@ import { ticketStatus } from 'helpers/support/tickets'
 import { axiosInstance } from 'helpers/axiosInstance'
 import { IOrder, IProduct, IRoomInfo, IStore, IStoreType, TOrderStatus } from 'types/order'
 import { IGuestAccount } from 'types/session'
+import { notify } from 'utils/notify'
+import { MdUpdate } from 'react-icons/md'
 
 interface IOrderProduct {
     id: string;
@@ -46,6 +48,7 @@ const initialState: GlobalStateType = {
 
 const orderReducer = (state: GlobalStateType, action: any) => {
     // console.log('orderReducer', action)
+    let orderId, status, paid_for
     switch (action.type) {
         case 'INITIALIZE_ORDERS':
             return {
@@ -62,6 +65,18 @@ const orderReducer = (state: GlobalStateType, action: any) => {
                         : order
                 ),
             };
+
+        case 'UPDATE_ORDER_PAID_STATUS':
+            orderId = action.payload.orderId
+            paid_for = action.payload.paid_for
+            return {
+                ...state,
+                orders: state.orders.map(order =>
+                    order.id === orderId
+                        ? { ...order, paid_for: paid_for }
+                        : order
+                ),
+            }
 
         case 'CREATE_ORDER':
             return {
@@ -206,6 +221,7 @@ export const OrderProvider = ({ children }) => {
                     },
                     isVisualNew: false,
                     completed_at: ord?.attributes.completed_at,
+                    paid_for: ord.attributes?.paid_for,
                     // type: {
                     //     id: ord?.attributes.type.data?.id,
                     //     label: ord?.attributes.type.data?.attributes.label,
@@ -306,6 +322,27 @@ export const OrderProvider = ({ children }) => {
                     // toast.success(`Новый статус заказа (${checkOrderStatus(newStatus)})`)
                 })
 
+                socket.on('orderPaidStatusChange', (data) => {
+                    const { paid_for, orderId } = data
+                    console.log('status change data ', data)
+                    console.log('orderId ', orderId)
+                    console.log('paid_for ', paid_for)
+                    dispatch({
+                        type: 'UPDATE_ORDER_PAID_STATUS',
+                        payload: { orderId, paid_for },
+                    })
+                    const order = state.orders.find(x => x.id == orderId)
+                    if (order?.paid_for !== paid_for) {
+                        if (paid_for) {
+                            notify({
+                                icon: <MdUpdate />,
+                                title: `Заказ #${orderId}`,
+                                message: `Поступила оплата за заказ`,
+                            })
+                        }
+                    }
+                });
+
                 socket.on('orderCreate', (data) => {
                     const newOrder = data.newOrder;
                     console.log('orderCreate event: ', data.event)
@@ -347,6 +384,7 @@ export const OrderProvider = ({ children }) => {
                         socket.off('orderStatusChange');
                         socket.off('orderCreate');
                         socket.off('supportTicketCreate');
+                        socket.off('orderPaidStatusChange');
                         socketRef.current.disconnect();
                         socketRef.current = null;
                     }
