@@ -1,4 +1,5 @@
 import { useAuth } from 'context/AuthContext'
+import { usePortal } from 'context/PortalContext'
 import { DEFAULTS } from 'defaults'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -8,9 +9,6 @@ import { ReactSVG } from 'react-svg'
 export default function Footer() {
     // const { isAuthenticated } = useAuth()
     const router = useRouter()
-    useEffect(() => {
-        console.log('router: ', router)
-    }, [router])
     if (!router.pathname.includes('store'))
         return (<>
 

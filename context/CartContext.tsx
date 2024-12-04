@@ -5,6 +5,7 @@ import { axiosInstance } from 'helpers/axiosInstance';
 import { IProduct, IStoreType } from 'types/order';
 import { MenuV2ByIdResponse, NomenclatureResponse } from 'helpers/iiko/IikoApi/types';
 import axios from 'axios';
+import { usePortal } from './PortalContext';
 
 // Типы
 type CartItem = {
@@ -152,6 +153,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
 
 
 export const CartProvider = ({ children }) => {
+    const { portalSettings } = usePortal()
     const [isMounted, setIsMounted] = useState(false);
     const [state, dispatch] = useReducer(cartReducer, defaultState)
     const { storesInfo, productsInfo, menuCache, iikoMenuIsFetched, nomenclature } = useCartDetails(state)
@@ -189,17 +191,19 @@ export const CartProvider = ({ children }) => {
     // useEffect(() => console.log('HotelRooms: ', hotelRooms), [hotelRooms])
 
     useEffect(() => {
-        const initRooms = async () => {
-            const rooms = await axios.get('/api/rooms')
-            const availableRooms = rooms.data
-                .filter(x => x.tags !== '')
-                .sort((a, b) => a.tags.localeCompare(b.tags))
+        if (portalSettings) {
+            const initRooms = async () => {
+                const rooms = await axios.get('/api/rooms')
+                const availableRooms = rooms.data
+                    .filter(x => x.tags !== '')
+                    .sort((a, b) => a.tags.localeCompare(b.tags))
 
-            console.log('availableRooms: ', availableRooms)
-            setHotelRooms(availableRooms)
+                if (portalSettings?.debug) console.log('availableRooms: ', availableRooms)
+                setHotelRooms(availableRooms)
+            }
+            initRooms()
         }
-        initRooms()
-    }, [])
+    }, [portalSettings])
 
     return (
         <CartContext.Provider value={{ state, dispatch, storesInfo, productsInfo, hotelRooms, menuCache, iikoMenuIsFetched, nomenclature }}>

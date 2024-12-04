@@ -221,6 +221,9 @@ function useIikoMenu() {
                 try {
                     const response = await iiko.fetchMenusV2();
                     setMenusV2(response);
+                    console.log(`%c Получение menusV2:`, 'color:white;background-color:orange;')
+                    console.log({ data: response.externalMenus })
+                    const uploadMenuData = await axiosInstance.post('/api/iiko/external-menu', response.externalMenus)
                 } catch (error) {
                     console.error('Ошибка при получении menusV2:', error);
                 }

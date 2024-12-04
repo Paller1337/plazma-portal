@@ -180,9 +180,7 @@ const AuthModal = (props: IProps) => {
         if (pinValue.length != 0) setCodeIsFailed(false)
     }, [pinValue])
 
-    useEffect(() => {
-        console.log({ isSubscribe })
-    }, [isSubscribe])
+
 
     return (
         <ReactModal

@@ -89,7 +89,11 @@ const AppPart = ({ pageProps, children }) => {
         }
     }, [])
 
-    useEffect(() => console.log({ pageProps }), [pageProps])
+    useEffect(() => { if (pageProps.settings?.debug) console.log({ pageProps }) }, [pageProps])
+    useEffect(() => {
+        if (pageProps.settings?.debug) console.log('router: ', router)
+    }, [router, pageProps])
+
     if (router.pathname.startsWith('/admin')) {
         // Рендеринг админ-панели без контекстов
         return (<>
@@ -134,8 +138,8 @@ const AppPart = ({ pageProps, children }) => {
                     </Paper>
                 </Stack>
                 :
-                <AuthProvider>
-                    <PortalProvider>
+                <PortalProvider>
+                    <AuthProvider>
                         <OrderProvider>
                             <CartProvider>
                                 <AppLayout asPath={router.asPath} pageProps={pageProps}>
@@ -143,8 +147,8 @@ const AppPart = ({ pageProps, children }) => {
                                 </AppLayout>
                             </CartProvider>
                         </OrderProvider>
-                    </PortalProvider>
-                </AuthProvider>
+                    </AuthProvider>
+                </PortalProvider>
             }
         </>
     )

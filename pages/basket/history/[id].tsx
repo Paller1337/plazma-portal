@@ -14,9 +14,9 @@ import { useOrders } from 'context/OrderContext'
 import { DEFAULTS } from 'defaults'
 import { useEffect, useMemo, useState } from 'react'
 import { useCart } from 'context/CartContext'
-import { ItemMenuV2 } from 'helpers/iiko/IikoApi/types'
+import { ItemMenuV2, Product } from 'helpers/iiko/IikoApi/types'
 import { DateTime, Settings } from 'luxon'
-import { findItemInCache, getProductById } from 'helpers/cartContext'
+import { findItemInCache, findItemInNomenclature, getProductById } from 'helpers/cartContext'
 import { Group, Loader, LoadingOverlay, Paper, Progress, Stack, Text } from '@mantine/core'
 import { getPaymentType } from 'helpers/getPaymentType'
 import { FaCheck, FaTimeline } from 'react-icons/fa6'
@@ -85,14 +85,14 @@ const OrderLine = (props: { product: IProduct, quantity: number }) => {
     )
 }
 
-const IikoOrderLine = (props: { product: ItemMenuV2, quantity: number }) => {
+const IikoOrderLine = (props: { product: ItemMenuV2, productNomen: Product, quantity: number }) => {
     // console.log('order line: ', props.product)
     return (
         <div className='guest-order__part'>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={props.product?.itemSizes[0]?.buttonImageUrl || '/images/no-photo-60x60.png'} alt=''
                 className='guest-order__image' />
-            <span className='guest-order__item'>{props.product?.name}</span>
+            <span className='guest-order__item'>{props.productNomen?.name}</span>
             <div className='guest-order__part-amount'>
                 <span className='guest-order__part-quantity'>{props.quantity} x</span>
                 <span className='guest-order__part-price'>{props.product?.itemSizes[0]?.prices[0]?.price} ₽</span>
@@ -104,13 +104,14 @@ const IikoOrderLine = (props: { product: ItemMenuV2, quantity: number }) => {
 
 export default function OrderServices(props: BasketHistoryProps) {
     const { state } = useOrders()
+
     const order = state.orders?.find(ord => parseInt(ord.id) === props.order?.id)
     const paidStatus = order === null ? props.order.paid_for : order?.paid_for
     // console.log({paidStatus})
     // @ts-ignore
     const [visibleLoadingOverlay, setVisibleLoadingOverlay] = useState(false)
     const [orderProducts, setOrderProducts] = useState<IProduct[]>(null)
-    const { dispatch, productsInfo, menuCache, iikoMenuIsFetched } = useCart()
+    const { dispatch, productsInfo, menuCache, iikoMenuIsFetched, nomenclature } = useCart()
 
     const [statusStyle, setStatusStyle] = useState({
         '--status-color': '#000'
@@ -153,52 +154,22 @@ export default function OrderServices(props: BasketHistoryProps) {
     }, [status])
 
     useEffect(() => {
-        const initProducts = async () => {
-            const products = []
-            for (const product of props.order.products) {
-                const fetchedProduct = await getProductById(product.id) as IProduct
-                products.push(fetchedProduct)
+        if (props.order) {
+            const initProducts = async () => {
+                const products = []
+                for (const product of props.order?.products) {
+                    const fetchedProduct = await getProductById(product.id) as IProduct
+                    products.push(fetchedProduct)
+                }
+                setOrderProducts(products)
             }
-            setOrderProducts(products)
+            initProducts()
         }
-        initProducts()
-    }, [props.order.products])
+    }, [props.order, props.order?.products])
 
     Settings.defaultLocale = 'ru';
-    const createAt = DateTime.fromISO(props.order.create_at).toFormat('dd MMMM, HH:mm');
+    const createAt = DateTime.fromISO(props.order?.create_at).toFormat('dd MMMM, HH:mm');
 
-    const orderServiceRepeat = () => {
-        setVisibleLoadingOverlay(true)
-        if (props.order.type.value === 'eat') {
-            dispatch({ type: 'CLEAR_CART', storeId: 'eat' })
-            for (let product of props.order.iikoProducts) {
-                // console.log(`in ${service.service.id.toString()} amount ${service.quantity}`)
-                dispatch({
-                    type: 'ADD_ITEM',
-                    storeId: 'eat',
-                    item: {
-                        id: product.product.toString(),
-                        quantity: product.quantity
-                    },
-                })
-            }
-            Router.push(`/basket/eat`, null, { shallow: true })
-        } else {
-            dispatch({ type: 'CLEAR_CART', storeId: props.order.store.id.toString() })
-            for (let product of props.order.products) {
-                // console.log(`in ${service.service.id.toString()} amount ${service.quantity}`)
-                dispatch({
-                    type: 'ADD_ITEM',
-                    storeId: props.order.store.id.toString(),
-                    item: {
-                        id: product.id.toString(),
-                        quantity: product.quantity
-                    },
-                })
-            }
-            Router.push(`/basket/${props.order.store.id}`, null, { shallow: true })
-        }
-    }
     useEffect(() => console.log(props.order), [props.order])
 
     return (<>
@@ -261,23 +232,25 @@ export default function OrderServices(props: BasketHistoryProps) {
                             </Paper>
 
                             <div className='guest-order__info'>
-                                <span className='guest-order__number'>№ {props.order.id}</span>
+                                <span className='guest-order__number'>№ {props.order?.id}</span>
                                 <span className='guest-order__type'>Тип заказа: {props.order?.type?.label}</span>
                             </div>
 
                             <div className='guest-order__services'>
                                 {props.order?.type?.value === 'eat' ?
-                                    iikoMenuIsFetched ? props.order.iikoProducts.map((x, i) => {
+                                    iikoMenuIsFetched ? props.order?.iikoProducts.map((x, i) => {
                                         const product = findItemInCache(x.product, menuCache)
+                                        const productNomen = findItemInNomenclature(x.product, nomenclature)
                                         return (
                                             <IikoOrderLine
                                                 key={x.product + DateTime.now().toISO()}
                                                 product={product}
+                                                productNomen={productNomen}
                                                 quantity={x.quantity}
                                             />
                                         )
                                     }) : <Loader color='gray' style={{ margin: '0 auto' }} size={24} />
-                                    : orderProducts ? props.order.products.map((x, i) => {
+                                    : orderProducts ? props.order?.products.map((x, i) => {
                                         return (
                                             <OrderLine
                                                 key={x.id + DateTime.now().toISO()}
@@ -292,18 +265,18 @@ export default function OrderServices(props: BasketHistoryProps) {
 
                                 <div className='guest-order__total-row'>
                                     <span className='guest-order__total-label'>Способ оплаты</span>
-                                    <span className='guest-order__total-amount'>{getPaymentType(props.order.paymentType)}</span>
+                                    <span className='guest-order__total-amount'>{getPaymentType(props.order?.paymentType)}</span>
                                 </div>
                                 <div className='guest-order__total-row'>
                                     <span className='guest-order__total-label'>Итого</span>
                                     <span className='guest-order__total-amount'>
                                         {props.order?.type?.value === 'eat' ?
-                                            iikoMenuIsFetched ? props.order.iikoProducts.reduce((val, x) => {
+                                            iikoMenuIsFetched ? props.order?.iikoProducts.reduce((val, x) => {
                                                 const product = findItemInCache(x.product, menuCache)
                                                 const sum = val + x.quantity * product.itemSizes[0]?.prices[0]?.price
                                                 return sum
                                             }, 0) : <Loader color='gray' style={{ margin: '0 auto' }} size={24} />
-                                            : orderProducts ? props.order.products.reduce(
+                                            : orderProducts ? props.order?.products.reduce(
                                                 (val, x) => val + x.quantity * (orderProducts?.find(p => x.id === parseInt(p.id)) as IProduct).price, 0
                                             ) : <Loader color='gray' style={{ margin: '0 auto' }} size={12} />} ₽
 

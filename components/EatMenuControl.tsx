@@ -1,14 +1,18 @@
 import { Carousel } from '@mantine/carousel'
 import { Button, Divider, Group, SegmentedControl, Stack } from '@mantine/core'
 import { MenusV2Response } from 'helpers/iiko/IikoApi/types'
+import { IPortalMenu } from 'pages/store/eat'
 import { Dispatch, useState } from 'react'
 
 interface EatMenuControlProps {
     data: MenusV2Response
+    portalMenu: IPortalMenu[]
     onChange: Dispatch<any>
     currentMenuId: string
 }
-export default function EatMenuControl({ data, onChange, currentMenuId }: EatMenuControlProps) {
+export default function EatMenuControl({ data, onChange, currentMenuId, portalMenu }: EatMenuControlProps) {
+    const initSlide = portalMenu?.findIndex(x => x.menuId.toString() === currentMenuId)
+
     return (
         <Stack
             style={{
@@ -27,6 +31,7 @@ export default function EatMenuControl({ data, onChange, currentMenuId }: EatMen
                 align="start"
                 slideGap="xs"
                 controlsOffset="xs"
+                initialSlide={initSlide}
                 controlSize={14}
                 dragFree
                 withControls={false}
@@ -61,26 +66,29 @@ export default function EatMenuControl({ data, onChange, currentMenuId }: EatMen
                         />
                     </Stack>
                 </Carousel.Slide> */}
-                {data?.externalMenus.map((x, i) => (
-                    <Carousel.Slide key={x.id}>
-                        <Group>
-                            <Button
-                                color={currentMenuId === x.id ? '#56754B' : '#495057'}
-                                variant={currentMenuId === x.id ? 'filled' : 'transparent'}
-                                onClick={currentMenuId === x.id ? () => null : () => { onChange(x.id) }}
-                                // onClick={() => {
-                                //     onChange(x.id)
-                                //     console.log('123')
-                                // }}
-                                radius={'lg'}
-                                py={8}
-                            >
-                                {x.name}
-                            </Button>
-                            {i < (data?.externalMenus.length - 1) && <Divider orientation='vertical' />}
-                        </Group>
-                    </Carousel.Slide>
-                ))}
+                {portalMenu?.map((x, i) => {
+
+                    return (
+                        <Carousel.Slide key={x.menuId}>
+                            <Group>
+                                <Button
+                                    color={currentMenuId === x.menuId?.toString() ? '#56754B' : '#495057'}
+                                    variant={currentMenuId === x.menuId?.toString() ? 'filled' : 'transparent'}
+                                    onClick={currentMenuId === x.menuId?.toString() ? () => null : () => { onChange(x.menuId?.toString()) }}
+                                    // onClick={() => {
+                                    //     onChange(x.id)
+                                    //     console.log('123')
+                                    // }}
+                                    radius={'lg'}
+                                    py={8}
+                                >
+                                    {x.title}
+                                </Button>
+                                {i < (data?.externalMenus.length - 1) && <Divider orientation='vertical' />}
+                            </Group>
+                        </Carousel.Slide>
+                    )
+                })}
             </Carousel>
         </Stack>
     )

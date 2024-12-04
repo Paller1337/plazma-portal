@@ -350,7 +350,7 @@ interface ProductCategory {
 }
 
 /** Категория блюда (API v2) */
-interface ItemCategory {
+export interface ItemCategory {
     /** Уникальный идентификатор категории */
     id: string;
     /** Название категории */

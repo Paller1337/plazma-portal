@@ -5,7 +5,7 @@ import { ReactSVG } from 'react-svg'
 import { useRouter } from 'next/router'
 import { DEFAULTS } from 'defaults'
 import { useCart } from 'context/CartContext'
-import { ItemMenuV2, Product } from 'helpers/iiko/IikoApi/types'
+import { ItemCategory, ItemMenuV2, Product } from 'helpers/iiko/IikoApi/types'
 import { Image } from '@mantine/core'
 import { IStoreStatus } from 'utils/storeStatus'
 
@@ -16,6 +16,7 @@ interface IProps {
     onClose: () => void,
     storeId?: string,
     product?: ItemMenuV2
+    category?: ItemCategory
     productNomenclature?: Product
     storeStatus?: IStoreStatus
 }
@@ -41,6 +42,9 @@ const ProductEatModal = (props: IProps) => {
         props.onClose()
     }
 
+    useEffect(() => {
+        console.log({ propsProduct: props})
+    }, [props])
 
     const price = props.product?.itemSizes[0].prices[0].price
     const itemData = props.product?.itemSizes[0]
@@ -51,18 +55,21 @@ const ProductEatModal = (props: IProps) => {
             onRequestClose={props.onClose}
             className="Product-Modal"
             overlayClassName="Overlay"
+            bodyOpenClassName='ReactModal__Eat-Body--open'
         // shouldCloseOnOverlayClick={false}
         >
             <div className="Product-Modal__content">
-                <div className='Product-Modal__image'>
+                {itemData?.buttonImageUrl ? <div className='Product-Modal__image'>
                     <Image src={`${itemData?.buttonImageUrl}`} alt='' fallbackSrc='/images/fallback.png' />
                 </div>
-                <ReactSVG color='#fff' className='Product-Modal__close' src='/svg/modal-close.svg' onClick={props.onClose} />
+                    : <></>}
+
+                <ReactSVG className={`Product-Modal__close${itemData?.buttonImageUrl ? ' white' : ' dark'}`} src='/svg/modal-close.svg' onClick={props.onClose} />
 
                 <div className='Product-Modal__info'>
-                    {/* {props.product?.memo_text ? <span className='Product-Modal__info-memo'>{props.product?.memo_text}</span> : <></>} */}
+                    {props.category?.name ? <span className='Product-Modal__info-memo'>{props.category?.name}</span> : <></>}
                     {props.productNomenclature?.seoTitle ? <span className='Product-Modal__info-title'>{props.productNomenclature?.seoTitle}</span> : <></>}
-                    {/* {props.product?.warning_text ? <span className='Product-Modal__info-warning_text'>{props.product?.warning_text}</span> : <></>} */}
+                    {props.category?.description ? <span className='Product-Modal__info-warning_text'>{props.category?.description}</span> : <></>}
                     {props.productNomenclature?.seoDescription ? <span className='Product-Modal__info-description'>{props.productNomenclature?.seoDescription}</span> : <></>}
                     {price && price > 0 ? <span className='Product-Modal__info-price'>{price} руб.</span> : <></>}
                 </div>

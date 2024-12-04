@@ -3,6 +3,8 @@ import NavBar from '@/components/NavBar'
 import PromoSlider from '@/components/PromoSlider'
 import RatingModal from '@/components/RatingModal'
 import StoriesModal from '@/components/Story'
+import { Stack } from '@mantine/core'
+import { useMediaQuery } from '@mantine/hooks'
 import axios from 'axios'
 import { useOrders } from 'context/OrderContext'
 import { DEFAULTS } from 'defaults'
@@ -49,7 +51,14 @@ const slides = [
 ]
 
 interface IndexPageProps {
-    // orders?: IOrder[]
+    promo?: {
+        id: number
+        title: string
+        subtitle: string
+        tag: string
+        href: string
+        image: string
+    }
     slider?: WallWallpostFull[]
     categories?: {
         name: string,
@@ -126,9 +135,10 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
             .sort((aa, bb) => bb.attributes.priority - aa.attributes.priority);
 
 
+        const promo = await axiosInstance.get('/api/promo')
         return {
             props: {
-                // orders: orders,
+                promo: promo.data,
                 slider: vkPosts,
                 categories: categories,
                 stories: stories
@@ -187,6 +197,7 @@ export default function IndexPage(props: IndexPageProps) {
     const orders = state.orders
     const supportTicks = state.tickets
     const [sliderData, setSliderData] = useState(null)
+    const isMobile = useMediaQuery(`(max-width: 520px)`)
 
     const [ratingModalIsOpen, setRatingModalIsOpen] = useState(false)
     const closeRatingModal = () => setRatingModalIsOpen(false)
@@ -276,7 +287,7 @@ export default function IndexPage(props: IndexPageProps) {
     return (<>
         <RatingModal isOpen={ratingModalIsOpen} onClose={closeRatingModal} />
         <div className='index-preview'>
-            <img src='/images/welcome.png' alt='' />
+            <img src='/images/welcome-winter.png' alt='' />
         </div>
 
         <StoriesModal isOpen={modalIsOpen} onClose={closeModal} stories={props.stories} />
@@ -293,7 +304,20 @@ export default function IndexPage(props: IndexPageProps) {
                     </div>
                 </div>
             </div>
-            <PromoSlider slides={sliderData} />
+            {/* <PromoSlider slides={sliderData} /> */}
+            {props.promo ?
+                <Stack px={isMobile ? 8 : 24} mb={24}>
+                    <MainCard
+                        key={props.promo?.title}
+                        image={DEFAULTS.STRAPI_URL.prod + props.promo?.image}
+                        size={'big'}
+                        title={props.promo?.title}
+                        subtitle={props.promo?.subtitle}
+                        tag={props.promo?.tag}
+                        href={props.promo?.href}
+                    />
+                </Stack>
+                : <></>}
 
             {workOrders.length > 0 ?
                 <div className='index-nav index-orders'>

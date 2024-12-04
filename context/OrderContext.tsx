@@ -11,6 +11,7 @@ import { ticketStatus } from 'helpers/support/tickets';
 import { notify } from 'utils/notify';
 import { FaCheckCircle } from "react-icons/fa"
 import { MdUpdate } from "react-icons/md"
+import { usePortal } from './PortalContext';
 
 
 interface IOrderProduct {
@@ -134,13 +135,14 @@ const OrderContext = createContext<{
 
 export const OrderProvider = ({ children }) => {
     const ws = useRef<Socket>(null)
+    const { portalSettings } = usePortal()
     const [state, dispatch] = useReducer(orderReducer, initialState)
     const [ordersIsLoading, setOrdersIsLoading] = useState(true)
     const [ticketsIsLoading, setTicketsIsLoading] = useState(true)
     const [isInitFetched, setIsInitFetched] = useState(false)
     const { isAuthenticated, isAuthProcessed, currentUser, visitorId } = useAuth()
 
-    useEffect(() => { console.log(state) }, [state])
+    useEffect(() => { if (portalSettings?.debug) console.log(state) }, [state, portalSettings])
     useEffect(() => {
         async function fetchOrdersAndTickets() {
             try {
@@ -210,11 +212,11 @@ export const OrderProvider = ({ children }) => {
             fetchOrdersAndTickets().then(() => setIsInitFetched(true))
         }
     }, [currentUser.id, isAuthenticated])
-    useEffect(() => console.log({ ws: ws.current }), [ws.current])
+    useEffect(() => { if (portalSettings?.debug) console.log({ ws: ws.current }) }, [ws.current, portalSettings])
 
     useEffect(() => {
         if (visitorId && !ws.current && !isAuthProcessed) {
-            console.log('Socket Init');
+            // console.log('Socket Init');
             ws.current = io(DEFAULTS.SOCKET.URL, {
                 query: {
                     visitorId: visitorId,
@@ -234,31 +236,33 @@ export const OrderProvider = ({ children }) => {
     useEffect(() => {
         if (visitorId && ws.current) {
             const socket = ws.current
-            console.log('Socket Start Connection')
+            // console.log('Socket Start Connection')
             socket.on('connect', () => {
-                console.log('Connected to Strapi WebSocket')
+                console.log('Connected to Plazma WebSocket')
             });
 
             socket.on('disconnect', (e) => {
-                console.log('disconnected to Strapi WebSocket', { e })
+                console.log('disconnected to Plazma WebSocket', { e })
             });
 
 
-            socket.on('checkSocket', (data) => {
-                console.log('checkSocket ', data)
-            });
+            // socket.on('checkSocket', (data) => {
+            //     console.log('checkSocket ', data)
+            // });
 
             if (isAuthenticated && currentUser.id !== 0 && isInitFetched) {
                 socket.on('orderStatusChange', (data) => {
                     const { newStatus, orderId, paid_for } = data
-                    console.log('status change data ', data)
-                    console.log('orderId ', orderId)
-                    console.log('state.orders ', state.orders)
+                    if (portalSettings?.debug) {
+                        console.log('status change data ', data)
+                        console.log('orderId ', orderId)
+                        console.log('state.orders ', state.orders)
+                    }
                     // console.log('status old data ', state.orders.find(x => x.id == orderId)
                     const order = state.orders.find(x => x.id == orderId)
                     const textStatus = checkOrderStatus(newStatus);
 
-                    console.log({ status: order?.status, incomeStatus: newStatus })
+                    if (portalSettings?.debug) console.log({ status: order?.status, incomeStatus: newStatus })
                     if (order?.status !== newStatus) {
                         dispatch({
                             type: 'UPDATE_ORDER_STATUS',
@@ -275,9 +279,12 @@ export const OrderProvider = ({ children }) => {
 
                 socket.on('orderPaidStatusChange', (data) => {
                     const { paid_for, orderId } = data
-                    console.log('status change data ', data)
-                    console.log('orderId ', orderId)
-                    console.log('paid_for ', paid_for)
+
+                    if (portalSettings?.debug) {
+                        console.log('status change data ', data)
+                        console.log('orderId ', orderId)
+                        console.log('paid_for ', paid_for)
+                    }
                     dispatch({
                         type: 'UPDATE_ORDER_PAID_STATUS',
                         payload: { orderId, paid_for },
@@ -312,7 +319,7 @@ export const OrderProvider = ({ children }) => {
 
                 socket.on('supportTicketStatusChange', (data) => {
                     const { newStatus, ticketId } = data
-                    console.log('ticket data: ', data)
+                    if (portalSettings?.debug) console.log('ticket data: ', data)
                     dispatch({
                         type: 'UPDATE_TICKET_STATUS',
                         payload: { ticketId, status: newStatus },
@@ -340,12 +347,13 @@ export const OrderProvider = ({ children }) => {
     }, [isAuthenticated, visitorId, isInitFetched]);
 
     useEffect(() => {
-        if (ws.current) {
+        if (ws.current && portalSettings?.debug) {
             console.log('Socket already initialized:', ws.current.id);
         } else {
             console.log('Initializing new socket connection');
         }
-    }, []);
+    }, [portalSettings])
+
     return (
         <OrderContext.Provider value={{ state, dispatch, ordersIsLoading, ticketsIsLoading, ws }}>
             {children}

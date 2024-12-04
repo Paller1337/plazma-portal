@@ -7,8 +7,8 @@ import { DateTime, Settings } from 'luxon'
 import { Flex, Loader, LoadingOverlay } from '@mantine/core'
 import { useCart } from 'context/CartContext'
 import Router from 'next/router'
-import { findItemInCache, getProductById } from 'helpers/cartContext'
-import { ItemMenuV2 } from 'helpers/iiko/IikoApi/types'
+import { findItemInCache, findItemInNomenclature, getProductById } from 'helpers/cartContext'
+import { ItemMenuV2, Product } from 'helpers/iiko/IikoApi/types'
 import { getPaymentType } from 'helpers/getPaymentType'
 
 interface OrderListItemProps {
@@ -34,14 +34,14 @@ const OrderLine = (props: { product: IProduct, quantity: number }) => {
     )
 }
 
-const IikoOrderLine = (props: { product: ItemMenuV2, quantity: number }) => {
+const IikoOrderLine = (props: { product: ItemMenuV2, productNomen: Product, quantity: number }) => {
     // console.log('order line: ', props.product)
     return (
         <div className='guest-order__part'>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={props.product?.itemSizes[0]?.buttonImageUrl || '/images/no-photo-60x60.png'} alt=''
                 className='guest-order__image' />
-            <span className='guest-order__item'>{props.product?.name}</span>
+            <span className='guest-order__item'>{props.productNomen?.name}</span>
             <div className='guest-order__part-amount'>
                 <span className='guest-order__part-quantity'>{props.quantity} x</span>
                 <span className='guest-order__part-price'>{props.product?.itemSizes[0]?.prices[0]?.price} ₽</span>
@@ -53,7 +53,7 @@ const IikoOrderLine = (props: { product: ItemMenuV2, quantity: number }) => {
 export default function OrderListItem(props: OrderListItemProps) {
     const [visibleLoadingOverlay, setVisibleLoadingOverlay] = useState(false)
     const [orderProducts, setOrderProducts] = useState<IProduct[]>(null)
-    const { dispatch, productsInfo, menuCache, iikoMenuIsFetched } = useCart()
+    const { dispatch, productsInfo, menuCache, iikoMenuIsFetched, nomenclature } = useCart()
 
     const [statusStyle, setStatusStyle] = useState({
         '--status-color': '#000'
@@ -168,10 +168,12 @@ export default function OrderListItem(props: OrderListItemProps) {
                     {props.order?.type?.value === 'eat' ?
                         iikoMenuIsFetched ? props.order.iikoProducts.map((x, i) => {
                             const product = findItemInCache(x.product, menuCache)
+                            const productNomen = findItemInNomenclature(x.product, nomenclature)
                             return (
                                 <IikoOrderLine
                                     key={x.product + DateTime.now().toISO()}
                                     product={product}
+                                    productNomen={productNomen}
                                     quantity={x.quantity}
                                 />
                             )

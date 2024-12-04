@@ -22,6 +22,7 @@ import { default as NextImage } from 'next/image'
 import { IStore } from './[id]'
 import { getStoreStatus } from 'utils/storeStatus'
 import { getStoreResult } from 'helpers/getStoreResult'
+import { usePortal } from 'context/PortalContext'
 
 const EatMenuControl = dynamic(() => import('@/components/EatMenuControl').then((mod) => mod.default), { ssr: false })
 
@@ -47,8 +48,15 @@ const EatMenuControl = dynamic(() => import('@/components/EatMenuControl').then(
 //     customId?: string
 // }
 
+export interface IPortalMenu {
+    menuId: number,
+    title: string
+    description: string
+    fetchDate: Date
+}
 interface EatPageProps {
     menus?: MenusV2Response
+    portalMenu?: IPortalMenu[],
     store?: IStore
     targetId?: string
 }
@@ -64,8 +72,11 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
     try {
         const menus = await iiko.fetchMenusV2()
         const targetId = menus.externalMenus.find(m => m.id === id)?.id
+        const portalMenu = (await axiosInstance.get(`/api/iiko/portal-menu`)).data
+
         return {
             props: {
+                portalMenu: portalMenu,
                 menus: menus,
                 targetId: targetId ? targetId : menus.externalMenus[0].id,
                 store: store
@@ -143,10 +154,12 @@ const ImageLoader = ({ src }) => {
 export default function CustomStorePage(props: EatPageProps) {
     const customStoreId = 'eat'
 
+    const { portalSettings } = usePortal()
     const [productModalIsOpen, setProductModalIsOpen] = useState(false)
     const [currentProduct, setCurrentProduct] = useState(null)
     const [currentProductNomenclature, setCurrentProductNomenclature] = useState(null)
 
+    const [currentCat, setCurrentCat] = useState(null)
     const [currentMenuId, setCurrentMenuId] = useState(null)
     const [currentMenu, setCurrentMenu] = useState<MenuV2ByIdResponse>(null)
 
@@ -159,7 +172,9 @@ export default function CustomStorePage(props: EatPageProps) {
     const paddingOffset = (storeStatus.untilClose_min && storeStatus.untilClose_min < 45) || storeStatus.untilOpen_min ? 240 : 190
     const firstCat = currentMenu?.itemCategories.filter(c => c.items.length > 0)[0]
 
-    useEffect(() => console.log({ worktime: getStoreStatus(props.store.storeWorktime) }), [])
+    useEffect(() => {
+        if (portalSettings?.debug) console.log({ worktime: getStoreStatus(props.store.storeWorktime) })
+    }, [portalSettings])
 
     const { state, productsInfo, nomenclature, menuCache, iikoMenuIsFetched } = useCart()
     const router = useRouter()
@@ -179,7 +194,7 @@ export default function CustomStorePage(props: EatPageProps) {
             const menuId = props.targetId
 
             const menu = menuCache[menuId]
-            console.log('current menu: ', menu)
+            if (portalSettings?.debug) console.log('current menu: ', menu)
             setCurrentMenu(menu)
         }
         if (props.store?.isActive) {
@@ -190,7 +205,7 @@ export default function CustomStorePage(props: EatPageProps) {
             setCurrentMenuId(props.targetId)
             fetchMenu().then(() => setIsLoading(false))
         }
-    }, [props.targetId, props.store?.isActive, iikoMenuIsFetched])
+    }, [props.targetId, props.store?.isActive, iikoMenuIsFetched, portalSettings])
 
     useEffect(() => {
         window.addEventListener('scroll', handleScroll, { passive: true });
@@ -203,15 +218,17 @@ export default function CustomStorePage(props: EatPageProps) {
     useEffect(() => {
         if (currentMenu && nomenclature) {
             const product = nomenclature?.products.find(x => x.id === currentMenu?.itemCategories[0]?.items[14]?.itemId)
-            console.log({ product })
-            console.log({ menuCache })
-            console.log({ nomenclature })
+            if (portalSettings?.debug) {
+                console.log({ product })
+                console.log({ menuCache })
+                console.log({ nomenclature })
+            }
         }
         // console.log('currentStoreState: ', currentStoreState)
-    }, [currentMenu, nomenclature])
+    }, [currentMenu, nomenclature, portalSettings])
 
     useEffect(() => {
-        console.log('currentMenu ', currentMenu)
+        if (portalSettings?.debug) console.log('currentMenu ', currentMenu)
     }, [currentMenu])
 
     // useEffect(() => {
@@ -221,20 +238,23 @@ export default function CustomStorePage(props: EatPageProps) {
     // }, [])
 
     const closeProductModal = () => setProductModalIsOpen(false)
-    const openProductModal = (product, productNomen) => {
+    const openProductModal = (product, productNomen, cat) => {
         setProductModalIsOpen(true)
         setCurrentProduct(product)
+        setCurrentCat(cat)
         setCurrentProductNomenclature(productNomen)
     }
 
     useEffect(() => {
-        console.log('currentProduct: ', currentProduct)
-        router.query.id = currentMenuId
-        router.push({
-            pathname: router.pathname,
-            query: router.query
-        }, undefined, { shallow: false })
-    }, [currentMenuId])
+        if (portalSettings) {
+            if (portalSettings?.debug) console.log('currentProduct: ', currentProduct)
+            router.query.id = currentMenuId
+            router.push({
+                pathname: router.pathname,
+                query: router.query
+            }, undefined, { shallow: false })
+        }
+    }, [currentMenuId, portalSettings])
 
 
 
@@ -246,6 +266,7 @@ export default function CustomStorePage(props: EatPageProps) {
             onClose={closeProductModal}
             product={currentProduct}
             productNomenclature={currentProductNomenclature}
+            category={currentCat}
             storeId={customStoreId}
             storeStatus={storeStatus}
         />
@@ -295,7 +316,12 @@ export default function CustomStorePage(props: EatPageProps) {
                             }
 
                             {isLoading ? <Skeleton height={24} radius="xl" /> :
-                                isActive ? <EatMenuControl data={props.menus} onChange={setCurrentMenuId} currentMenuId={currentMenuId} /> : <></>
+                                isActive ? <EatMenuControl
+                                    data={props.menus}
+                                    onChange={setCurrentMenuId}
+                                    currentMenuId={currentMenuId}
+                                    portalMenu={props.portalMenu}
+                                /> : <></>
                             }
                         </Stack>
                     </Stack>
@@ -350,7 +376,7 @@ export default function CustomStorePage(props: EatPageProps) {
                                                             const itemNomen = nomenclature.products.find(x => x.id === item.itemId)
                                                             return (
                                                                 <div key={item.name + item.itemId} className='store-content__product'
-                                                                    onClick={() => openProductModal(item, itemNomen)}
+                                                                    onClick={() => openProductModal(item, itemNomen, cat)}
                                                                 >
                                                                     <div className={`store-content__product-image${price && price > 0 ? ' with-price' : ''}`}>
                                                                         <ImageLoader src={itemData.buttonImageUrl} />
@@ -369,14 +395,22 @@ export default function CustomStorePage(props: EatPageProps) {
                                                             const price = item.itemSizes[0].prices[0].price
                                                             const itemData = item.itemSizes[0]
                                                             const itemNomen = nomenclature.products.find(x => x.id === item.itemId)
-                                                            console.log({ itemN: itemNomen })
+                                                            // if (portalSettings?.debug) console.log({ itemN: itemNomen })
                                                             return (
                                                                 <div
                                                                     key={item.name + item.itemId}
                                                                     className='store-content__product inline'
-                                                                    onClick={() => openProductModal(item, itemNomen)}
+                                                                    onClick={() => openProductModal(item, itemNomen, cat)}
                                                                 >
-                                                                    <div className={`store-content__product-image${tprice && tprice > 0 ? ' with-price' : ''}`} style={{ background: itemNomen?.seoTitle ? 'green' : '#f1f3f5' }}>
+                                                                    <div className={`store-content__product-image${tprice && tprice > 0 ? ' with-price' : ''}`}
+                                                                        // style={portalSettings?.debug ? { background: itemNomen?.seoTitle ? 'green' : '#f1f3f5' } : {}}
+                                                                    >
+                                                                        {portalSettings?.debug && itemNomen?.seoTitle
+                                                                            ?
+                                                                            <Paper w={8} h={8} bg={'green'} radius={'xl'} pos={'absolute'} right={0} top={0}
+                                                                            />
+                                                                            : <></>
+                                                                        }
                                                                         <div className='store-content__product-info'>
                                                                             <span className='store-content__product-name'>{itemNomen?.seoTitle ? itemNomen?.seoTitle : item.name}</span>
                                                                             <span className='store-content__product-size'> </span>

@@ -16,6 +16,7 @@ import FingerprintJS from '@fingerprintjs/fingerprintjs'
 import { FaCheckCircle } from 'react-icons/fa'
 import { notify } from 'utils/notify'
 import { LiaHandPeace } from "react-icons/lia"
+import { usePortal } from './PortalContext'
 
 interface AuthContextType {
     isAuthenticated: boolean
@@ -54,6 +55,7 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const router = useRouter()
+    const { portalSettings } = usePortal()
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [isAuthProcessed, setIsAuthProcessed] = useState(true)
     const [isPwaBannerHidden, setIsPwaBannerHidden] = useState(false)
@@ -71,8 +73,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const closeNotifyModal = () => setNotifyModalIsOpen(false)
     const openNotifyModal = () => setNotifyModalIsOpen(true)
 
-    useEffect(() => console.log({ currentUser }), [currentUser])
-    useEffect(() => console.log({ isAuthProcessed }), [isAuthProcessed])
+    useEffect(() => { if (portalSettings?.debug) console.log({ currentUser }) }, [currentUser, portalSettings])
+    useEffect(() => { if (portalSettings?.debug) console.log({ isAuthProcessed }) }, [isAuthProcessed, portalSettings])
 
     const authGuestByPhone = async (phone: string) => {
         try {
@@ -117,7 +119,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
             if (response.status === 201) {
                 const auth = await authGuestByPhone(phone)
-                console.log('auth result: ', auth)
+                if (portalSettings?.debug) console.log('auth result: ', auth)
                 return response.data
             } else if (response.status === 200) {
                 return { status: false, message: 'Гость уже зарегистрирован' }
@@ -177,8 +179,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     useEffect(() => {
-        console.log('isPwaBannerHidden: ', isPwaBannerHidden)
-    }, [isPwaBannerHidden])
+        if (portalSettings?.debug) console.log('isPwaBannerHidden: ', isPwaBannerHidden)
+    }, [isPwaBannerHidden, portalSettings])
 
     useEffect(() => {
         checkAuthToken()
@@ -210,14 +212,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }, [isAuthenticated])
 
     useEffect(() => {
-        FingerprintJS.load()
-            .then(fp => fp.get())
-            .then(result => {
-                setVisitorId(result.visitorId)
-                console.log('visitorId: ', result)
-            })
+        if (portalSettings) {
+            FingerprintJS.load()
+                .then(fp => fp.get())
+                .then(result => {
+                    setVisitorId(result.visitorId)
+                    if (portalSettings?.debug) console.log('visitorId: ', result)
+                })
+        }
 
-    }, [])
+    }, [portalSettings])
 
     const { getSubscription } = useSubscribe({ publicKey: 'BBu8PIpHwRr3d2B61zDh75x_GqvvBwn4sPxHIIu7D5fxaG0rEIiWPU8k6oc0vS-aaO3J8Jum19QjEFfT-hFJczs' })
 

@@ -54,6 +54,16 @@
         right: 0
         top: 0
         cursor: pointer
+        &.white
+            div
+                svg
+                    path
+                        fill: #fff
+        &.dark
+            div
+                svg
+                    path
+                        fill: #252525
     &__image
         height: 220px
         width: 100%
@@ -81,23 +91,35 @@
             font-size: 24px
             font-weight: 600
             color: #262626
-            line-height: 150%
+            line-height: 125%
 
         &-description
             font-size: 14px
             color: #262626
             line-height: 150%
-            margin-top: 12px
+            margin-top: 18px
         &-price
             font-size: 20px
             font-weight: 600
             color: #262626
             line-height: 150%
+            margin-top: 8px
         &-warning_text
+            // font-size: 14px
+            // font-weight: 600
+            // color: #e56111
+            // line-height: 150%
+
             font-size: 14px
             font-weight: 600
-            color: #e56111
+            color: #fff
             line-height: 150%
+            margin-top: 0px
+            background: #e56111
+            width: fit-content
+            padding: 2px 8px
+            border-radius: 8px
+            margin-top: 4px
     &__actions
         display: flex
         padding: 24px 24px 24px 24px

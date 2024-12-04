@@ -283,7 +283,9 @@
             border-radius: 0px 0 8px 0
             overflow: hidden
             background: #2DCA13
+            // background: #00b93a
             color: #fff
+            z-index: 1
         &-image
             border-radius: 12px
             max-width: 49%
@@ -333,9 +335,12 @@
             max-width: 100%
             height: 260px
             max-height: 260px
+            @media screen and ( max-width: 590px )
+                height: 200px
+                max-height: 200px
             @media screen and ( max-width: 470px )
-                height: 220px
-                max-height: 220px
+                height: 190px
+                max-height: 190px
             @media screen and ( max-width: 390px )
                 height: 180px
                 max-height: 180px

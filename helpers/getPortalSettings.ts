@@ -4,6 +4,7 @@ export interface IPortalSettings {
     isDisable: boolean
     isDisableOrders: boolean
     isDisableSMSAuth: boolean
+    debug: boolean
 }
 
 export const getPortalSettings = async (): Promise<IPortalSettings> => {

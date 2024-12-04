@@ -89,6 +89,8 @@ export default function OrderServices(props) {
     const storeStatus = props?.storeStatus as IStoreStatus
     const store = props?.store as IStore
 
+    const { portalSettings } = usePortal()
+
     const [paymentTypes, setPaymentTypes] = useState(DEFAULT_PAYMENT_TYPES)
     const { yookassa } = usePortal()
 
@@ -133,14 +135,14 @@ export default function OrderServices(props) {
         try {
             const response = await axiosInstance.post('/api/order/create', orderData)
             if (response.status === 200) {
-                console.log('Order placed successfully:', response.data)
+                if (portalSettings.debug) console.log('Order placed successfully:', response.data)
                 return { data: response.data, status: true }
             } else {
-                console.error('Error placing order:', response.data)
+                if (portalSettings.debug) console.error('Error placing order:', response.data)
                 return { data: response.data, status: false }
             }
         } catch (error) {
-            console.error('Error placing order:', error)
+            if (portalSettings.debug) console.error('Error placing order:', error)
             return { data: null, status: false }
         }
     }
@@ -148,8 +150,10 @@ export default function OrderServices(props) {
     useEffect(() => {
         // console.log('state.stores[props.id]: ', state)
         // state.stores[props.id]
-        console.log('currentStoreState: ', props)
-    }, [])
+        if (portalSettings.debug) {
+            console.log('currentStoreState: ', props)
+        }
+    }, [portalSettings])
 
     useEffect(() => {
         if (store?.payment_system) {
@@ -168,10 +172,10 @@ export default function OrderServices(props) {
                     const decoded = res.data
                     const resGuestAccount = await getGuestAccountById(decoded.accountId)
 
-                    console.log('resGuestAccount: ', resGuestAccount)
+                    if (portalSettings.debug) console.log('resGuestAccount: ', resGuestAccount)
                     setOrderPhone(p => ({ ...p, value: resGuestAccount.attributes.phone }))
                     setGuestAccount(resGuestAccount)
-                    console.log('guestAccount: ', resGuestAccount)
+                    if (portalSettings.debug) console.log('guestAccount: ', resGuestAccount)
                 }
             }
             initGuestInfo()
@@ -331,7 +335,7 @@ export default function OrderServices(props) {
     }
 
     const closeModal = () => {
-        console.log('state.stores: ', state.stores)
+        // console.log('state.stores: ', state.stores)
         if (Object.keys(state.stores).length === 0) router.push('/', null, { shallow: true })
         setModalIsOpen(false)
     }
@@ -391,7 +395,7 @@ export default function OrderServices(props) {
                 }) || [],
             });
 
-            console.log({ paymentResponse })
+            if (portalSettings.debug) console.log({ paymentResponse })
             const token = paymentResponse.data.payment.confirmation.confirmation_token;
 
             // Инициализация и отображение виджета

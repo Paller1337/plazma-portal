@@ -2,16 +2,20 @@ import { GetServerSideProps, GetServerSidePropsContext, GetServerSidePropsResult
 import jwt from 'jsonwebtoken';
 import { SECRET_KEY } from './login'
 import { axiosInstance } from './axiosInstance';
+import { getPortalSettings } from './getPortalSettings';
 // const SECRET_KEY = 'your-secret-key';
 
 export function withAuthServerSideProps(gssp: GetServerSideProps): GetServerSideProps {
     return async (context: GetServerSidePropsContext): Promise<GetServerSidePropsResult<any>> => {
         try {
-            const settingsRes = (await axiosInstance.post('/api/portal-setting')).data
-            const settings = {
-                isDisable: settingsRes?.status?.data?.attributes?.isDisable,
-                isDisableOrders: settingsRes?.status?.data?.attributes?.isDisableOrders,
-            }
+            // const settingsRes = (await axiosInstance.post('/api/portal-setting')).data
+            // const settings = {
+            //     isDisable: settingsRes?.status?.data?.attributes?.isDisable,
+            //     isDisableOrders: settingsRes?.status?.data?.attributes?.isDisableOrders,
+            //     isDisableSMSAuth: settingsRes?.status?.data?.attributes?.isDisableOrders,
+            //     debug: settingsRes?.status?.data?.attributes?.isDisableOrders,
+            // }
+            const settings = await getPortalSettings()
 
             const token = context.req.cookies.session_token;
             const result = await gssp(context)
