@@ -4,8 +4,8 @@ import { DEFAULTS } from 'defaults';
 import { axiosInstance } from 'helpers/axiosInstance';
 
 const checkout = new YooCheckout({
-    shopId: '499489',
-    secretKey: 'test_EseOkYl7mFGASpLlS2ABreyRYemq78NV96uImawIclw',
+    shopId: '497828',
+    secretKey: 'live_WAGecp73V3188OHjZPfM7wJFRMxslBFj-MOY6g4_o9A',
 })
 
 const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN
