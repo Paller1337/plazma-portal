@@ -40,12 +40,13 @@ export async function telegramSendTicket(ticket: ISupportTicket) {
 }
 
 export async function telegramSendOrder(order: IOrder) {
+    console.log({ telegramOrder: order })
     let message = '[PORTAL DELIVERY]\n'
     message += '<b>Новый заказ!</b>\n'
     // message += `<b>ID заказа:</b> ${order.id}\n`
     message += `Тип заказа: <b>${order.type.label}</b>\n`
     message += `Время заказа: <b>${DateTime.fromISO(order.create_at).toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)}</b>\n`
-    message += `Способ оплаты: <b>${getPaymentType(order.paymentType)}</b>\n`
+    message += `Способ оплаты: <b>${getPaymentType({ order, type: 'staff' })}</b>\n`
     message += `Магазин: <b>${order.store.title}</b>\n\n`
     message += `Гость: <b>${order.guest.name}</b>\n`
     message += `Комната: <b>${order.room.label}</b>\n`

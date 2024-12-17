@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react'
 import { IOrder, IProduct, TOrderPaymentType, TOrderStatus } from 'types/order'
 import { IServiceOrdered, TServiceOrderStatus } from 'types/services'
 import AdminOrderModal from './OrderModal';
+import { axiosInstance } from 'helpers/axiosInstance';
+import { IPaymentStatus } from '@a2seven/yoo-checkout';
 
 const mockdata = {
     image:
@@ -36,6 +38,15 @@ interface ServiceOrderItemProps {
     amount: number
 }
 
+export interface IPaymentData {
+    createdAt: string
+    id: number
+    metadata: any
+    payment_id: string
+    publishedAt: string
+    status: IPaymentStatus
+    updatedAt: string
+}
 export const ServiceOrderItem = (props: ServiceOrderItemProps) => {
     return (
         <div className='admin-serviceCard__orderItem'>
@@ -50,14 +61,14 @@ export const ServiceOrderItem = (props: ServiceOrderItemProps) => {
     )
 }
 
-export const ServiceOrderBadge = (props: { status: TOrderStatus, order: IOrder, date: string }) => {
+export const ServiceOrderBadge = (props: { order: IOrder, min?: boolean }) => {
     const [isIdVisible, setIsIdVisible] = useState(false)
 
     const toggleIdVisible = () => setIsIdVisible(p => !p)
 
     const checkOrderStatus = (status) => {
         // if (!props.status) return
-        switch (props.status) {
+        switch (props.order.status) {
             case 'new':
                 return {
                     name: 'Новый',
@@ -82,6 +93,12 @@ export const ServiceOrderBadge = (props: { status: TOrderStatus, order: IOrder, 
                     name: 'В работе',
                     color: 'orange',
                 }
+
+            case 'canceled':
+                return {
+                    name: 'Отменен',
+                    color: 'red',
+                }
             // break
             default:
                 return {
@@ -92,8 +109,8 @@ export const ServiceOrderBadge = (props: { status: TOrderStatus, order: IOrder, 
         }
     }
 
-    const badge = checkOrderStatus(props.status)
-    const date = DateTime.fromISO(props.date).toLocaleString({ weekday: 'short', month: 'long', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+    const badge = checkOrderStatus(props.order.status)
+    const date = DateTime.fromISO(props.order.create_at).toLocaleString({ weekday: 'short', month: 'long', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 
     return (
         <Group wrap='nowrap' w='100%' justify='flex-end' pos={'absolute'} top={0}>
@@ -107,7 +124,7 @@ export const ServiceOrderBadge = (props: { status: TOrderStatus, order: IOrder, 
                 {isIdVisible ? `ID: ${props.order?.id}` : date}
             </span>
             <Group wrap='nowrap' p={4} gap={4} pos={'absolute'} right={4} top={4}>
-                {props.order?.paymentType === 'yookassa' && props.order?.store?.store_type?.value === 'eat' ?
+                {!props.min && props.order?.paymentType === 'external' ?
                     <Badge autoContrast variant="light" color={props.order?.paid_for ? 'teal' : 'orange'}
                         className='admin-serviceCard__badge'>
                         {props.order?.paid_for ? 'оплачен' : 'онлайн оплата'}
@@ -123,24 +140,21 @@ export const ServiceOrderBadge = (props: { status: TOrderStatus, order: IOrder, 
 
 export default function ServiceOrder(props: ICServiceOrderProps) {
     const [modalIsOpen, setModalIsOpen] = useState(false)
-
     const openModal = (index) => {
         setModalIsOpen(true)
     }
 
 
-    // useEffect(() => {
-    //     console.log('ServiceOrder: ', props.orderInfo.customer.name, ': ', props)
-    // }, [props])
+
     return (<>
         <AdminOrderModal isOpen={modalIsOpen} onClose={() => setModalIsOpen(false)} order={props} />
 
         <div className='admin-serviceCard__outer'>
             <div className={`admin-serviceCard${props.isVisualNew ? ' admin-serviceCard_new' : ''}`} onClick={() => {
                 openModal(props.order.id)
-                props.onClick()
+                props?.onClick ? props.onClick() : () => { }
             }}>
-                <ServiceOrderBadge status={props.order.status} order={props.order} date={props.order.create_at} />
+                <ServiceOrderBadge order={props.order} />
                 <Stack></Stack>
                 <div className='admin-serviceCard__header'>
                     <div className='admin-serviceCard__status'>

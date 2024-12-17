@@ -17,10 +17,18 @@ import { useCart } from 'context/CartContext'
 import { ItemMenuV2, Product } from 'helpers/iiko/IikoApi/types'
 import { DateTime, Settings } from 'luxon'
 import { findItemInCache, findItemInNomenclature, getProductById } from 'helpers/cartContext'
-import { Group, Loader, LoadingOverlay, Paper, Progress, Stack, Text } from '@mantine/core'
-import { getPaymentType } from 'helpers/getPaymentType'
-import { FaCheck, FaTimeline } from 'react-icons/fa6'
+import { Button, Group, Loader, LoadingOverlay, Paper, Progress, Stack, Text } from '@mantine/core'
+import { getPaymentStatus, getPaymentType } from 'helpers/getPaymentType'
+import { FaCheck, FaCircleXmark, FaNotEqual, FaRecycle, FaRotate, FaTimeline, FaXmark } from 'react-icons/fa6'
 import { FaClock, FaTimesCircle } from 'react-icons/fa'
+import { axiosInstance } from 'helpers/axiosInstance'
+import { IYookassaContext, usePortal } from 'context/PortalContext'
+import { IPortalSettings } from 'helpers/getPortalSettings'
+import { IPaymentData } from '@/components/admin/ServiceOrder'
+import { ReactSVG } from 'react-svg'
+import { RiErrorWarningLine } from 'react-icons/ri'
+import { notify } from 'utils/notify'
+import { useInterval } from '@mantine/hooks'
 
 
 
@@ -44,7 +52,6 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
         const orders = await getOrdersByGuestId(decoded.accountId)
         const order = orders.find(ord => ord.id === parseInt((id as string)))
 
-        console.log('orders ', orders)
 
         if (!orders) {
             throw new Error(`Заказов нет`);
@@ -103,7 +110,8 @@ const IikoOrderLine = (props: { product: ItemMenuV2, productNomen: Product, quan
 
 
 export default function OrderServices(props: BasketHistoryProps) {
-    const { state } = useOrders()
+    const { state, ws } = useOrders()
+    const { portalSettings, yookassa } = usePortal()
 
     const order = state.orders?.find(ord => parseInt(ord.id) === props.order?.id)
     const paidStatus = order === null ? props.order.paid_for : order?.paid_for
@@ -112,7 +120,19 @@ export default function OrderServices(props: BasketHistoryProps) {
     const [visibleLoadingOverlay, setVisibleLoadingOverlay] = useState(false)
     const [orderProducts, setOrderProducts] = useState<IProduct[]>(null)
     const { dispatch, productsInfo, menuCache, iikoMenuIsFetched, nomenclature } = useCart()
+    const [paymentData, setPaymentData] = useState<IPaymentData[] | undefined>(undefined)
+    const [paymentDataIsFetched, setPaymentDataIsFetched] = useState<boolean>(false)
+    const targetPayment = paymentData?.length > 0 ? paymentData[0] : null
+    const paymentStatusFetching = useInterval(async () => await fetchPayment(), 8000)
 
+    const fetchPayment = async () => {
+        if(order?.paid_for) return
+        const payment = await axiosInstance.post(`/api/order/payments/${props.order.id}`).finally(() => setPaymentDataIsFetched(true))
+        if (portalSettings?.debug) console.log(`Payment for order ${props.order.id}:`, { payment: payment.data })
+        setPaymentData(payment.data)
+    }
+
+    // const paymentStatus = order === null ? props.order.paid_for : order?.paid_for
     const [statusStyle, setStatusStyle] = useState({
         '--status-color': '#000'
     } as React.CSSProperties)
@@ -134,6 +154,13 @@ export default function OrderServices(props: BasketHistoryProps) {
                     text: 'Доставляется',
                     color: '#40c057'
                 };
+
+            case 'canceled':
+                return {
+                    name: 'Отменен',
+                    color: '#F23',
+                }
+
             case 'done':
                 return {
                     text: 'Готов',
@@ -167,10 +194,118 @@ export default function OrderServices(props: BasketHistoryProps) {
         }
     }, [props.order, props.order?.products])
 
+    // useEffect(() => {
+    //     if (ws.current?.connected) {
+    //         const socket = ws.current;
+
+    //         const handlePaymentChange = (data) => {
+    //             console.log('[TRIGGER] handlePaymentChange', data);
+
+    //         };
+
+    //         // Удаляем старую подписку перед добавлением новой
+    //         socket.off(`paymentChange-${props.order.id}`, handlePaymentChange);
+    //         socket.on(`paymentChange-${props.order.id}`, handlePaymentChange);
+
+    //         // Чистим обработчик при размонтировании
+    //         return () => {
+    //             socket.off(`paymentChange-${props.order.id}`, handlePaymentChange);
+    //         };
+    //     }
+    // }, [ws.current]);
+    const handleConsole = () => {
+        console.log({ ws })
+        console.log({ state })
+    }
+
+
     Settings.defaultLocale = 'ru';
     const createAt = DateTime.fromISO(props.order?.create_at).toFormat('dd MMMM, HH:mm');
 
-    useEffect(() => console.log(props.order), [props.order])
+    const total = props.order?.type?.value === 'eat' ?
+        iikoMenuIsFetched && props.order?.iikoProducts.reduce((val, x) => {
+            const product = findItemInCache(x.product, menuCache)
+            const sum = val + x.quantity * product.itemSizes[0]?.prices[0]?.price
+            return sum
+        }, 0)
+        : orderProducts && props.order?.products.reduce(
+            (val, x) => val + x.quantity * (orderProducts?.find(p => x.id === parseInt(p.id)) as IProduct).price, 0
+        )
+
+
+    const retryPayment = async () => {
+        // const paymentCapture = await axiosInstance.post(`/api/order/payments/${order.id}/cancel`, {
+        //     paymentId: targetPayment.payment_id
+        // })
+        handleExternalPayment(props.order)
+    }
+    const handleExternalPayment = async (targetOrder: IOrder) => {
+        if (portalSettings?.debug) console.log({ targetOrder, portalSettings, yookassa })
+        switch (targetOrder.payment_system.name) {
+            case 'yookassa':
+                await handleYookassa(targetOrder, portalSettings, yookassa)
+                break;
+            case 'yookassa_test':
+                await handleYookassa(targetOrder, portalSettings, yookassa)
+                break;
+            default:
+                return
+        }
+    }
+
+
+    const handleYookassa = async (order: IOrder, globalSettings: IPortalSettings, yookassa: IYookassaContext) => {
+        if (!yookassa?.yooWidgetIsLoaded) {
+            alert('Виджет еще не загружен. Попробуйте позже.');
+            return;
+        }
+        const payment_system_description = 'Оплата заказа еды'
+        if (!order?.payment_system?.id) {
+            alert('Онлайн оплата временно не работает.');
+            return;
+        }
+        try {
+            const paymentResponse = await axiosInstance.post('/api/order/payments', {
+                payment_system: order?.payment_system?.id,
+                orderId: order?.id,
+                guestId: order?.guest?.id,
+                amount: total,
+                phone: order?.guest?.phone,
+                description: payment_system_description,
+                items: order?.iikoProducts.map(p => {
+                    const product = findItemInNomenclature(p.product, nomenclature)
+                    return ({
+                        name: product.seoTitle || product.name,
+                        quantity: p.quantity,
+                        price: product.sizePrices[0].price.currentPrice,
+                    })
+                }) || [],
+            });
+
+            if (globalSettings?.debug) console.log({ paymentResponse })
+            const token = paymentResponse.data.payment.confirmation.confirmation_token;
+
+            // Инициализация и отображение виджета
+            await yookassa.initializeWidget(
+                token,
+                `${DEFAULTS.GENERAL_URL.app}/basket/history/${order?.id}`,
+            );
+        } catch (error) {
+            console.error('Ошибка при создании платежа:', error);
+            alert('Ошибка при создании платежа. Попробуйте позже.');
+        }
+    };
+
+    useEffect(() => {
+        if (portalSettings && props.order.id && props.order.paymentType === 'external') {
+            fetchPayment()
+            paymentStatusFetching.start()
+            return paymentStatusFetching.stop
+        }
+    }, [props.order, portalSettings])
+
+    useEffect(() => console.log('history props.order ', props.order), [props.order])
+
 
     return (<>
         <HeaderUnder title={props.order ? 'Заказ №' + props.order?.id : 'Заказ не найден'} onClick={() => Router.back()} />
@@ -188,13 +323,11 @@ export default function OrderServices(props: BasketHistoryProps) {
                                 loaderProps={{ color: 'gray', type: 'oval' }}
                             />
 
-
-
-                            <div className='guest-order__header'>
+                            <div className='guest-order__header' onClick={handleConsole}>
                                 <span className='guest-order__date'>{createAt}</span>
                                 <span className='guest-order__status guest-order__status--active' style={statusStyle}>{status.text}</span>
                             </div>
-                            <Paper my={12} radius={'md'} p={12} style={{ border: '1px solid rgb(86, 117, 75)' }}>
+                            {/* <Paper my={12} radius={'md'} p={12} style={{ border: '1px solid rgb(86, 117, 75)' }}>
                                 {paidStatus
                                     ?
                                     <Group gap={12} wrap='nowrap'>
@@ -229,7 +362,111 @@ export default function OrderServices(props: BasketHistoryProps) {
 
                                     </Group>
                                 }
-                            </Paper>
+                            </Paper> */}
+                            {props.order?.paymentType === 'external'
+                                ?
+                                <Paper my={12} radius={'md'} p={12} style={{ border: '1px solid rgb(86, 117, 75)' }}>
+                                    {paymentDataIsFetched ? targetPayment ?
+                                        <Group gap={12} wrap='nowrap'>
+                                            <Stack
+                                                bg={'rgb(86, 117, 75)'}
+                                                p={6}
+                                                style={{ borderRadius: 32 }}
+                                                justify='center'
+                                                align='center'
+                                            >
+                                                {order?.paid_for ? <FaCheck size={18} color='white' /> :
+                                                    targetPayment?.status === 'waiting_for_capture' || targetPayment?.status === 'pending' ?
+                                                        <FaClock size={18} color='white' />
+                                                        :
+                                                        targetPayment?.status === 'canceled' ?
+                                                            <RiErrorWarningLine size={18} color='white' />
+                                                            :
+                                                            <FaCheck size={18} color='white' />
+                                                }
+                                            </Stack>
+                                            <Stack>
+                                                <Text fz={15} fw={600}>
+                                                    {order?.paid_for
+                                                        ? 'Оплачен'
+                                                        : getPaymentStatus({ status: targetPayment?.status }).guest
+                                                    }
+                                                </Text>
+                                            </Stack>
+                                            {targetPayment?.status === 'pending' || (targetPayment?.status === 'canceled' && order?.status !== 'canceled') ?
+                                                <Button
+                                                    bg={'#56754B'}
+                                                    ml={'auto'}
+                                                    p={12} variant='filled'
+                                                    c={'white'}
+                                                    size='sm' h={'fit-content'} radius={'md'}
+                                                    onClick={() => retryPayment()}
+                                                >
+                                                    <Group gap={12}>
+                                                        {/* <ReactSVG src='/svg/cart-white.svg' /> */}
+                                                        <FaRotate size={18} color='white' />
+                                                        Повторить оплату
+                                                    </Group>
+                                                </Button>
+                                                : <></>}
+                                        </Group>
+                                        :
+                                        <Stack>
+                                            <Group gap={12} wrap='nowrap'>
+                                                <Stack
+                                                    bg={'rgb(86, 117, 75)'}
+                                                    p={6}
+                                                    style={{ borderRadius: 32 }}
+                                                    justify='center'
+                                                    align='center'
+                                                >
+                                                    <FaXmark size={18} color='white' />
+                                                </Stack>
+                                                <Stack>
+                                                    <Text fz={15} fw={600}>{getPaymentStatus({ status: targetPayment?.status }).guest}</Text>
+                                                </Stack>
+
+                                                <Button
+                                                    bg={'#56754B'}
+                                                    ml={'auto'}
+                                                    p={12} variant='filled'
+                                                    c={'white'}
+                                                    size='sm' h={'fit-content'} radius={'md'}
+                                                    onClick={() => handleExternalPayment(props.order)}
+                                                >
+                                                    <Group gap={12}>
+                                                        <ReactSVG src='/svg/cart-white.svg' />
+                                                        Оплатить заказ
+                                                    </Group>
+                                                </Button>
+                                            </Group>
+                                        </Stack>
+                                        :
+                                        <Stack>
+                                            <Loader color='gray' style={{ margin: '0 auto' }} size={24} />
+                                        </Stack>
+                                    }
+
+                                    {/* <Group gap={12} wrap='nowrap'>
+                                        <Stack
+                                            bg={'rgb(86, 117, 75)'}
+                                            p={6}
+                                            style={{ borderRadius: 32 }}
+                                            justify='center'
+                                            align='center'
+                                        >
+                                            <FaClock size={18} color='white' />
+                                        </Stack>
+                                        <Stack w='100%' gap={4}>
+                                            <Text fz={15} fw={600}>Заказ ожидает оплаты</Text>
+                                            <Progress color="rgb(86, 117, 75)" value={100} striped animated />
+                                        </Stack>
+
+                                    </Group> */}
+
+                                </Paper>
+                                : <></>
+                            }
 
                             <div className='guest-order__info'>
                                 <span className='guest-order__number'>№ {props.order?.id}</span>
@@ -265,7 +502,7 @@ export default function OrderServices(props: BasketHistoryProps) {
 
                                 <div className='guest-order__total-row'>
                                     <span className='guest-order__total-label'>Способ оплаты</span>
-                                    <span className='guest-order__total-amount'>{getPaymentType(props.order?.paymentType)}</span>
+                                    <span className='guest-order__total-amount'>{getPaymentType({ order: props.order, type: 'default' })}</span>
                                 </div>
                                 <div className='guest-order__total-row'>
                                     <span className='guest-order__total-label'>Итого</span>

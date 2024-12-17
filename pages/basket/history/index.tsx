@@ -28,11 +28,8 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
         }
         const decoded = jwt.verify(token, SECRET_KEY) as JwtPayload
 
-        // console.log('decoded: ', decoded)
-
         const orders = await getOrdersByGuestId(decoded.accountId)
 
-        console.log('orders ', orders)
 
         if (!orders) {
             throw new Error(`Заказов нет`);
@@ -60,9 +57,6 @@ export default function OrderServices(props: BasketHistoryProps) {
     const { state } = useOrders()
     // @ts-ignore
     // useEffect(() => console.log('orders: ', state))
-    const fetch = async () => {
-        await getOrdersByGuestId(7)
-    }
     return (<>
         <HeaderUnder title='Мои заказы' onClick={() => Router.back()} />
         <main className='--gray-main'>

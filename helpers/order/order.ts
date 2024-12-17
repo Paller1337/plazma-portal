@@ -10,6 +10,7 @@ export const checkOrderStatus = (status: TServiceOrderStatus) => {
         case 'delivered': return 'Доставляется'
         case 'done': return 'Выполнен'
         case 'inwork': return 'В работе'
+        case 'canceled': return 'Отменен'
         default: 'Не определен'
     }
 }
@@ -29,6 +30,10 @@ export async function getOrdersByGuestId(id: number): Promise<IOrder[]> {
             status: order.attributes.status,
             previous_status: order.attributes.previous_status,
             paymentType: order.attributes.paymentType,
+            payment_system: order.attributes.payment_system?.data?.id ? {
+                id: order.attributes?.payment_system?.data?.id,
+                ...order.attributes?.payment_system?.data?.attributes
+            } : null,
             description: order.attributes.description,
             guest: {
                 id: order.attributes.guest?.data.id,
@@ -46,6 +51,7 @@ export async function getOrdersByGuestId(id: number): Promise<IOrder[]> {
             iikoProducts: order.attributes.iikoProducts?.map(product => ({
                 product: product?.product,
                 quantity: product?.quantity,
+                stoplist: product?.stoplist,
             })) || [],//
             room: order.attributes.room,//
             phone: order.attributes.phone,
@@ -68,5 +74,22 @@ export async function getOrdersByGuestId(id: number): Promise<IOrder[]> {
     } catch (error) {
         console.error(`Ошибка при получении заказов гостя id-${id}:`, error);
         throw error; // Переброс ошибки для дальнейшей обработки
+    }
+}
+
+export async function updateOrderRequest(order: IOrder): Promise<axios.AxiosResponse<any, any>> {
+    try {
+        const response = await axiosInstance.put('/api/order/update',
+            {
+                data: { order }
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+        return response
+    } catch (error) {
+        console.error(error)
     }
 }

@@ -31,10 +31,12 @@ import { getStoreStatus, IStoreStatus } from 'utils/storeStatus'
 import { metrika } from 'utils/metrika'
 import { IStore } from 'pages/store/[id]'
 import { FaFile, FaGear, FaMoneyBill, FaPencil } from 'react-icons/fa6'
-import { usePortal } from 'context/PortalContext'
+import { IYookassaContext, usePortal } from 'context/PortalContext'
 import { DEFAULTS } from 'defaults'
 import { DEFAULT_PAYMENT_TYPES } from './[id]'
 import { IconCashBanknote, IconCheck, IconCreditCard } from '@tabler/icons-react'
+import { IOrder } from 'types/order'
+import { IPortalSettings } from 'helpers/getPortalSettings'
 
 
 export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(async (context) => {
@@ -74,13 +76,14 @@ const icons: Record<string, React.ReactNode> = {
     'cash': <IconCashBanknote {...iconProps} />,
     'bank-card': <IconCreditCard {...iconProps} />,
     'yookassa': <MImage src={'/images/payment_yookassa.png'} h={18} />,
+    'yookassa_test': <MImage src={'/images/payment_yookassa.png'} h={18} />,
 };
 
 const renderSelectOption: SelectProps['renderOption'] = ({ option, checked }) => (
     <Group flex="1" gap="xs">
         {icons[option.value]}
         <Text fw={400}>{option.label}</Text>
-        {option.value === 'yookassa' && <MImage ml={'auto'} src={'/images/payment_types.png'} h={24} />}
+        {option.value === 'yookassa' || option.value === 'yookassa_test' && <MImage ml={'auto'} src={'/images/payment_types.png'} h={24} />}
         {/* {checked && <IconCheck style={{ marginInlineStart: 'auto' }} {...iconProps} />} */}
     </Group>
 );
@@ -90,9 +93,9 @@ export default function OrderServices(props) {
     const store = props?.store as IStore
 
     const { portalSettings } = usePortal()
+    const { yookassa } = usePortal()
 
     const [paymentTypes, setPaymentTypes] = useState(DEFAULT_PAYMENT_TYPES)
-    const { yookassa } = usePortal()
 
     const { isAuthenticated, openAuthModal, currentUser } = useAuth()
     const [modalIsOpen, setModalIsOpen] = useState(false)
@@ -242,31 +245,35 @@ export default function OrderServices(props) {
                 return
             }
             try {
-                console.log({
-                    guest: currentUser.id, // ID гостя
-                    create_at: new Date().toISOString(),
-                    completed_at: null,
-                    status: 'new',
-                    previous_status: 'none',
-                    paymentType: orderPayment,
-                    comment: orderComment,
-                    phone: orderPhone.value,
-                    room: {
-                        label: room.label,
-                        roomId: room.value,
-                    },
-                    products: [],
-                    iikoProducts: currentStoreState.order.map(p => {
-                        const product = findItemInCache(p.id, menuCache)
-                        return ({
-                            product: p.id,
-                            quantity: p.quantity,
-                            price: product?.itemSizes[0]?.prices[0]?.price || -1,
-                        })
-                    }) || [],
-                    type: storesInfo[props.id]?.store_type.id,
-                    store: storesInfo[props.id]?.id,
-                })
+                // console.log({
+                //     guest: currentUser.id, // ID гостя
+                //     create_at: new Date().toISOString(),
+                //     completed_at: null,
+                //     status: 'new',
+                //     previous_status: 'none',
+                //     paymentType: DEFAULT_PAYMENT_TYPES.some(p => p.value === orderPayment) ? orderPayment : 'external',
+                //     payment_system: store?.payment_system.id,
+                //     comment: orderComment,
+                //     phone: orderPhone.value,
+                //     room: {
+                //         label: room.label,
+                //         roomId: room.value,
+                //     },
+                //     products: [],
+                //     iikoProducts: currentStoreState.order.map(p => {
+                //         const product = findItemInCache(p.id, menuCache)
+                //         return ({
+                //             product: p.id,
+                //             quantity: p.quantity,
+                //             price: product?.itemSizes[0]?.prices[0]?.price || -1,
+                //         })
+                //     }) || [],
+                //     type: storesInfo[props.id]?.store_type.id,
+                //     store: storesInfo[props.id]?.id,
+                // })
+
+
+                // return
 
                 const orderIsPlace = await placeOrder({
                     guest: currentUser.id, // ID гостя
@@ -274,7 +281,8 @@ export default function OrderServices(props) {
                     completed_at: null,
                     status: 'new',
                     previous_status: 'none',
-                    paymentType: orderPayment,
+                    paymentType: DEFAULT_PAYMENT_TYPES.some(p => p.value === orderPayment) ? orderPayment : 'external',
+                    payment_system: store?.payment_system?.id,
                     comment: orderComment,
                     phone: orderPhone.value,
                     room: {
@@ -295,13 +303,20 @@ export default function OrderServices(props) {
                 })
 
                 if (!orderIsPlace.status) return
+
                 const orders = await getOrdersByGuestId(currentUser.id)
                 const targetOrder = orders.find(o => o.id === orderIsPlace.data.data.id)
 
-                const response = await telegramSendOrder(targetOrder)
+                console.log({ targetOrder })
+                try {
+                    const response = await telegramSendOrder(targetOrder)
+                } catch (error) {
+                    console.error(error)
+                }
                 // console.log('tg response: ', response)
+
                 if (
-                    response &&
+                    // response &&
                     orderIsPlace
                 ) {
                     // notify({
@@ -312,9 +327,9 @@ export default function OrderServices(props) {
 
                     metrika.eatOrder()
                     setOrderComment('')
-                    dispatch({ type: 'CLEAR_CART', storeId: props.id })
-                    if (targetOrder.paymentType === 'yookassa') {
-                        handlePayment({ orderId: targetOrder.id })
+                    // dispatch({ type: 'CLEAR_CART', storeId: props.id })
+                    if (targetOrder.paymentType === 'external') {
+                        handleExternalPayment(targetOrder)
                     } else {
                         router.push(`/basket/${Object.keys(storesInfo).find(x => x != props.id) || 0}`)
                         setModalIsOpen(true)
@@ -330,6 +345,8 @@ export default function OrderServices(props) {
                     title: 'Заказ не оформлен.',
                     message: 'Ошибка при оформлении заявки.',
                 })
+
+                setVisibleLoadingOverlay(false)
             }
         }
     }
@@ -369,24 +386,41 @@ export default function OrderServices(props) {
 
 
 
+    const handleExternalPayment = async (targetOrder: IOrder) => {
+        if (portalSettings?.debug) console.log({ targetOrder, portalSettings, yookassa })
+        switch (targetOrder.payment_system.name) {
+            case 'yookassa':
+                await handleYookassa(targetOrder, portalSettings, yookassa)
+                break;
+            case 'yookassa_test':
+                await handleYookassa(targetOrder, portalSettings, yookassa)
+                break;
+            default:
+                return
+        }
+    }
 
 
-
-    const handlePayment = async ({ orderId, }) => {
+    const handleYookassa = async (order: IOrder, globalSettings: IPortalSettings, yookassa: IYookassaContext) => {
         if (!yookassa?.yooWidgetIsLoaded) {
             alert('Виджет еще не загружен. Попробуйте позже.');
             return;
         }
-
+        const payment_system_description = 'Оплата заказа еды'
+        if (!order?.payment_system?.id) {
+            alert('Онлайн оплата временно не работает.');
+            return;
+        }
         try {
-            const paymentResponse = await axiosInstance.post('/api/order/create-payment', {
-                orderId,
-                guestId: currentUser.id,
-                amount: 1,
-                phone: orderPhone.value,
-                description: 'Оплата заказа еды',
-                items: currentStoreState.order.map(p => {
-                    const product = findItemInNomenclature(p.id, nomenclature)
+            const paymentResponse = await axiosInstance.post('/api/order/payments', {
+                payment_system: order?.payment_system?.id,
+                orderId: order?.id,
+                guestId: order?.guest?.id,
+                amount: total,
+                phone: order?.guest?.phone,
+                description: payment_system_description,
+                items: order?.iikoProducts.map(p => {
+                    const product = findItemInNomenclature(p.product, nomenclature)
                     return ({
                         name: product.seoTitle || product.name,
                         quantity: p.quantity,
@@ -395,13 +429,13 @@ export default function OrderServices(props) {
                 }) || [],
             });
 
-            if (portalSettings?.debug) console.log({ paymentResponse })
+            if (globalSettings?.debug) console.log({ paymentResponse })
             const token = paymentResponse.data.payment.confirmation.confirmation_token;
 
             // Инициализация и отображение виджета
             await yookassa.initializeWidget(
                 token,
-                `${DEFAULTS.GENERAL_URL.app}/basket/history/${orderId}`,
+                `${DEFAULTS.GENERAL_URL.app}/basket/history/${order?.id}`,
             );
         } catch (error) {
             console.error('Ошибка при создании платежа:', error);
@@ -562,7 +596,7 @@ export default function OrderServices(props) {
                                 bg={currentStoreState?.order.length === 0
                                     || !storeStatus?.isOpen
                                     || props.settings?.isDisableOrders
-                                    || (orderPayment === 'yookassa' && !yookassa?.yooWidgetIsLoaded)
+                                    || ((orderPayment === 'yookassa' || orderPayment === 'yookassa_test') && !yookassa?.yooWidgetIsLoaded)
                                     ? '#aaa'
                                     : '#56754B'
                                 }
@@ -574,7 +608,7 @@ export default function OrderServices(props) {
                                     currentStoreState?.order.length === 0
                                     || !storeStatus?.isOpen
                                     || props.settings?.isDisableOrders
-                                    || (orderPayment === 'yookassa' && !yookassa?.yooWidgetIsLoaded)
+                                    || ((orderPayment === 'yookassa' || orderPayment === 'yookassa_test') && !yookassa?.yooWidgetIsLoaded)
                                 }
                             >
                                 <Group gap={12}>

@@ -76,6 +76,13 @@ export default function OrderListItem(props: OrderListItemProps) {
                     text: 'Доставляется',
                     color: '#40c057'
                 };
+
+            case 'canceled':
+                return {
+                    name: 'Отменен',
+                    color: '#F23',
+                }
+
             case 'done':
                 return {
                     text: 'Готов',
@@ -193,7 +200,7 @@ export default function OrderListItem(props: OrderListItemProps) {
 
                     <div className='guest-order__total-row'>
                         <span className='guest-order__total-label'>Способ оплаты</span>
-                        <span className='guest-order__total-amount'>{getPaymentType(props.order.paymentType)}</span>
+                        <span className='guest-order__total-amount'>{getPaymentType({ order: props.order, type: 'default' })}</span>
                     </div>
                     <div className='guest-order__total-row'>
                         <span className='guest-order__total-label'>Итого</span>

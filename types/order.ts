@@ -1,7 +1,8 @@
+import { IPaymentSystem } from 'pages/store/[id]'
 import { IServiceOrdered } from './services'
 import { IGuestAccount } from './session'
 
-export type TOrderStatus = 'new' | 'inwork' | 'done' | 'delivered' | 'none' | 'null'
+export type TOrderStatus = 'new' | 'inwork' | 'done' | 'delivered' | 'none' | 'null' | 'canceled'
 
 // export interface IOrderCustomer {
 //     name: string
@@ -41,6 +42,16 @@ export interface IOrder {
     store: IStore
     isVisualNew?: boolean
     paid_for: boolean
+    approve: boolean
+    payment_system: IPaymentSystem
+    cancelReason: {
+        cancel_reason: {
+            id: number
+            name: string
+            title: string
+        },
+        metadata: any
+    }
 }
 
 export interface IRoomInfo {
@@ -56,6 +67,7 @@ export interface IOrderIikoProduct {
     product: string
     quantity: number
     price: number
+    stoplist: boolean
 }
 
 export interface IProduct {
@@ -97,4 +109,4 @@ export interface IStoreType {
 //     order: IServiceOrdered[]
 // }
 
-export type TOrderPaymentType = 'bank-card' | 'cash' | 'yookassa'
+export type TOrderPaymentType = 'bank-card' | 'cash' | 'external'

@@ -5,7 +5,10 @@ export const getStoreResult = (store): IStore => {
         id: store?.id,
         title: store?.attributes?.title || '',
         description: store?.attributes?.description || '',
-        payment_system: store?.attributes?.payment_system?.data?.attributes || {},
+        payment_system: {
+            id: store?.attributes?.payment_system?.data?.id,
+            ...store?.attributes?.payment_system?.data?.attributes || {}
+        },
         image: store?.attributes?.image?.data?.attributes?.url || '',
         preview_size: store?.attributes?.preview_size || 'min',
         category: {

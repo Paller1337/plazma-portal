@@ -11,17 +11,18 @@ declare global {
     }
 }
 
+export interface IYookassaContext {
+    yooWidgetIsLoaded?: boolean
+    yooWidgetIsError?: boolean
+    initializeWidget?: (
+        confirmationToken: string,
+        returnUrl?: string
+    ) => Promise<void>
+    destroyWidget?: () => void;
+}
 interface PortalContextType {
     portalSettings?: IPortalSettings
-    yookassa?: {
-        yooWidgetIsLoaded?: boolean
-        yooWidgetIsError?: boolean
-        initializeWidget?: (
-            confirmationToken: string,
-            returnUrl?: string
-        ) => Promise<void>
-        destroyWidget?: () => void;
-    };
+    yookassa?: IYookassaContext;
 }
 
 

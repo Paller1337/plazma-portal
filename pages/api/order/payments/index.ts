@@ -3,37 +3,50 @@ import axios from 'axios';
 import { DEFAULTS } from 'defaults';
 import { axiosInstance } from 'helpers/axiosInstance';
 
-const checkout = new YooCheckout({
-    shopId: '497828',
-    secretKey: 'live_WAGecp73V3188OHjZPfM7wJFRMxslBFj-MOY6g4_o9A',
-})
+// const checkout = new YooCheckout({
+//     shopId: '497828',
+//     secretKey: 'live_WAGecp73V3188OHjZPfM7wJFRMxslBFj-MOY6g4_o9A',
+// })
+
+
 
 const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN
 
 export default async function handler(req, res) {
     if (req.method === 'POST') {
-        const data = {
-            orderId: '',
-            amount: 2,
-            phone: "+79539687367",
-            description: 'Оплата заказа',
-            items: [
-                {
-                    name: 'Товар из корзины',
-                    quantity: 1,
-                    price: 1
-                },
-                {
-                    name: 'Товар из корзины',
-                    quantity: 1,
-                    price: 1
-                }
-            ]
-        }
+        const { orderId, guestId, amount, phone, description, items, payment_system } = req.body
+        // console.log({ orderId, amount, phone, description, items })
 
-        const { orderId, guestId, amount, phone, description, items } = req.body;
-        console.log({ orderId, amount, phone, description, items })
         try {
+            const paymentSystemPayloadData = (await axios.get(DEFAULTS.GENERAL_URL.server + '/api/payment-system-payloads',
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${STRAPI_API_TOKEN}`,
+                    },
+                }
+            ))?.data
+                .data?.find(ps => ps.id === payment_system)
+
+            const payload = {
+                id: paymentSystemPayloadData?.id,
+                ...paymentSystemPayloadData?.attributes?.payload
+            }
+            console.log('find payload: ')
+            console.log({ paymentSystemPayload: payload })
+
+            if (!payload) {
+                res.status(400).json({ message: 'Не найден payload для выбранной платежной системы' });
+                return
+            }
+
+            // res.status(200).json({ payload });
+            // return
+            const checkout = new YooCheckout({
+                shopId: payload.shopId,
+                secretKey: payload.secretKey,
+            })
+
             const payment = await checkout.createPayment({
                 metadata: {
                     orderId,
@@ -42,8 +55,9 @@ export default async function handler(req, res) {
                 },
                 amount: {
                     value: amount, // Сумма платежа
-                    currency: 'RUB', // Валюта
+                    currency: 'RUB',
                 },
+                capture: payload.auto_accept_capture, // Автоматическое принятие платежа
                 confirmation: {
                     type: 'embedded', // Редирект на страницу оплаты
                     // return_url: `${DEFAULTS.GENERAL_URL.app}/order/${orderId}/success`, // Ссылка после оплаты
@@ -64,25 +78,14 @@ export default async function handler(req, res) {
                         vat_code: 1, // Код НДС
                     }))
                 },
-            });
-            console.log({ payment })
+            })
 
             if (payment) {
-                const paymentSystem = (await axios.get(DEFAULTS.GENERAL_URL.server + '/api/payment-systems',
-                    {
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${STRAPI_API_TOKEN}`,
-                        },
-                    }
-                ))?.data
-                    .data?.find(ps => ps.attributes.name === 'yookassa')
-                // console.log({ paymentSystem })
                 await axios.post(DEFAULTS.GENERAL_URL.server + '/api/payments',
                     {
                         data: {
                             order: payment.metadata.orderId,
-                            payment_system: paymentSystem.id,
+                            payment_system: payload.id,
                             payment_id: payment.id,
                             status: payment.status,
                             metadata: payment.metadata
@@ -97,7 +100,6 @@ export default async function handler(req, res) {
                 )
             }
             res.status(200).json({ payment });
-            // res.status(200).json({ orderId, amount, phone, description, items });
         } catch (error) {
             console.error(error);
             res.status(500).json({ error: 'Ошибка создания платежа' });

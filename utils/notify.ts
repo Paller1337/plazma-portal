@@ -11,7 +11,7 @@ export const notify = ({
         withCloseButton: true,
         // onClose: () => console.log('unmounted'),
         // onOpen: () => console.log('mounted'),
-        autoClose: 2000,
+        autoClose: 3000,
         title,
         message,
         radius: 'lg',

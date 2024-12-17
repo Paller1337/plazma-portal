@@ -105,6 +105,7 @@ function OrdersPage(props: AdminOrdersPageProps) {
         { status: 'inwork', name: 'На кухне', count: eatOrders.filter(x => x.status === 'inwork').length },
         { status: 'delivered', name: 'В доставке', count: eatOrders.filter(x => x.status === 'delivered').length },
         { status: 'done', name: 'Готовы', count: eatOrders.filter(x => x.status === 'done').length },
+        { status: 'canceled', name: 'Отменены', count: eatOrders.filter(x => x.status === 'canceled').length },
     ]
 
     useEffect(() => {
@@ -134,7 +135,7 @@ function OrdersPage(props: AdminOrdersPageProps) {
             };
         }
     }, [playInterval, socketRef.current, isSfxPlaying]);
-    
+
 
     const stopSfx = () => {
         setIsSfxPlaying(false)
@@ -157,6 +158,11 @@ function OrdersPage(props: AdminOrdersPageProps) {
 
             case 'inwork':
                 tmporders = eatOrders.filter(x => x.status === 'inwork')
+                setOrders(tmporders)
+                break;
+
+            case 'canceled':
+                tmporders = eatOrders.filter(x => x.status === 'canceled')
                 setOrders(tmporders)
                 break;
 
@@ -198,7 +204,8 @@ function OrdersPage(props: AdminOrdersPageProps) {
     }
 
     useEffect(() => {
-        setOrders(eatOrders)
+        console.log('state.orders trigger')
+        setOrders(() => eatOrders)
         loadOrders((query.status as string) as TOrderStatus)
     }, [state.orders, query.status])
 

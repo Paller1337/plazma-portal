@@ -48,7 +48,7 @@ const initialState: GlobalStateType = {
 
 const orderReducer = (state: GlobalStateType, action: any) => {
     // console.log('orderReducer', action)
-    let orderId, status, paid_for
+    let orderId, status, paid_for, updatedOrder
     switch (action.type) {
         case 'INITIALIZE_ORDERS':
             return {
@@ -56,7 +56,20 @@ const orderReducer = (state: GlobalStateType, action: any) => {
                 orders: action.payload.orders,
             };
 
+        case 'UPDATE_ORDER':
+            orderId = action.payload.orderId
+            updatedOrder = action.payload.updatedOrder
+            return {
+                ...state,
+                orders: state.orders.map(order =>
+                    order.id === orderId
+                        ? { ...updatedOrder }
+                        : order
+                ),
+            }
+
         case 'UPDATE_ORDER_STATUS':
+            console.log({ orderId, status, paid_for, updatedOrder })
             return {
                 ...state,
                 orders: state.orders.map(order =>
@@ -65,6 +78,7 @@ const orderReducer = (state: GlobalStateType, action: any) => {
                         : order
                 ),
             };
+
 
         case 'UPDATE_ORDER_PAID_STATUS':
             orderId = action.payload.orderId
@@ -186,6 +200,7 @@ export const OrderProvider = ({ children }) => {
                         product: product?.product,
                         quantity: product?.quantity,
                         price: product?.price || -1,
+                        stoplist: product?.stoplist || false,
                     })) || [],
                     comment: ord?.attributes.comment,
                     create_at: ord?.attributes.create_at,
@@ -222,6 +237,16 @@ export const OrderProvider = ({ children }) => {
                     isVisualNew: false,
                     completed_at: ord?.attributes.completed_at,
                     paid_for: ord.attributes?.paid_for,
+                    approve: ord.attributes?.approve,
+                    payment_system: {
+                        ...ord.attributes?.payment_system?.data?.attributes
+                    },
+                    cancelReason: {
+                        cancel_reason: {
+                            ...ord.attributes?.cancelReason?.cancel_reason?.data?.attributes
+                        },
+                        metadata: ord.attributes?.cancelReason?.metadata
+                    }
                     // type: {
                     //     id: ord?.attributes.type.data?.id,
                     //     label: ord?.attributes.type.data?.attributes.label,
@@ -323,8 +348,8 @@ export const OrderProvider = ({ children }) => {
                 })
 
                 socket.on('orderPaidStatusChange', (data) => {
+                    console.log('[TRIGGER] orderPaidStatusChange', data)
                     const { paid_for, orderId } = data
-                    console.log('status change data ', data)
                     console.log('orderId ', orderId)
                     console.log('paid_for ', paid_for)
                     dispatch({

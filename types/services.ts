@@ -30,7 +30,7 @@ export interface ServicesResponse {
     data: IService[]
 }
 
-export type TServiceOrderStatus = 'new' | 'inwork' | 'done' | 'delivered'
+export type TServiceOrderStatus = 'new' | 'inwork' | 'done' | 'delivered' | 'canceled'
 export interface IServiceOrderData {
     id?: number
     status: TServiceOrderStatus

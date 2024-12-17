@@ -35,15 +35,20 @@ export interface IStoreWorkTime {
     start: string
     end: string
 }
+
+export interface IPaymentSystem {
+    id: number
+    name: string,
+    title: string,
+    title_system?: string,
+    title_staff?: string,
+    requisites: string,
+}
 export interface IStore {
     id?: string,
     title?: string
     description?: string
-    payment_system?: {
-        name: string,
-        title: string,
-        requisites: string,
-    }
+    payment_system?: IPaymentSystem
     image?: string
     products?: IProduct[]
     preview_size?: string

@@ -44,12 +44,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${STRAPI_API_TOKEN}`,
                     },
+                    params: {
+                        filters: {
+                            payment_id: {
+                                $eq: id
+                            }
+                        }
+                    }
                 }
             ))?.data
-                .data?.find(ps => ps.attributes.payment_id === id)
-            // console.log({ payment })
+            const targetPayment = payment?.data?.find(ps => ps.attributes.payment_id === id)
+            console.log({ targetPayment })
+
             if (payment) {
-                const updatePayment = (await axios.put(DEFAULTS.GENERAL_URL.server + '/api/payments/' + payment.id,
+
+                const updatePayment = (await axios.put(DEFAULTS.GENERAL_URL.server + '/api/payments/' + targetPayment.id,
                     {
                         data: {
                             status: status

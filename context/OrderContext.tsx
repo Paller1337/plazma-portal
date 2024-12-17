@@ -65,12 +65,11 @@ const orderReducer = (state: GlobalStateType, action: any) => {
         case 'UPDATE_ORDER_STATUS':
             orderId = action.payload.orderId
             status = action.payload.status
-            paid_for = action.payload.paid_for
             return {
                 ...state,
                 orders: state.orders.map(order =>
                     order.id === orderId
-                        ? { ...order, status: status, paid_for: paid_for }
+                        ? { ...order, status: status }
                         : order
                 ),
             }
@@ -254,7 +253,7 @@ export const OrderProvider = ({ children }) => {
                 socket.on('orderStatusChange', (data) => {
                     const { newStatus, orderId, paid_for } = data
                     if (portalSettings?.debug) {
-                        console.log('status change data ', data)
+                        console.log('[TRIGGER] orderStatusChange', data)
                         console.log('orderId ', orderId)
                         console.log('state.orders ', state.orders)
                     }
@@ -266,7 +265,7 @@ export const OrderProvider = ({ children }) => {
                     if (order?.status !== newStatus) {
                         dispatch({
                             type: 'UPDATE_ORDER_STATUS',
-                            payload: { orderId, status: newStatus, previous_status: state.orders.find(x => x.id == orderId)?.status, paid_for: paid_for },
+                            payload: { orderId, status: newStatus, previous_status: order?.status },
                         })
 
                         notify({
@@ -281,7 +280,7 @@ export const OrderProvider = ({ children }) => {
                     const { paid_for, orderId } = data
 
                     if (portalSettings?.debug) {
-                        console.log('status change data ', data)
+                        console.log('[TRIGGER] orderPaidStatusChange', data)
                         console.log('orderId ', orderId)
                         console.log('paid_for ', paid_for)
                     }
@@ -338,6 +337,7 @@ export const OrderProvider = ({ children }) => {
 
             return () => {
                 socket.off('connect');
+                socket.off('connect_error');
                 socket.off('orderStatusChange');
                 socket.off('orderPaidStatusChange');
                 socket.off('orderCreate');
