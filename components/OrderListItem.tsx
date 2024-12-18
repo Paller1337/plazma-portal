@@ -4,12 +4,15 @@ import { IServiceOrdered } from 'types/services'
 import { useEffect, useMemo, useState } from 'react'
 import { DEFAULTS } from 'defaults'
 import { DateTime, Settings } from 'luxon'
-import { Flex, Loader, LoadingOverlay } from '@mantine/core'
+import { Divider, Flex, Group, Loader, LoadingOverlay, Paper, Stack, Text } from '@mantine/core'
 import { useCart } from 'context/CartContext'
-import Router from 'next/router'
+import Router, { useRouter } from 'next/router'
 import { findItemInCache, findItemInNomenclature, getProductById } from 'helpers/cartContext'
 import { ItemMenuV2, Product } from 'helpers/iiko/IikoApi/types'
-import { getPaymentType } from 'helpers/getPaymentType'
+import { getPaymentStatus, getPaymentType } from 'helpers/getPaymentType'
+import { FaCheck, FaRotate } from 'react-icons/fa6'
+import { FaClock } from 'react-icons/fa'
+import { RiErrorWarningLine } from 'react-icons/ri'
 
 interface OrderListItemProps {
     order?: IOrder
@@ -34,10 +37,21 @@ const OrderLine = (props: { product: IProduct, quantity: number }) => {
     )
 }
 
-const IikoOrderLine = (props: { product: ItemMenuV2, productNomen: Product, quantity: number }) => {
+const IikoOrderLine = (props: { product: ItemMenuV2, productNomen: Product, quantity: number, stoplist: boolean }) => {
     // console.log('order line: ', props.product)
     return (
-        <div className='guest-order__part'>
+        <div className='guest-order__part' style={{ position: 'relative' }}>
+            {props.stoplist ? <Divider
+                pos={'absolute'}
+                left={0}
+                right={0}
+                top={'50%'}
+                style={{
+                    transform: 'translateY(-50%)',
+                }}
+                bg={'#f23'}
+            /> : <></>}
+
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={props.product?.itemSizes[0]?.buttonImageUrl || '/images/no-photo-60x60.png'} alt=''
                 className='guest-order__image' />
@@ -54,6 +68,7 @@ export default function OrderListItem(props: OrderListItemProps) {
     const [visibleLoadingOverlay, setVisibleLoadingOverlay] = useState(false)
     const [orderProducts, setOrderProducts] = useState<IProduct[]>(null)
     const { dispatch, productsInfo, menuCache, iikoMenuIsFetched, nomenclature } = useCart()
+    const router = useRouter()
 
     const [statusStyle, setStatusStyle] = useState({
         '--status-color': '#000'
@@ -79,7 +94,7 @@ export default function OrderListItem(props: OrderListItemProps) {
 
             case 'canceled':
                 return {
-                    name: 'Отменен',
+                    text: 'Отменен',
                     color: '#F23',
                 }
 
@@ -149,7 +164,7 @@ export default function OrderListItem(props: OrderListItemProps) {
             Router.push(`/basket/${props.order.store.id}`, null, { shallow: true })
         }
     }
-    useEffect(() => console.log(props.order), [props.order])
+    // useEffect(() => console.log(props.order), [props.order])
     return (
         <div className='guest-order__wrapper' id={props.order.id.toString()}>
             <div className='guest-order'>
@@ -182,6 +197,7 @@ export default function OrderListItem(props: OrderListItemProps) {
                                     product={product}
                                     productNomen={productNomen}
                                     quantity={x.quantity}
+                                    stoplist={x.stoplist}
                                 />
                             )
                         }) : <Loader color='gray' style={{ margin: '0 auto' }} size={24} />
@@ -205,14 +221,10 @@ export default function OrderListItem(props: OrderListItemProps) {
                     <div className='guest-order__total-row'>
                         <span className='guest-order__total-label'>Итого</span>
                         <span className='guest-order__total-amount'>
-                            {/* {orderProducts ? props.order.products.reduce(
-                                (val, x) => val + x.quantity * (orderProducts?.find(p => x.id === parseInt(p.id)) as IProduct).price, 0
-                            ) : <Loader color='gray' style={{ margin: '0 auto' }} size={12} />} ₽ */}
-
                             {props.order?.type?.value === 'eat' ?
                                 iikoMenuIsFetched ? props.order.iikoProducts.reduce((val, x) => {
                                     const product = findItemInCache(x.product, menuCache)
-                                    const sum = val + x.quantity * product.itemSizes[0]?.prices[0]?.price
+                                    const sum = val + (x.quantity * product.itemSizes[0]?.prices[0]?.price * (x.stoplist ? 0 : 1))
                                     return sum
                                 }, 0) : <Loader color='gray' style={{ margin: '0 auto' }} size={24} />
                                 : orderProducts ? props.order.products.reduce(
@@ -225,9 +237,20 @@ export default function OrderListItem(props: OrderListItemProps) {
 
                 <div
                     className='guest-order__buttons'
-                    onClick={() => orderServiceRepeat()}
                 >
-                    <Button text='Повторить заказ' stretch />
+                    <Stack gap={8}>
+                        {!props.order?.paid_for
+                            && props.order?.paymentType === 'external'
+                            && props.order?.status !== 'canceled'
+                            &&
+                            <Button text='Оплатить' stretch bgColor='#56754B'
+                                onClick={() => router.push(`/basket/history/${props.order?.id}`, null, { shallow: true })}
+                            />
+                        }
+                        <Button text='Повторить заказ' stretch
+                            onClick={() => orderServiceRepeat()}
+                        />
+                    </Stack>
                 </div>
             </div>
         </div>

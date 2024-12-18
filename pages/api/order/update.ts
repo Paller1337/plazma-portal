@@ -24,8 +24,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             res.status(400).json({ message: 'Недостаточно данных для обновления статуса' })
             return
         }
-        
-        if (newStatus === 'canceled') {
+
+        if (newStatus === 'canceled' && order.paymentType === 'external') {
             const payments = (await axiosInstance.post(`/api/order/payments/${order.id}`)).data
 
             console.log({ payments })

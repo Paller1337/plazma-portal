@@ -13,6 +13,7 @@ import AdminWrapper from '@/components/admin/AdminWrapper'
 import { IMaskInput } from 'react-imask'
 import { axiosInstance } from 'helpers/axiosInstance'
 import { useDisclosure } from '@mantine/hooks'
+import axios from 'axios'
 
 
 
@@ -84,7 +85,7 @@ export default function AuthPage() {
 
 
     const check = async () => {
-        const response = await axiosInstance.post('/api/admin/auth/check', {
+        const response = await axios.post('/api/admin/auth/check', {
             data: { phone },
         })
 

@@ -223,7 +223,7 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
     }
 
     const openApprove = () => {
-        if (!targetPayment || targetPayment?.status === 'pending') {
+        if (props.order?.order?.paymentType === 'external' && (!targetPayment || targetPayment?.status === 'pending')) {
             notify({
                 icon: <RiErrorWarningLine />,
                 title: 'Действие недоступно.',

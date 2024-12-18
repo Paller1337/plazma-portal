@@ -17,7 +17,7 @@ import { useCart } from 'context/CartContext'
 import { ItemMenuV2, Product } from 'helpers/iiko/IikoApi/types'
 import { DateTime, Settings } from 'luxon'
 import { findItemInCache, findItemInNomenclature, getProductById } from 'helpers/cartContext'
-import { Button, Group, Loader, LoadingOverlay, Paper, Progress, Stack, Text } from '@mantine/core'
+import { Button, Divider, Group, Loader, LoadingOverlay, Paper, Progress, Stack, Text } from '@mantine/core'
 import { getPaymentStatus, getPaymentType } from 'helpers/getPaymentType'
 import { FaCheck, FaCircleXmark, FaNotEqual, FaRecycle, FaRotate, FaTimeline, FaXmark } from 'react-icons/fa6'
 import { FaClock, FaTimesCircle } from 'react-icons/fa'
@@ -92,10 +92,20 @@ const OrderLine = (props: { product: IProduct, quantity: number }) => {
     )
 }
 
-const IikoOrderLine = (props: { product: ItemMenuV2, productNomen: Product, quantity: number }) => {
+const IikoOrderLine = (props: { product: ItemMenuV2, productNomen: Product, quantity: number, stoplist: boolean }) => {
     // console.log('order line: ', props.product)
     return (
-        <div className='guest-order__part'>
+        <div className='guest-order__part' style={{ position: 'relative' }}>
+            {props.stoplist ? <Divider
+                pos={'absolute'}
+                left={0}
+                right={0}
+                top={'50%'}
+                style={{
+                    transform: 'translateY(-50%)',
+                }}
+                bg={'#f23'}
+            /> : <></>}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={props.product?.itemSizes[0]?.buttonImageUrl || '/images/no-photo-60x60.png'} alt=''
                 className='guest-order__image' />
@@ -126,7 +136,7 @@ export default function OrderServices(props: BasketHistoryProps) {
     const paymentStatusFetching = useInterval(async () => await fetchPayment(), 8000)
 
     const fetchPayment = async () => {
-        if(order?.paid_for) return
+        if (order?.paid_for) return
         const payment = await axiosInstance.post(`/api/order/payments/${props.order.id}`).finally(() => setPaymentDataIsFetched(true))
         if (portalSettings?.debug) console.log(`Payment for order ${props.order.id}:`, { payment: payment.data })
         setPaymentData(payment.data)
@@ -157,7 +167,7 @@ export default function OrderServices(props: BasketHistoryProps) {
 
             case 'canceled':
                 return {
-                    name: 'Отменен',
+                    text: 'Отменен',
                     color: '#F23',
                 }
 
@@ -484,6 +494,7 @@ export default function OrderServices(props: BasketHistoryProps) {
                                                 product={product}
                                                 productNomen={productNomen}
                                                 quantity={x.quantity}
+                                                stoplist={x.stoplist}
                                             />
                                         )
                                     }) : <Loader color='gray' style={{ margin: '0 auto' }} size={24} />
@@ -510,7 +521,8 @@ export default function OrderServices(props: BasketHistoryProps) {
                                         {props.order?.type?.value === 'eat' ?
                                             iikoMenuIsFetched ? props.order?.iikoProducts.reduce((val, x) => {
                                                 const product = findItemInCache(x.product, menuCache)
-                                                const sum = val + x.quantity * product.itemSizes[0]?.prices[0]?.price
+                                                // const sum = val + x.quantity * product.itemSizes[0]?.prices[0]?.price
+                                                const sum = val + (x.quantity * product.itemSizes[0]?.prices[0]?.price * (x.stoplist ? 0 : 1))
                                                 return sum
                                             }, 0) : <Loader color='gray' style={{ margin: '0 auto' }} size={24} />
                                             : orderProducts ? props.order?.products.reduce(

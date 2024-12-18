@@ -93,7 +93,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const authAdminByIdPassword = async (id: number, password: string) => {
         try {
-            const response = await axiosInstance.post('/api/admin/auth/login', {
+            const response = await axios.post('/api/admin/auth/login', {
                 data: {
                     id,
                     password,
@@ -149,7 +149,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             }
 
             if (decodedToken.accountId) {
-                const user = await axiosInstance.post('/api/admin/sms-auth/guest', {
+                const user = await axios.post('/api/admin/sms-auth/guest', {
                     data: { id: decodedToken.accountId },
                 })
 
