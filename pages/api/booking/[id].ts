@@ -1,4 +1,3 @@
-// pages/api/rooms.ts
 import { getBooking } from 'helpers/bnovo/getBooking';
 import { getRooms } from 'helpers/bnovo/getRooms';
 import type { NextApiRequest, NextApiResponse } from 'next'

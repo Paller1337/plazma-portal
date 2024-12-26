@@ -506,10 +506,14 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                                 : <></>}
                         </div>
                     </div>
-                    <div className='OrderAdmin-Modal__actions AdminModal-block'>
-                        <div className='AdminModal-block__header'>
-                            <span className='AdminModal-block__header-title'>Действия</span>
-                        </div>
+
+                </div>
+
+
+                <div className='OrderAdmin-Modal__main-section right-section'>
+                    <Stack px={24} py={12} gap={0} bg={'#EEF0F5'} style={{ borderRadius: 12 }}>
+                        <span className='AdminModal-block__header-title'>Действия</span>
+
                         <div className='OrderAdmin-Modal__actions-content' style={{ position: 'relative' }}>
                             {!props.order?.order?.approve ?
                                 <Group wrap='nowrap' w={'100%'}>
@@ -547,11 +551,7 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                                 </Group>
                             }
                         </div>
-                    </div>
-                </div>
-
-
-                <div className='OrderAdmin-Modal__main-section right-section'>
+                    </Stack>
                     <div className='OrderAdmin-Modal__table AdminModal-block'>
                         <div className='AdminModal-block__header' style={{ position: 'relative' }}>
                             <span className='AdminModal-block__header-title'>Таблица заказа</span>

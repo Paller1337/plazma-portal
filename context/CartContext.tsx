@@ -1,6 +1,6 @@
 import React, { createContext, useReducer, useContext, useEffect, useState, useMemo } from 'react';
 import { useCartDetails } from 'helpers/cartContext';
-import { getRooms } from 'helpers/bnovo/getRooms';
+import { getRooms, IHotelRoom } from 'helpers/bnovo/getRooms';
 import { axiosInstance } from 'helpers/axiosInstance';
 import { IProduct, IStoreType } from 'types/order';
 import { MenuV2ByIdResponse, NomenclatureResponse } from 'helpers/iiko/IikoApi/types';
@@ -59,7 +59,7 @@ const CartContext = createContext<{
     dispatch: React.Dispatch<CartAction>;
     storesInfo: { [key: string]: StoreInfo };
     productsInfo: { [key: string]: IProduct }
-    hotelRooms: any,
+    hotelRooms: IHotelRoom[],
     menuCache: { [key: string]: MenuV2ByIdResponse }
     iikoMenuIsFetched: boolean
     nomenclature: NomenclatureResponse
@@ -157,7 +157,7 @@ export const CartProvider = ({ children }) => {
     const [isMounted, setIsMounted] = useState(false);
     const [state, dispatch] = useReducer(cartReducer, defaultState)
     const { storesInfo, productsInfo, menuCache, iikoMenuIsFetched, nomenclature } = useCartDetails(state)
-    const [hotelRooms, setHotelRooms] = useState(null)
+    const [hotelRooms, setHotelRooms] = useState<IHotelRoom[]>(null)
 
     useEffect(() => {
         setIsMounted(true)
@@ -194,9 +194,33 @@ export const CartProvider = ({ children }) => {
         if (portalSettings) {
             const initRooms = async () => {
                 const rooms = await axios.get('/api/rooms')
-                const availableRooms = rooms.data
-                    .filter(x => x.tags !== '')
-                    .sort((a, b) => a.tags.localeCompare(b.tags))
+                const availableRooms = (rooms.data as IHotelRoom[])
+                    .filter(x => x.name !== '')
+                    .sort((a, b) => {
+                        // Сортировка по `sort_priority` (числовое сравнение)
+                        const priorityComparison = b.sort_priority - a.sort_priority;
+                        if (priorityComparison !== 0) return priorityComparison;
+
+                        // Сортировка по имени с учётом чисел в строках
+                        const nameA = a.name.toLowerCase();
+                        const nameB = b.name.toLowerCase();
+
+                        const extractNumber = (str: string) => {
+                            const match = str.match(/(\d+)$/); // Ищем число в конце строки
+                            return match ? parseInt(match[1], 10) : Infinity; // Если число не найдено, ставим Infinity
+                        };
+
+                        const baseNameA = nameA.replace(/(\d+)$/, '').trim(); // Убираем числа для базового сравнения
+                        const baseNameB = nameB.replace(/(\d+)$/, '').trim();
+
+                        if (baseNameA === baseNameB) {
+                            // Если базовые названия одинаковы, сортируем по числу
+                            return extractNumber(nameA) - extractNumber(nameB);
+                        }
+
+                        // Сортировка по базовому названию (строковое сравнение)
+                        return baseNameA.localeCompare(baseNameB);
+                    })
 
                 if (portalSettings?.debug) console.log('availableRooms: ', availableRooms)
                 setHotelRooms(availableRooms)

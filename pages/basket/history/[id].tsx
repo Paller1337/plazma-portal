@@ -19,7 +19,7 @@ import { DateTime, Settings } from 'luxon'
 import { findItemInCache, findItemInNomenclature, getProductById } from 'helpers/cartContext'
 import { Button, Divider, Group, Loader, LoadingOverlay, Paper, Progress, Stack, Text } from '@mantine/core'
 import { getPaymentStatus, getPaymentType } from 'helpers/getPaymentType'
-import { FaCheck, FaCircleXmark, FaNotEqual, FaRecycle, FaRotate, FaTimeline, FaXmark } from 'react-icons/fa6'
+import { FaCheck, FaCircleXmark, FaNotEqual, FaPhone, FaRecycle, FaRotate, FaTimeline, FaXmark } from 'react-icons/fa6'
 import { FaClock, FaTimesCircle } from 'react-icons/fa'
 import { axiosInstance } from 'helpers/axiosInstance'
 import { IYookassaContext, usePortal } from 'context/PortalContext'
@@ -314,7 +314,7 @@ export default function OrderServices(props: BasketHistoryProps) {
         }
     }, [props.order, portalSettings])
 
-    useEffect(() => console.log('history props.order ', props.order), [props.order])
+    // useEffect(() => console.log('history props.order ', props.order), [props.order])
 
 
     return (<>
@@ -373,55 +373,12 @@ export default function OrderServices(props: BasketHistoryProps) {
                                     </Group>
                                 }
                             </Paper> */}
-                            {props.order?.paymentType === 'external'
-                                ?
-                                <Paper my={12} radius={'md'} p={12} style={{ border: '1px solid rgb(86, 117, 75)' }}>
-                                    {paymentDataIsFetched ? targetPayment ?
-                                        <Group gap={12} wrap='nowrap'>
-                                            <Stack
-                                                bg={'rgb(86, 117, 75)'}
-                                                p={6}
-                                                style={{ borderRadius: 32 }}
-                                                justify='center'
-                                                align='center'
-                                            >
-                                                {order?.paid_for ? <FaCheck size={18} color='white' /> :
-                                                    targetPayment?.status === 'waiting_for_capture' || targetPayment?.status === 'pending' ?
-                                                        <FaClock size={18} color='white' />
-                                                        :
-                                                        targetPayment?.status === 'canceled' ?
-                                                            <RiErrorWarningLine size={18} color='white' />
-                                                            :
-                                                            <FaCheck size={18} color='white' />
-                                                }
-                                            </Stack>
-                                            <Stack>
-                                                <Text fz={15} fw={600}>
-                                                    {order?.paid_for
-                                                        ? 'Оплачен'
-                                                        : getPaymentStatus({ status: targetPayment?.status }).guest
-                                                    }
-                                                </Text>
-                                            </Stack>
-                                            {targetPayment?.status === 'pending' || (targetPayment?.status === 'canceled' && order?.status !== 'canceled') ?
-                                                <Button
-                                                    bg={'#56754B'}
-                                                    ml={'auto'}
-                                                    p={12} variant='filled'
-                                                    c={'white'}
-                                                    size='sm' h={'fit-content'} radius={'md'}
-                                                    onClick={() => retryPayment()}
-                                                >
-                                                    <Group gap={12}>
-                                                        {/* <ReactSVG src='/svg/cart-white.svg' /> */}
-                                                        <FaRotate size={18} color='white' />
-                                                        Повторить оплату
-                                                    </Group>
-                                                </Button>
-                                                : <></>}
-                                        </Group>
-                                        :
-                                        <Stack>
+
+                            <Stack gap={8} my={12}>
+                                {props.order?.paymentType === 'external'
+                                    ?
+                                    <Paper radius={'md'} p={12} style={{ border: '1px solid rgb(86, 117, 75)' }}>
+                                        {paymentDataIsFetched ? targetPayment ?
                                             <Group gap={12} wrap='nowrap'>
                                                 <Stack
                                                     bg={'rgb(86, 117, 75)'}
@@ -430,34 +387,83 @@ export default function OrderServices(props: BasketHistoryProps) {
                                                     justify='center'
                                                     align='center'
                                                 >
-                                                    <FaXmark size={18} color='white' />
-                                                </Stack>
-                                                <Stack>
-                                                    <Text fz={15} fw={600}>{getPaymentStatus({ status: targetPayment?.status }).guest}</Text>
+                                                    {order?.paid_for ? <FaCheck size={18} color='white' /> :
+                                                        targetPayment?.status === 'waiting_for_capture' || targetPayment?.status === 'pending' ?
+                                                            <FaClock size={18} color='white' />
+                                                            :
+                                                            targetPayment?.status === 'canceled' ?
+                                                                <RiErrorWarningLine size={18} color='white' />
+                                                                :
+                                                                <FaCheck size={18} color='white' />
+                                                    }
                                                 </Stack>
 
-                                                <Button
-                                                    bg={'#56754B'}
-                                                    ml={'auto'}
-                                                    p={12} variant='filled'
-                                                    c={'white'}
-                                                    size='sm' h={'fit-content'} radius={'md'}
-                                                    onClick={() => handleExternalPayment(props.order)}
-                                                >
-                                                    <Group gap={12}>
-                                                        <ReactSVG src='/svg/cart-white.svg' />
-                                                        Оплатить заказ
-                                                    </Group>
-                                                </Button>
+                                                <Group wrap='nowrap' justify='space-between' w={'100%'}>
+                                                    <Text fz={15} fw={600}>
+                                                        {order?.paid_for
+                                                            ? 'Оплачен'
+                                                            : getPaymentStatus({ status: targetPayment?.status }).guest
+                                                        }
+                                                    </Text>
+                                                    {(targetPayment?.status === 'pending' || targetPayment?.status === 'waiting_for_capture') &&
+                                                        <Progress w={100} size={'lg'} color="rgb(86, 117, 75)" value={100} striped animated />
+                                                    }
+                                                </Group>
+                                                {targetPayment?.status === 'pending' || (targetPayment?.status === 'canceled' && order?.status !== 'canceled') ?
+                                                    <Button
+                                                        bg={'#56754B'}
+                                                        ml={'auto'}
+                                                        p={12} variant='filled'
+                                                        c={'white'}
+                                                        size='sm' h={'fit-content'} radius={'md'}
+                                                        onClick={() => retryPayment()}
+                                                    >
+                                                        <Group gap={12}>
+                                                            {/* <ReactSVG src='/svg/cart-white.svg' /> */}
+                                                            <FaRotate size={18} color='white' />
+                                                            Повторить оплату
+                                                        </Group>
+                                                    </Button>
+                                                    : <></>}
                                             </Group>
-                                        </Stack>
-                                        :
-                                        <Stack>
-                                            <Loader color='gray' style={{ margin: '0 auto' }} size={24} />
-                                        </Stack>
-                                    }
+                                            :
+                                            <Stack>
+                                                <Group gap={12} wrap='nowrap'>
+                                                    <Stack
+                                                        bg={'rgb(86, 117, 75)'}
+                                                        p={6}
+                                                        style={{ borderRadius: 32 }}
+                                                        justify='center'
+                                                        align='center'
+                                                    >
+                                                        <FaXmark size={18} color='white' />
+                                                    </Stack>
+                                                    <Stack>
+                                                        <Text fz={15} fw={600}>{getPaymentStatus({ status: targetPayment?.status }).guest}</Text>
+                                                    </Stack>
 
-                                    {/* <Group gap={12} wrap='nowrap'>
+                                                    <Button
+                                                        bg={'#56754B'}
+                                                        ml={'auto'}
+                                                        p={12} variant='filled'
+                                                        c={'white'}
+                                                        size='sm' h={'fit-content'} radius={'md'}
+                                                        onClick={() => handleExternalPayment(props.order)}
+                                                    >
+                                                        <Group gap={12}>
+                                                            <ReactSVG src='/svg/cart-white.svg' />
+                                                            Оплатить заказ
+                                                        </Group>
+                                                    </Button>
+                                                </Group>
+                                            </Stack>
+                                            :
+                                            <Stack>
+                                                <Loader color='gray' style={{ margin: '0 auto' }} size={24} />
+                                            </Stack>
+                                        }
+
+                                        {/* <Group gap={12} wrap='nowrap'>
                                         <Stack
                                             bg={'rgb(86, 117, 75)'}
                                             p={6}
@@ -474,10 +480,32 @@ export default function OrderServices(props: BasketHistoryProps) {
 
                                     </Group> */}
 
-                                </Paper>
-                                : <></>
-                            }
+                                    </Paper>
+                                    : <></>
+                                }
 
+                                {(props.order?.paymentType === 'external' && targetPayment?.status === 'waiting_for_capture') &&
+                                    <Paper radius={'md'} px={14} py={8} style={{ border: '1px solid rgb(86, 117, 75)' }}>
+                                        <Stack>
+                                            <Group gap={12} wrap='nowrap'>
+                                                <Stack
+                                                    bg={'rgb(86, 117, 75)'}
+                                                    p={6}
+                                                    style={{ borderRadius: 32 }}
+                                                    justify='center'
+                                                    align='center'
+                                                >
+                                                    <FaPhone size={18} color='white' />
+                                                </Stack>
+                                                <Stack>
+                                                    <Text fz={15} fw={600}>С вами скоро свяжутся для подтверждения заказа</Text>
+                                                </Stack>
+
+                                            </Group>
+                                        </Stack>
+                                    </Paper>
+                                }
+                            </Stack>
                             <div className='guest-order__info'>
                                 <span className='guest-order__number'>№ {props.order?.id}</span>
                                 <span className='guest-order__type'>Тип заказа: {props.order?.type?.label}</span>
@@ -485,7 +513,7 @@ export default function OrderServices(props: BasketHistoryProps) {
 
                             <div className='guest-order__services'>
                                 {props.order?.type?.value === 'eat' ?
-                                    iikoMenuIsFetched ? props.order?.iikoProducts.map((x, i) => {
+                                    iikoMenuIsFetched ? state.orders?.find(o => Number(o.id) === Number(props.order?.id))?.iikoProducts.map((x, i) => {
                                         const product = findItemInCache(x.product, menuCache)
                                         const productNomen = findItemInNomenclature(x.product, nomenclature)
                                         return (
@@ -498,11 +526,11 @@ export default function OrderServices(props: BasketHistoryProps) {
                                             />
                                         )
                                     }) : <Loader color='gray' style={{ margin: '0 auto' }} size={24} />
-                                    : orderProducts ? props.order?.products.map((x, i) => {
+                                    : orderProducts ? state.orders?.find(o => Number(o.id) === Number(props.order?.id))?.products.map((x, i) => {
                                         return (
                                             <OrderLine
                                                 key={x.id + DateTime.now().toISO()}
-                                                product={orderProducts?.find(p => x.id === parseInt(p.id)) as IProduct}
+                                                product={orderProducts?.find(p => Number(x.id) === Number(p.id)) as IProduct}
                                                 quantity={x.quantity}
                                             />
                                         )
@@ -519,14 +547,14 @@ export default function OrderServices(props: BasketHistoryProps) {
                                     <span className='guest-order__total-label'>Итого</span>
                                     <span className='guest-order__total-amount'>
                                         {props.order?.type?.value === 'eat' ?
-                                            iikoMenuIsFetched ? props.order?.iikoProducts.reduce((val, x) => {
+                                            iikoMenuIsFetched ? state.orders?.find(o => Number(o.id) === Number(props.order?.id))?.iikoProducts.reduce((val, x) => {
                                                 const product = findItemInCache(x.product, menuCache)
                                                 // const sum = val + x.quantity * product.itemSizes[0]?.prices[0]?.price
                                                 const sum = val + (x.quantity * product.itemSizes[0]?.prices[0]?.price * (x.stoplist ? 0 : 1))
                                                 return sum
                                             }, 0) : <Loader color='gray' style={{ margin: '0 auto' }} size={24} />
-                                            : orderProducts ? props.order?.products.reduce(
-                                                (val, x) => val + x.quantity * (orderProducts?.find(p => x.id === parseInt(p.id)) as IProduct).price, 0
+                                            : orderProducts ? state.orders?.find(o => Number(o.id) === Number(props.order?.id))?.products.reduce(
+                                                (val, x) => val + x.quantity * (orderProducts?.find(p => Number(x.id) === Number(p.id)) as IProduct).price, 0
                                             ) : <Loader color='gray' style={{ margin: '0 auto' }} size={12} />} ₽
 
                                     </span>

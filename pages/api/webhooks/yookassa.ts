@@ -90,7 +90,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             };
 
             // Отправка письма
-            await send('max@kplazma.ru');
+            await send('logs@kplazma.ru');
 
             res.status(200).json({ message: 'Сообщение успешно отправлено' });
         } catch (error) {

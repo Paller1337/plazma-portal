@@ -95,7 +95,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             message += `<b>Время:</b> ${body?.eventTime}\n`;
 
             if (body?.eventType === 'ReserveError') {
-                await send('max@kplazma.ru')
+                await send('logs@kplazma.ru')
             }
             // Отправка сообщения в Telegram
             await bot.sendMessage(CHAT_ID, message, { parse_mode: 'HTML' });

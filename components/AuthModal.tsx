@@ -15,6 +15,7 @@ import { useAuth } from 'context/AuthContext'
 import { sendAuthCode } from 'helpers/send-code'
 import { FaCheckCircle, FaSms } from 'react-icons/fa'
 import { notify } from 'utils/notify'
+import { usePortal } from 'context/PortalContext'
 
 ReactModal.setAppElement('#__next')
 
@@ -30,6 +31,7 @@ interface IProps {
 
 const AuthModal = (props: IProps) => {
     const { authGuestByPhone, registerGuest } = useAuth()
+    const { portalSettings } = usePortal()
     const router = useRouter()
     const [currentSlide, setCurrentSlide] = useState(0)
     const [phone, setPhone] = useState('')
@@ -115,7 +117,7 @@ const AuthModal = (props: IProps) => {
             console.log('Можно попробовать еще раз')
         }, codeHoldTimeout)
 
-        const smsCode = await sendAuthCode(phone)
+        const smsCode = await sendAuthCode(phone, portalSettings?.debug)
         setSmsCode(smsCode)
         const interval = setInterval(() => {
             setIntervalHold(p => {

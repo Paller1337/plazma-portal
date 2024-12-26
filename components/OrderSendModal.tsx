@@ -6,7 +6,12 @@ import { useRouter } from 'next/router'
 
 ReactModal.setAppElement('#__next'); // Для Next.js обычно это #__next, для create-react-app это #root
 
-const OrderSendModal = ({ isOpen, onClose }) => {
+interface OrderSendModalProps {
+    isOpen: boolean,
+    onClose: () => void,
+    orderId?: number
+}
+const OrderSendModal = ({ isOpen, onClose, orderId }: OrderSendModalProps) => {
     const router = useRouter()
 
     return (
@@ -26,7 +31,10 @@ const OrderSendModal = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="OrderSend-Modal__actions">
-                    <Button text='Мои заказы' outlined stretch onClick={() => router.push('/basket/history')} />
+                    {orderId
+                        ? <Button text='К заказу' outlined stretch onClick={() => router.push(`/basket/history/${orderId}`)} />
+                        : <Button text='Мои заказы' outlined stretch onClick={() => router.push('/basket/history')} />
+                    }
                     <Button text='Хорошо!' stretch onClick={onClose} />
                 </div>
             </div>

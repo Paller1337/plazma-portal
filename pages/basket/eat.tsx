@@ -30,7 +30,7 @@ import { getStoreResult } from 'helpers/getStoreResult'
 import { getStoreStatus, IStoreStatus } from 'utils/storeStatus'
 import { metrika } from 'utils/metrika'
 import { IStore } from 'pages/store/[id]'
-import { FaFile, FaGear, FaMoneyBill, FaPencil } from 'react-icons/fa6'
+import { FaFile, FaGear, FaMoneyBill, FaPencil, FaPhone } from 'react-icons/fa6'
 import { IYookassaContext, usePortal } from 'context/PortalContext'
 import { DEFAULTS } from 'defaults'
 import { DEFAULT_PAYMENT_TYPES } from './[id]'
@@ -83,7 +83,7 @@ const renderSelectOption: SelectProps['renderOption'] = ({ option, checked }) =>
     <Group flex="1" gap="xs">
         {icons[option.value]}
         <Text fw={400}>{option.label}</Text>
-        {option.value === 'yookassa' || option.value === 'yookassa_test' && <MImage ml={'auto'} src={'/images/payment_types.png'} h={24} />}
+        {(option.value === 'yookassa' || option.value === 'yookassa_test') && <MImage ml={'auto'} src={'/images/payment_types.png'} h={24} />}
         {/* {checked && <IconCheck style={{ marginInlineStart: 'auto' }} {...iconProps} />} */}
     </Group>
 );
@@ -105,6 +105,7 @@ export default function OrderServices(props) {
     const router = useRouter()
     const currentStoreState = state.stores[props.id]
     const total = currentStoreState?.order?.reduce((acc, curr) => acc + productsInfo[curr.id.toString()]?.price * curr.quantity, 0) || 0
+    const [placedOrderId, setPlacedOrderId] = useState<number>(null)
 
     const [room, setRoom] = useState({
         value: '',
@@ -118,9 +119,9 @@ export default function OrderServices(props) {
         error: ''
     })
 
-    const rooms = hotelRooms?.map(room => ({
-        value: room.id.toString(),
-        label: room.tags
+    const rooms = hotelRooms?.filter(f => f.isActive)?.map(room => ({
+        value: room.meta_system_id.toString(),
+        label: room.name
     }))
 
     const [guestAccount, setGuestAccount] = useState<{
@@ -303,6 +304,7 @@ export default function OrderServices(props) {
                 })
 
                 if (!orderIsPlace.status) return
+                setPlacedOrderId(orderIsPlace.data.data.id)
 
                 const orders = await getOrdersByGuestId(currentUser.id)
                 const targetOrder = orders.find(o => o.id === orderIsPlace.data.data.id)
@@ -314,6 +316,7 @@ export default function OrderServices(props) {
                     console.error(error)
                 }
                 // console.log('tg response: ', response)
+                console.log('orderIsPlace: ', orderIsPlace)
 
                 if (
                     // response &&
@@ -327,11 +330,10 @@ export default function OrderServices(props) {
 
                     metrika.eatOrder()
                     setOrderComment('')
-                    // dispatch({ type: 'CLEAR_CART', storeId: props.id })
+                    dispatch({ type: 'CLEAR_CART', storeId: props.id })
                     if (targetOrder.paymentType === 'external') {
                         handleExternalPayment(targetOrder)
                     } else {
-                        router.push(`/basket/${Object.keys(storesInfo).find(x => x != props.id) || 0}`)
                         setModalIsOpen(true)
                     }
                     setVisibleLoadingOverlay(false)
@@ -354,6 +356,7 @@ export default function OrderServices(props) {
     const closeModal = () => {
         // console.log('state.stores: ', state.stores)
         if (Object.keys(state.stores).length === 0) router.push('/', null, { shallow: true })
+        else router.push(`/basket/${Object.keys(storesInfo).find(x => x != props.id) || 0}`, null, { shallow: true })
         setModalIsOpen(false)
     }
 
@@ -450,7 +453,8 @@ export default function OrderServices(props) {
             overlayProps={{ radius: 'sm', blur: 2 }}
             loaderProps={{ color: 'gray', type: 'oval' }}
         />
-        <OrderSendModal isOpen={modalIsOpen} onClose={closeModal} />
+        <OrderSendModal isOpen={modalIsOpen} onClose={closeModal} orderId={placedOrderId} />
+
         <main>
             <div className='page-wrapper'>
                 <div className='order'>
@@ -483,10 +487,11 @@ export default function OrderServices(props) {
                         {currentStoreState && currentStoreState?.order?.length !== 0 ?
                             iikoMenuIsFetched ? currentStoreState?.order?.map((x, i) => {
                                 const product = findItemInCache(x.id, menuCache)
+                                const productNomen = findItemInNomenclature(x.id, nomenclature)
                                 return <OrderItem
                                     key={i + product?.name}
                                     productId={x.id}
-                                    title={product?.name}
+                                    title={productNomen?.name}
                                     desc={`${x.quantity} x ${product?.itemSizes[0].prices[0].price}  ₽`}
                                     image={product?.itemSizes[0].buttonImageUrl}
                                     storeId={props.id}
@@ -644,9 +649,8 @@ export default function OrderServices(props) {
                             </Button>
                             : <></>} */}
 
-                        {store?.payment_system && store?.payment_system?.requisites ?
-
-                            <Paper radius={'md'} p={12} style={{ border: '1px solid rgb(86, 117, 75)' }} mt={24}>
+                        <Stack gap={12} mt={24}>
+                            <Paper radius={'md'} p={12} style={{ border: '1px solid rgb(86, 117, 75)' }}>
                                 <Group wrap='nowrap'>
                                     <Stack
                                         bg={'rgb(86, 117, 75)'}
@@ -655,15 +659,36 @@ export default function OrderServices(props) {
                                         justify='center'
                                         align='center'
                                     >
-                                        <FaPencil size={16} color='white' />
+                                        <FaPhone size={16} color='white' />
                                     </Stack>
                                     <Stack gap={2}>
-                                        <Text fz={14} fw={500}>Реквизиты</Text>
-                                        <Text fz={16}>{store?.payment_system?.requisites}</Text>
+                                        {/* <Text fz={14} fw={500}>Реквизиты</Text> */}
+                                        <Text fz={16} lh={'125%'}>После оформления заказа с вами свяжется наш сотрудник для подтверждения</Text>
                                     </Stack>
                                 </Group>
                             </Paper>
-                            : <></>}
+
+                            {store?.payment_system && store?.payment_system?.requisites ?
+
+                                <Paper radius={'md'} p={12} style={{ border: '1px solid rgb(86, 117, 75)' }} >
+                                    <Group wrap='nowrap'>
+                                        <Stack
+                                            bg={'rgb(86, 117, 75)'}
+                                            p={8}
+                                            style={{ borderRadius: 32 }}
+                                            justify='center'
+                                            align='center'
+                                        >
+                                            <FaPencil size={16} color='white' />
+                                        </Stack>
+                                        <Stack gap={2}>
+                                            <Text fz={14} fw={500}>Реквизиты</Text>
+                                            <Text fz={16} lh={'125%'}>{store?.payment_system?.requisites}</Text>
+                                        </Stack>
+                                    </Group>
+                                </Paper>
+                                : <></>}
+                        </Stack>
                     </div>
                 </div>
             </div>

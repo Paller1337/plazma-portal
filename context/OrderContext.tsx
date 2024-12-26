@@ -6,7 +6,7 @@ import { checkOrderStatus } from 'helpers/order/order';
 import toast from 'react-hot-toast';
 import { DEFAULTS } from 'defaults';
 import { ISupportTicket } from 'types/support'
-import { TOrderStatus } from 'types/order';
+import { IOrderIikoProduct, TOrderStatus } from 'types/order';
 import { ticketStatus } from 'helpers/support/tickets';
 import { notify } from 'utils/notify';
 import { FaCheckCircle } from "react-icons/fa"
@@ -21,7 +21,8 @@ interface IOrderProduct {
 
 export interface IOrderContext {
     id: string
-    order: IOrderProduct[]
+    products: IOrderProduct[]
+    iikoProducts: IOrderIikoProduct[]
     status: TOrderStatus
     paid_for: boolean
 }
@@ -54,7 +55,7 @@ const initialState: GlobalStateType = {
 };
 
 const orderReducer = (state: GlobalStateType, action: any) => {
-    let orderId, status, paid_for
+    let orderId, status, paid_for, iikoProducts, products
     switch (action.type) {
         case 'INITIALIZE_ORDERS':
             return {
@@ -70,6 +71,19 @@ const orderReducer = (state: GlobalStateType, action: any) => {
                 orders: state.orders.map(order =>
                     order.id === orderId
                         ? { ...order, status: status }
+                        : order
+                ),
+            }
+
+        case 'UPDATE_ORDER_PRODUCTS':
+            orderId = action.payload.orderId
+            products = action.payload.products
+            iikoProducts = action.payload.iikoProducts
+            return {
+                ...state,
+                orders: state.orders.map(order =>
+                    order.id === orderId
+                        ? { ...order, products, iikoProducts }
                         : order
                 ),
             }
@@ -154,10 +168,16 @@ export const OrderProvider = ({ children }) => {
                 const orders = ordersRes.data.orders.data?.map(ord => ({
                     id: ord.id,
                     status: ord.attributes?.status,
-                    order: ord.attributes?.products?.map(product => ({
+                    products: ord?.attributes.products.map(product => ({
                         id: product.product.data.id,
                         quantity: product.quantity,
                     })),
+                    iikoProducts: ord?.attributes.iikoProducts?.map(product => ({
+                        product: product?.product,
+                        quantity: product?.quantity,
+                        price: product?.price || -1,
+                        stoplist: product?.stoplist || false,
+                    })) || [],
                     paid_for: ord.attributes?.paid_for,
                 }) as IOrderContext)
 
@@ -260,6 +280,10 @@ export const OrderProvider = ({ children }) => {
                     // console.log('status old data ', state.orders.find(x => x.id == orderId)
                     const order = state.orders.find(x => x.id == orderId)
                     const textStatus = checkOrderStatus(newStatus);
+                    dispatch({
+                        type: 'UPDATE_ORDER_PRODUCTS',
+                        payload: { orderId, products: data?.products, iikoProducts: data?.iikoProducts },
+                    })
 
                     if (portalSettings?.debug) console.log({ status: order?.status, incomeStatus: newStatus })
                     if (order?.status !== newStatus) {
@@ -301,9 +325,17 @@ export const OrderProvider = ({ children }) => {
                 });
 
 
+                socket.on('orderBeforeUpdate', (data) => {
+                    console.log('orderBeforeUpdate', { data })
+                });
 
                 socket.on('orderCreate', (data) => {
                     const newOrder = data.newOrder;
+
+                    if (portalSettings?.debug) {
+                        console.log('[TRIGGER] orderCreate', data)
+                    }
+
                     dispatch({
                         type: 'CREATE_ORDER',
                         payload: { order: newOrder },
@@ -315,6 +347,8 @@ export const OrderProvider = ({ children }) => {
                         message: 'Ваш заказ принят',
                     })
                 });
+
+
 
                 socket.on('supportTicketStatusChange', (data) => {
                     const { newStatus, ticketId } = data

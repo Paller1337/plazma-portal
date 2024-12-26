@@ -70,7 +70,7 @@ export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(as
 
 export const DEFAULT_PAYMENT_TYPES = [
     { value: 'cash', label: 'Наличные' },
-    { value: 'bank-card', label: 'Банковская карта' },
+    { value: 'bank-card', label: 'Картой при получении' },
 ]
 
 export default function OrderServices(props) {
@@ -99,9 +99,9 @@ export default function OrderServices(props) {
         error: ''
     })
 
-    const rooms = hotelRooms?.map(room => ({
-        value: room.id.toString(),
-        label: room.tags
+    const rooms = hotelRooms?.filter(f => f.isActive)?.map(room => ({
+        value: room.meta_system_id.toString(),
+        label: room.name
     }))
 
     const [guestAccount, setGuestAccount] = useState<{
@@ -452,7 +452,7 @@ export default function OrderServices(props) {
                             placeholder="Выберите способ оплаты"
                             data={[
                                 { value: 'cash', label: 'Наличные' },
-                                { value: 'bank-card', label: 'Банковская карта' },
+                                { value: 'bank-card', label: 'Картой при получении' },
                             ]}
                             onChange={(v) => setOrderPayment(v)}
                             disabled={currentStoreState?.order.length === 0}

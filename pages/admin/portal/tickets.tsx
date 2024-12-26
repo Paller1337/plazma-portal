@@ -4,7 +4,7 @@ import ServiceOrder from '@/components/admin/ServiceOrder'
 import { Grid, Input, Loader, SegmentedControl } from '@mantine/core'
 import { IconSearch } from '@tabler/icons-react'
 import { useAdminOrders } from 'context/admin/OrderContext'
-import { getRooms } from 'helpers/bnovo/getRooms'
+import { getRooms, IHotelRoom } from 'helpers/bnovo/getRooms'
 import { withAdminAuthServerSideProps } from 'helpers/withAdminAuthServerSideProps'
 import { withAdminPage } from 'helpers/withAdminPage'
 import { DateTime } from 'luxon'
@@ -16,24 +16,17 @@ import { ISupportTicket, TSupportTicketStatus } from 'types/support'
 
 
 interface ProductsServicesPageProps {
-    rooms?: any
 }
 
 export const getServerSideProps: GetServerSideProps = withAdminAuthServerSideProps(async (context) => {
     try {
-        const rooms = await getRooms()
-
-        if (!rooms) {
-            throw new Error(`Комнат нет`)
-        }
         return {
             props: {
-                rooms: rooms,
             }
         };
     } catch (error) {
         console.error('Ошибка:', error);
-        return { props: { orders: [], rooms: [] } };
+        return { props: { orders: [] } };
     }
 }, ['admin', 'moderator'])
 

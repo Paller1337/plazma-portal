@@ -16,19 +16,14 @@ import { ISupportTicket, TSupportTicketStatus } from 'types/support'
 
 export const getServerSideProps: GetServerSideProps = withAdminAuthServerSideProps(async (context) => {
     try {
-        const rooms = await getRooms()
-
-        if (!rooms) {
-            throw new Error(`Комнат нет`)
-        }
+        
         return {
             props: {
-                rooms: rooms,
             }
         };
     } catch (error) {
         console.error('Ошибка:', error);
-        return { props: { orders: [], rooms: [] } };
+        return { props: { orders: [], } };
     }
 }, ['admin'])
 

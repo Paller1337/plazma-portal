@@ -224,7 +224,7 @@ export default function OrderListItem(props: OrderListItemProps) {
                             {props.order?.type?.value === 'eat' ?
                                 iikoMenuIsFetched ? props.order.iikoProducts.reduce((val, x) => {
                                     const product = findItemInCache(x.product, menuCache)
-                                    const sum = val + (x.quantity * product.itemSizes[0]?.prices[0]?.price * (x.stoplist ? 0 : 1))
+                                    const sum = val + (x.quantity * product?.itemSizes[0]?.prices[0]?.price * (x.stoplist ? 0 : 1))
                                     return sum
                                 }, 0) : <Loader color='gray' style={{ margin: '0 auto' }} size={24} />
                                 : orderProducts ? props.order.products.reduce(

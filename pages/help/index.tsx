@@ -84,8 +84,8 @@ export default function HelpPage(props: HelpPageProps) {
     const tickets: ISupportTicket[] = state.tickets
 
     const rooms = hotelRooms?.map(room => ({
-        value: room.id.toString(),
-        label: room.tags
+        value: room.meta_system_id.toString(),
+        label: room.name
     }))
 
     const placeTicket = async (ticketData) => {

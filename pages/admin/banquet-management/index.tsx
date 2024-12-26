@@ -37,7 +37,7 @@ import ExcelDownloadButton from '@/components/PlazmaBanquet/ExcelDownloadButton'
 import DeleteButton from '@/components/PlazmaBanquet/DeleteButton'
 import { withAdminPage } from 'helpers/withAdminPage'
 import { deleteCachedKeysByPattern } from 'helpers/redis'
-import { useDisclosure } from '@mantine/hooks'
+import { useDebouncedState, useDisclosure } from '@mantine/hooks'
 import toast from 'react-hot-toast'
 import { axiosInstance } from 'helpers/axiosInstance'
 
@@ -98,6 +98,8 @@ function BanquetManagementPage(props: BanquetManagementPageProps) {
     const [currentNav, setCurrentNav] = useState<TSupportTicketStatus>('new')
     const router = useRouter()
     const { state } = useAdminOrders()
+
+    const [searchValue, setSearchValue] = useDebouncedState('', 1000)
 
     const query = router.query
     const nowDate = DateTime.now()
@@ -276,7 +278,18 @@ function BanquetManagementPage(props: BanquetManagementPageProps) {
     useEffect(() => setBanquetsPortal(props.banquetsPortal), [props.banquetsPortal])
     useEffect(() => setBanquetsError(props.banquetsError), [props.banquetsError])
     useEffect(() => setBanquetsInWork(props.banquetsInWork), [props.banquetsInWork])
-
+    useEffect(() => {
+        if (props.banquetsPortal) {
+            setBanquetsPortal(
+                props.banquetsPortal.filter(
+                    b => b.banquetData.customer.name.toLowerCase().includes(searchValue.toLowerCase())
+                        || b.banquetData.comment.toLowerCase().includes(searchValue.toLowerCase())
+                        || b.banquetData.phone.toLowerCase().includes(searchValue.toLowerCase())
+                        || b.idN.toLowerCase().includes(searchValue.toLowerCase())
+                )
+            )
+        }
+    }, [searchValue, props.banquetsPortal])
 
     useEffect(() => {
         //init banquets
@@ -326,7 +339,8 @@ function BanquetManagementPage(props: BanquetManagementPageProps) {
                                     rightSection={<IconSearch size={16} />}
                                     radius={'md'}
                                     size='md'
-                                    disabled
+                                    onInput={e => setSearchValue(e.currentTarget.value)}
+                                // disabled
                                 />
                             </div>
                         </div>

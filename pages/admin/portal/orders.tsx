@@ -2,7 +2,7 @@ import AdminWrapper from '@/components/admin/AdminWrapper'
 import ServiceOrder from '@/components/admin/ServiceOrder'
 import { Input, Loader, SegmentedControl } from '@mantine/core'
 import { useAdminOrders } from 'context/admin/OrderContext'
-import { getRooms } from 'helpers/bnovo/getRooms'
+import { getRooms, IHotelRoom } from 'helpers/bnovo/getRooms'
 import { withAdminAuthServerSideProps } from 'helpers/withAdminAuthServerSideProps'
 import { useRouter } from 'next/router'
 import { GetServerSideProps } from 'next/types'
@@ -15,25 +15,19 @@ import { useIiko } from 'context/IikoContext'
 
 
 interface AdminOrdersPageProps {
-    rooms?: any
 }
 
 
 export const getServerSideProps: GetServerSideProps = withAdminAuthServerSideProps(async (context) => {
     try {
-        const rooms = await getRooms()
 
-        if (!rooms) {
-            throw new Error(`Комнат нет`)
-        }
         return {
             props: {
-                rooms: rooms,
             }
         };
     } catch (error) {
         console.error('Ошибка:', error);
-        return { props: { orders: [], rooms: [] } };
+        return { props: { orders: [] } };
     }
 }, ['admin', 'moderator'])
 
@@ -64,7 +58,6 @@ const groupOrdersByDate = (orders: IOrder[]) => {
 
 function OrdersPage(props: AdminOrdersPageProps) {
     const [currentNav, setCurrentNav] = useState<TOrderStatus>('new')
-    const hotelRooms = props.rooms?.filter(x => x.tags !== '')
     const { state, productsList } = useAdminOrders()
     const [orders, setOrders] = useState(state.orders)
     const [orderFetchTime, setOrderFetchTime] = useState(null)

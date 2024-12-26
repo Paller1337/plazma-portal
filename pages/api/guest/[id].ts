@@ -1,4 +1,3 @@
-// pages/api/rooms.ts
 import axios from 'axios';
 import { DEFAULTS } from 'defaults';
 import { getBooking } from 'helpers/bnovo/getBooking';

@@ -11,7 +11,7 @@ interface IGetPaymentType {
 export const getPaymentType = ({ order, type }: IGetPaymentType) => {
     switch (order?.paymentType) {
         case 'bank-card':
-            return 'Банковская карта'
+            return 'Картой при получении'
         case 'cash':
             return 'Наличные'
         case 'external':

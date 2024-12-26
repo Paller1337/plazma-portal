@@ -1,4 +1,3 @@
-// pages/api/rooms.ts
 import { getAllBookings, getBooking } from 'helpers/bnovo/getBooking';
 import { getRooms } from 'helpers/bnovo/getRooms';
 import { DateTime } from 'luxon';
