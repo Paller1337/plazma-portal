@@ -3,7 +3,7 @@ import NavBar from '@/components/NavBar'
 import PromoSlider from '@/components/PromoSlider'
 import RatingModal from '@/components/RatingModal'
 import StoriesModal from '@/components/Story'
-import { Stack } from '@mantine/core'
+import { Skeleton, Stack } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import axios from 'axios'
 import { useOrders } from 'context/OrderContext'
@@ -167,16 +167,26 @@ interface MainCardProps {
 
 export function MainCard(props: MainCardProps) {
     const [fallback, setFallback] = useState('')
-
+    const [loaded, setLoaded] = useState(false)
     return (
         <Link href={props.href} className={`card-${props.size}`}>
             <div className='main-cards__item'>
                 <div className='main-cards__item-image'>
                     {props.tag ? <span className='main-cards__item-tag'>{props.tag}</span> : <></>}
+                    {!loaded && <Skeleton
+                        radius="md"
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            position: 'absolute',
+                            zIndex: 100
+                        }}
+                    />}
                     <Image
                         fill
                         objectFit='cover'
                         src={fallback || props.image} alt=''
+                        onLoadingComplete={() => setLoaded(true)}
                         onError={() => setFallback('/images/fallback-2.png')}
                     // style={{ }}
                     />
