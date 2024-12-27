@@ -2,19 +2,25 @@
     padding: 0 24px 12px 24px
     @media screen and ( max-width: 500px )
         padding: 0 4px 12px 4px
+    p
+        line-height: 150%
+
+    p ~ ul  
+        margin-top: 8px
+
     p:not(:first-child)
         margin-top: 24px
     img
         max-width: 100%
-        max-height: 100%
+        max-height: fit-content
         border-radius: 18px
         object-fit: cover
-        @media screen and ( max-width: 600px )
-            max-height: 340px
-        @media screen and ( max-width: 480px )
-            max-height: 290px
-        @media screen and ( max-width: 410px )
-            max-height: 240px
+        // @media screen and ( max-width: 600px )
+        //     max-height: 340px
+        // @media screen and ( max-width: 480px )
+        //     max-height: 290px
+        // @media screen and ( max-width: 410px )
+        //     max-height: 240px
     h1, h2, h3, h4, h5, h6
         font-weight: 700
         margin-top: 24px
