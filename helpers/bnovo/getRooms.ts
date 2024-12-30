@@ -142,11 +142,11 @@ export async function getRooms(): Promise<IHotelRoom[]> {
         isActive: x.attributes.isActive,
     }));
 
-    console.log('[Strapi Rooms Length]', strapiRooms.length);
+    console.log('[Strapi Rooms Length]', strapiRooms?.length);
 
     // Получение данных из кеша или Bnovo API
     let bnovoRooms = JSON.parse(await getCachedRedis('bnovoRooms') || 'null');
-    console.log('[Bnovo Rooms]', bnovoRooms.length);
+    console.log('[Bnovo Rooms]', bnovoRooms?.length);
     if (!bnovoRooms) {
         await bnovoAuth();
         try {
@@ -166,16 +166,16 @@ export async function getRooms(): Promise<IHotelRoom[]> {
     }
 
     // Определяем недостающие комнаты
-    const missingRooms = bnovoRooms.filter(
+    const missingRooms = bnovoRooms?.filter(
         (bnovoRoom) =>
             !strapiRooms.some(
                 (strapiRoom) => String(strapiRoom.meta_system_id) === String(bnovoRoom.id)
             )
     );
 
-    console.log('[Missing Rooms]', missingRooms.length);
+    console.log('[Missing Rooms]', missingRooms?.length);
 
-    if (missingRooms.length > 0) {
+    if (missingRooms?.length > 0) {
         // Преобразуем недостающие комнаты в нужный формат
         const roomsToAdd = missingRooms.map((room) => ({
             meta_system_name: room.name,
