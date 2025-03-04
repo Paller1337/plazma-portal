@@ -1,7 +1,8 @@
 import axios from 'axios'
 import { getPortalSettings } from 'helpers/getPortalSettings'
+import { NextApiRequest } from 'next';
 
-export default async function handler(req, res) {
+export default async function handler(req: NextApiRequest, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -11,13 +12,14 @@ export default async function handler(req, res) {
     // const clientIp =
     //     req.headers['x-forwarded-for']?.split(',')[0] || // Если через прокси
     //     req.socket.remoteAddress
-
-    const ip =
-        req.headers['x-real-ip'] ||
-        req.headers.get['x-forwarded-for']?.split(',')[0] ||
-        req.ip
-    console.log({ip})
+    const xRealIp = req.headers['x-real-ip']
+    const xForwardedFor = (req.headers['x-forwarded-for'] as string)?.split(',')[0]
     
+    const ip =
+        xRealIp ||
+        xForwardedFor 
+    console.log({ xRealIp, xForwardedFor, headers: req.headers })
+
     const clientIp = ip.includes('127.0.0.1') ? '8.8.8.8' : ip
 
     if (!phoneNumber || !message) {
@@ -40,7 +42,8 @@ export default async function handler(req, res) {
         const portalSettings = await getPortalSettings()
         console.log({ portalSettings })
 
-        if (portalSettings && !portalSettings.isDisableSMSAuth) {
+        const isDisableSMSAuth = false
+        if (portalSettings && !portalSettings.isDisableSMSAuth && isDisableSMSAuth) {
             const response = await axios.get(smsUrl, { params })
             if (response.data.status === 'OK') {
                 console.log({ status: 'sent' })
