@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "cross-env port=4000 next start",
     "analyze": "cross-env port=4000 ANALYZE=true && next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "tuna": "tuna http 4000 --subdomain=portal-plazma"
   },
   "dependencies": {
     "@a2seven/yoo-checkout": "github:Paller1337/yoocheckout",

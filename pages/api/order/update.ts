@@ -68,7 +68,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 .reduce((acc, item) => acc + (item.price * item.quantity), 0)).toFixed(2)
                 : '0';
 
-            console.log({ iikoProductsCost })
+            const orderTotal = parseFloat(iikoProductsCost) + (order.store?.fee
+                ? order.store?.fee.type === 'fix' ? order.store?.fee.value : parseFloat(iikoProductsCost) * order.store.fee.value / 100 : 0)
+
+            const resultTotal = orderTotal.toFixed(2)
+
+            console.log({ iikoProductsCost, resultTotal })
 
             const payments = (await axiosInstance.post(`/api/order/payments/${order.id}`)).data
 
@@ -77,7 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const paymentCapture = await axiosInstance.post(`/api/order/payments/${order.id}/capture`, {
                 paymentId: payments[0]?.payment_id,
                 amount: {
-                    value: iikoProductsCost,
+                    value: resultTotal,
                     currency: "RUB"
                 }
             })

@@ -362,6 +362,20 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                 )
             })
 
+    const total = props.order.order.store.store_type?.value === 'eat'
+        ?
+        modalOrder.order.iikoProducts.filter(e => !e.stoplist).reduce((total, x) => {
+            return total + x?.price * x.quantity
+        }, 0)
+        :
+        props.order.order.products.reduce((total, x) => {
+            const product = props.order.products.find(p => parseInt(p.id) === x.id)
+            return total + product?.price * x.quantity
+        }, 0)
+
+    const orderTotal = total + (props.order.order.store?.fee
+        ? props.order.order.store?.fee.type === 'fix' ? props.order.order.store?.fee.value : total * props.order.order.store.fee.value / 100 : 0)
+
     return (
         <ReactModal
             isOpen={props.isOpen}
@@ -492,6 +506,21 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                                         }, 0)
                                 } руб.</span>
                             </div>
+                            {props.order.order.store?.fee ?
+                                <Group w={'100%'} justify='space-between'>
+                                    <Text c={'#8C8DA8'} fw={500}>{props.order.order.store?.fee?.name}</Text>
+                                    <Group wrap='nowrap' gap={4}>
+                                        <Text c={'#262E4A'}>({props.order.order.store?.fee?.value}{props.order.order.store?.fee?.type === 'fix' ? ' ₽' : '%'})</Text>
+                                        <Text c={'#262E4A'} fw={600}>{total * props.order.order.store?.fee?.value / 100} ₽</Text>
+                                    </Group>
+                                </Group>
+                                : <></>
+                            }
+                            <div className='row'>
+                                <span className='title'>Итого</span>
+                                <span className='value'>{orderTotal} руб.</span>
+                            </div>
+
                             <div className='row'>
                                 <span className='title'>Способ оплаты</span>
                                 <span className='value'>{getPaymentType({ order: props.order.order, type: 'staff' })}</span>
@@ -590,7 +619,7 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                                                 <Table.Td></Table.Td>
                                                 <Table.Td></Table.Td>
                                                 <Table.Td></Table.Td>
-                                                <Table.Td style={{
+                                                {/* <Table.Td style={{
                                                     fontWeight: 600,
                                                     fontSize: 18,
                                                     whiteSpace: 'nowrap',
@@ -598,18 +627,7 @@ const AdminOrderModal = (props: AdminOrderModalProps) => {
                                                     display: 'flex',
                                                     justifyContent: 'flex-end',
                                                 }}>
-                                                    Итого {
-                                                        props.order.order.store.store_type?.value === 'eat'
-                                                            ?
-                                                            modalOrder.order.iikoProducts.filter(e => !e.stoplist).reduce((total, x) => {
-                                                                return total + x?.price * x.quantity
-                                                            }, 0)
-                                                            :
-                                                            props.order.order.products.reduce((total, x) => {
-                                                                const product = props.order.products.find(p => parseInt(p.id) === x.id)
-                                                                return total + product?.price * x.quantity
-                                                            }, 0)
-                                                    } руб.</Table.Td>
+                                                    Сумма заказа {total} руб.</Table.Td> */}
                                             </Table.Tr>
                                         </Table.Tbody>
                                     </Table>

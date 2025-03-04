@@ -13,6 +13,9 @@ export default async function handler(req, res) {
             const response = await axios.post(`${DEFAULTS.STRAPI.url}/api/orders`,
                 { data: orderData },
                 {
+                    params: {
+                        populate: 'deep,4',
+                    },
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${STRAPI_API_TOKEN}`,

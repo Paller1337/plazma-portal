@@ -13,10 +13,11 @@ import { getPaymentStatus, getPaymentType } from 'helpers/getPaymentType'
 import { FaCheck, FaRotate } from 'react-icons/fa6'
 import { FaClock } from 'react-icons/fa'
 import { RiErrorWarningLine } from 'react-icons/ri'
+import { IOrderContext, useOrders } from 'context/OrderContext'
 
 interface OrderListItemProps {
     order?: IOrder
-    orderStatus?: TOrderStatus
+    orderContext?: IOrderContext
 }
 
 
@@ -69,13 +70,14 @@ export default function OrderListItem(props: OrderListItemProps) {
     const [orderProducts, setOrderProducts] = useState<IProduct[]>(null)
     const { dispatch, productsInfo, menuCache, iikoMenuIsFetched, nomenclature } = useCart()
     const router = useRouter()
+    const { state } = useOrders()
 
     const [statusStyle, setStatusStyle] = useState({
         '--status-color': '#000'
     } as React.CSSProperties)
 
     const status = useMemo(() => {
-        switch (props.orderStatus) {
+        switch (props.orderContext?.status ?? props.order?.status) {
             case 'new':
                 return {
                     text: 'Новый',
@@ -109,7 +111,7 @@ export default function OrderListItem(props: OrderListItemProps) {
                     color: '#000'
                 };
         }
-    }, [props.orderStatus]);
+    }, [props.orderContext?.status]);
 
     useEffect(() => {
         setStatusStyle({
@@ -165,6 +167,21 @@ export default function OrderListItem(props: OrderListItemProps) {
         }
     }
     // useEffect(() => console.log(props.order), [props.order])
+    const total = props.order?.type?.value === 'eat'
+        ?
+        props.order.iikoProducts.reduce((val, x) => {
+            const product = findItemInCache(x.product, menuCache)
+            const sum = val + (x.quantity * product?.itemSizes[0]?.prices[0]?.price * (x.stoplist ? 0 : 1))
+            return sum
+        }, 0)
+        : orderProducts ? props.order.products.reduce(
+            (val, x) => val + x.quantity * (orderProducts?.find(p => x.id === parseInt(p.id)) as IProduct).price, 0
+        ) : 0
+
+    const orderTotal = total + (props.order.store?.fee
+        ? props.order.store?.fee.type === 'fix' ? props.order.store?.fee.value : total * props.order.store.fee.value / 100 : 0)
+
+
     return (
         <div className='guest-order__wrapper' id={props.order.id.toString()}>
             <div className='guest-order'>
@@ -176,7 +193,7 @@ export default function OrderListItem(props: OrderListItemProps) {
                 />
 
                 <div className='guest-order__header'>
-                    <span className='guest-order__date'>{createAt}</span>
+                    <span className='guest-order__date' onClick={() => console.log({ order: props.order, context: props.orderContext, state })}>{createAt}</span>
                     <span className='guest-order__status guest-order__status--active' style={statusStyle}>{status.text}</span>
                 </div>
 
@@ -218,21 +235,38 @@ export default function OrderListItem(props: OrderListItemProps) {
                         <span className='guest-order__total-label'>Способ оплаты</span>
                         <span className='guest-order__total-amount'>{getPaymentType({ order: props.order, type: 'default' })}</span>
                     </div>
-                    <div className='guest-order__total-row'>
-                        <span className='guest-order__total-label'>Итого</span>
-                        <span className='guest-order__total-amount'>
-                            {props.order?.type?.value === 'eat' ?
-                                iikoMenuIsFetched ? props.order.iikoProducts.reduce((val, x) => {
-                                    const product = findItemInCache(x.product, menuCache)
-                                    const sum = val + (x.quantity * product?.itemSizes[0]?.prices[0]?.price * (x.stoplist ? 0 : 1))
-                                    return sum
-                                }, 0) : <Loader color='gray' style={{ margin: '0 auto' }} size={24} />
-                                : orderProducts ? props.order.products.reduce(
-                                    (val, x) => val + x.quantity * (orderProducts?.find(p => x.id === parseInt(p.id)) as IProduct).price, 0
-                                ) : <Loader color='gray' style={{ margin: '0 auto' }} size={12} />} ₽
 
-                        </span>
-                    </div>
+                    {props.order.store.fee ?
+                        <>
+                            <div className='guest-order__total-row'>
+                                <span className='guest-order__total-label'>Сумма заказа</span>
+                                <span className='guest-order__total-amount'>
+                                    {props.order?.type?.value === 'eat' ?
+                                        iikoMenuIsFetched ? props.order.iikoProducts.reduce((val, x) => {
+                                            const product = findItemInCache(x.product, menuCache)
+                                            const sum = val + (x.quantity * product?.itemSizes[0]?.prices[0]?.price * (x.stoplist ? 0 : 1))
+                                            return sum
+                                        }, 0) : <Loader color='gray' style={{ margin: '0 auto' }} size={24} />
+                                        : orderProducts ? props.order.products.reduce(
+                                            (val, x) => val + x.quantity * (orderProducts?.find(p => x.id === parseInt(p.id)) as IProduct).price, 0
+                                        ) : <Loader color='gray' style={{ margin: '0 auto' }} size={12} />} ₽
+
+                                </span>
+                            </div>
+                            <Group w={'100%'} justify='space-between'>
+                                <Text c={'#666'} fw={400}>{props.order.store.fee?.name}</Text>
+                                <Group wrap='nowrap' gap={4}>
+                                    <Text c={'#252525'}>({props.order.store.fee?.value}{props.order.store.fee?.type === 'fix' ? ' ₽' : '%'})</Text>
+                                    <Text c={'#252525'} fw={600}>{total * props.order.store.fee?.value / 100} ₽</Text>
+                                </Group>
+                            </Group>
+                        </>
+                        : <></>
+                    }
+                    <Group w={'100%'} justify='space-between'>
+                        <Text c={'#666'} fw={400}>Итого</Text>
+                        <Text c={'#252525'} fw={600}>{orderTotal} ₽</Text>
+                    </Group>
                 </div>
 
                 <div
@@ -242,6 +276,7 @@ export default function OrderListItem(props: OrderListItemProps) {
                         {!props.order?.paid_for
                             && props.order?.paymentType === 'external'
                             && props.order?.status !== 'canceled'
+                            && props.orderContext?.status !== 'canceled'
                             &&
                             <Button text='Оплатить' stretch bgColor='#56754B'
                                 onClick={() => router.push(`/basket/history/${props.order?.id}`, null, { shallow: true })}
@@ -252,7 +287,7 @@ export default function OrderListItem(props: OrderListItemProps) {
                         />
                     </Stack>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     )
 }

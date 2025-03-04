@@ -232,6 +232,12 @@ export const OrderProvider = ({ children }) => {
                             label: ord?.attributes.store.data?.attributes.store_type.data?.attributes.label,
                             value: ord?.attributes.store.data?.attributes.store_type.data?.attributes.value
                         },
+                        fee: {
+                            name: ord?.attributes.store.data?.attributes?.fee?.name || '',
+                            description: ord?.attributes.store.data?.attributes?.fee?.description || '',
+                            type: ord?.attributes.store.data?.attributes?.fee?.type || 'fix',
+                            value: ord?.attributes.store.data?.attributes?.fee?.value || 0,
+                        },
                         category: ord?.attributes.store.data?.attributes.category.data?.attributes.name,
                     },
                     isVisualNew: false,

@@ -8,9 +8,17 @@ export default async function handler(req, res) {
 
     const { phoneNumber, message } = req.body
 
-    const clientIp =
-        req.headers['x-forwarded-for']?.split(',')[0] || // Если через прокси
-        req.socket.remoteAddress
+    // const clientIp =
+    //     req.headers['x-forwarded-for']?.split(',')[0] || // Если через прокси
+    //     req.socket.remoteAddress
+
+    const ip =
+        req.headers['x-real-ip'] ||
+        req.headers.get['x-forwarded-for']?.split(',')[0] ||
+        req.ip
+    console.log({ip})
+    
+    const clientIp = ip.includes('127.0.0.1') ? '8.8.8.8' : ip
 
     if (!phoneNumber || !message) {
         return res.status(400).json({ error: 'Missing required fields' });

@@ -1,7 +1,7 @@
 import NavBar from '@/components/NavBar'
 import { ReactSVG } from 'react-svg'
 import Image from 'next/image'
-import { Image as MImage } from '@mantine/core'
+import { Divider, Image as MImage } from '@mantine/core'
 import OrderItem from '@/components/OrderItem'
 import { useCart } from 'context/CartContext'
 import Router, { useRouter } from 'next/router'
@@ -37,7 +37,15 @@ import { DEFAULT_PAYMENT_TYPES } from './[id]'
 import { IconCashBanknote, IconCheck, IconCreditCard } from '@tabler/icons-react'
 import { IOrder } from 'types/order'
 import { IPortalSettings } from 'helpers/getPortalSettings'
+import { useOrders } from 'context/OrderContext'
 
+
+interface PageProps {
+    id: string
+    store: IStore
+    storeStatus: IStoreStatus
+    settings: IPortalSettings
+}
 
 export const getServerSideProps: GetServerSideProps = withAuthServerSideProps(async (context) => {
     const id = 'eat'
@@ -88,7 +96,7 @@ const renderSelectOption: SelectProps['renderOption'] = ({ option, checked }) =>
     </Group>
 );
 
-export default function OrderServices(props) {
+export default function OrderServices(props: PageProps) {
     const storeStatus = props?.storeStatus as IStoreStatus
     const store = props?.store as IStore
 
@@ -100,12 +108,16 @@ export default function OrderServices(props) {
     const { isAuthenticated, openAuthModal, currentUser } = useAuth()
     const [modalIsOpen, setModalIsOpen] = useState(false)
     const { state, dispatch, productsInfo, storesInfo, hotelRooms, menuCache, iikoMenuIsFetched, nomenclature } = useCart()
+    const { dispatch: dispatchOrder, } = useOrders()
     const [visibleLoadingOverlay, setVisibleLoadingOverlay] = useState(false)
 
     const router = useRouter()
     const currentStoreState = state.stores[props.id]
     const total = currentStoreState?.order?.reduce((acc, curr) => acc + productsInfo[curr.id.toString()]?.price * curr.quantity, 0) || 0
     const [placedOrderId, setPlacedOrderId] = useState<number>(null)
+
+    const orderTotal = total + (props.store?.fee
+        ? props.store?.fee.type === 'fix' ? props.store?.fee.value : total * props.store.fee.value / 100 : 0)
 
     const [room, setRoom] = useState({
         value: '',
@@ -306,6 +318,19 @@ export default function OrderServices(props) {
                 if (!orderIsPlace.status) return
                 setPlacedOrderId(orderIsPlace.data.data.id)
 
+                dispatchOrder({
+                    type: 'CREATE_ORDER',
+                    payload: {
+                        order: {
+                            id: orderIsPlace.data.data.id,
+                            status: orderIsPlace.data.data.attributes.status,
+                            paid_for: orderIsPlace.data.data.attributes.paid_for,
+                            iikoProducts: orderIsPlace.data.data.attributes.iikoProducts,
+                            products: orderIsPlace.data.data.attributes.products,
+                        }
+                    },
+                })
+
                 const orders = await getOrdersByGuestId(currentUser.id)
                 const targetOrder = orders.find(o => o.id === orderIsPlace.data.data.id)
 
@@ -419,7 +444,7 @@ export default function OrderServices(props) {
                 payment_system: order?.payment_system?.id,
                 orderId: order?.id,
                 guestId: order?.guest?.id,
-                amount: total,
+                amount: orderTotal,
                 phone: order?.guest?.phone,
                 description: payment_system_description,
                 items: order?.iikoProducts.map(p => {
@@ -513,12 +538,38 @@ export default function OrderServices(props) {
                         }
 
                     </div>
+                    <Stack gap={12}>
+                        <Divider size={1} />
+                        <Stack px={24} pb={12} gap={8}>
+                            {props.store.fee ?
+                                <>
+                                    <Group w={'100%'} justify='space-between'>
+                                        <Text c={'#252525'} fw={500}>Сумма заказа</Text>
+                                        <Text c={'#252525'} fw={700}>{total} ₽</Text>
+                                    </Group>
+                                    <Group w={'100%'} justify='space-between'>
+                                        <Text c={'#252525'} fw={500}>{props.store.fee?.name}</Text>
+                                        <Group wrap='nowrap' gap={4}>
+                                            <Text c={'#252525'}>({props.store.fee?.value}{props.store.fee?.type === 'fix' ? ' ₽' : '%'})</Text>
+                                            <Text c={'#252525'} fw={700}>{total * props.store.fee?.value / 100} ₽</Text>
+                                        </Group>
+                                    </Group>
+                                </>
+                                : <></>
+                            }
+                            <Group w={'100%'} justify='space-between'>
+                                <Text c={'#252525'} fw={500}>Итого</Text>
+                                <Text c={'#252525'} fw={700}>{orderTotal} ₽</Text>
+                            </Group>
+                        </Stack>
+                    </Stack>
                     <div className='order-footer'>
                         <Select
                             label='Номер проживания'
                             mb={'md'}
                             size='md'
                             radius={'md'}
+                            allowDeselect={false}
                             comboboxProps={{ withinPortal: true }}
                             data={rooms}
                             placeholder="Комната"
@@ -595,7 +646,7 @@ export default function OrderServices(props) {
                         <div className='order-score'>
                             <div className='order-score__amount'>
                                 <span className='order-score__title'>Сумма заказа</span>
-                                <span className='order-score__sum'>{total > 0 ? `${total} ₽` : 'Бесплатно'}</span>
+                                <span className='order-score__sum'>{orderTotal > 0 ? `${orderTotal} ₽` : 'Бесплатно'}</span>
                             </div>
                             <Button
                                 bg={currentStoreState?.order.length === 0

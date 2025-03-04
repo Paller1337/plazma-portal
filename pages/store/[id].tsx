@@ -36,6 +36,14 @@ export interface IStoreWorkTime {
     end: string
 }
 
+export type IStoreFeeType = 'fix' | 'percent'
+export interface IStoreFee {
+    name: string,
+    description: string
+    type: IStoreFeeType
+    value: number
+}
+
 export interface IPaymentSystem {
     id: number
     name: string,
@@ -61,6 +69,7 @@ export interface IStore {
         value: string,
     }
     storeWorktime?: IStoreWorkTime[]
+    fee?: IStoreFee
     isActive?: boolean
     isCustom?: boolean
     customId?: string

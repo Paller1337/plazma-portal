@@ -414,6 +414,7 @@ export default function OrderServices(props) {
                             comboboxProps={{ withinPortal: true }}
                             data={rooms}
                             placeholder="Комната"
+                            allowDeselect={false}
                             searchable
                             onChange={value => setRoom(() => ({
                                 value: value,

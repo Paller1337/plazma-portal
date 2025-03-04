@@ -66,7 +66,7 @@ export default function OrderServices(props: BasketHistoryProps) {
                         <OrderListItem
                             key={(x.id + x.create_at).toString()}
                             order={x}
-                            orderStatus={state.orders?.find(ord => parseInt(ord.id) === x.id)?.status}
+                            orderContext={state.orders?.find(ord => parseInt(ord.id) === x.id)}
                         />
                     )
                         :

@@ -38,6 +38,12 @@ export const getStoreResult = (store): IStore => {
                 name: p.weekday.data.attributes.name || '',
             }
         })) : [],
+        fee: {
+            name: store?.attributes.fee?.name || '',
+            description: store?.attributes.fee?.description || '',
+            type: store?.attributes.fee?.type || 'fix',
+            value: store?.attributes.fee?.value || 0,
+        },
         customId: store?.attributes?.customId || '',
         isActive: store?.attributes?.isActive || false,
         isCustom: store?.attributes?.isCustom || false,

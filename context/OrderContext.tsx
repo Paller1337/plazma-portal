@@ -286,12 +286,12 @@ export const OrderProvider = ({ children }) => {
                     })
 
                     if (portalSettings?.debug) console.log({ status: order?.status, incomeStatus: newStatus })
-                    if (order?.status !== newStatus) {
-                        dispatch({
-                            type: 'UPDATE_ORDER_STATUS',
-                            payload: { orderId, status: newStatus, previous_status: order?.status },
-                        })
 
+                    dispatch({
+                        type: 'UPDATE_ORDER_STATUS',
+                        payload: { orderId, status: newStatus, previous_status: order?.status },
+                    })
+                    if (order?.status !== newStatus) {
                         notify({
                             icon: <MdUpdate />,
                             title: 'Новый статус заказа',
@@ -329,24 +329,24 @@ export const OrderProvider = ({ children }) => {
                     console.log('orderBeforeUpdate', { data })
                 });
 
-                socket.on('orderCreate', (data) => {
-                    const newOrder = data.newOrder;
+                // socket.on('orderCreate', (data) => {
+                //     const newOrder = data.newOrder;
 
-                    if (portalSettings?.debug) {
-                        console.log('[TRIGGER] orderCreate', data)
-                    }
+                //     if (portalSettings?.debug) {
+                //         console.log('[TRIGGER] orderCreate', data)
+                //     }
 
-                    dispatch({
-                        type: 'CREATE_ORDER',
-                        payload: { order: newOrder },
-                    });
+                //     dispatch({
+                //         type: 'CREATE_ORDER',
+                //         payload: { order: newOrder },
+                //     })
 
-                    notify({
-                        icon: <FaCheckCircle />,
-                        title: 'Новый заказ',
-                        message: 'Ваш заказ принят',
-                    })
-                });
+                //     notify({
+                //         icon: <FaCheckCircle />,
+                //         title: 'Новый заказ',
+                //         message: 'Ваш заказ принят',
+                //     })
+                // });
 
 
 

@@ -82,6 +82,13 @@ export interface IProduct {
     warning_text: string
 }
 
+export type IStoreFeeType = 'fix' | 'percent'
+export interface IStoreFee {
+    name: string,
+    description: string
+    type: IStoreFeeType
+    value: number
+}
 export interface IStore {
     id: number
     title: string
@@ -96,6 +103,7 @@ export interface IStore {
     store_type: IStoreType
     isCustom?: boolean
     customId?: string
+    fee?: IStoreFee
 }
 
 export interface IStoreType {

@@ -233,7 +233,7 @@ export default function OrderServices(props: BasketHistoryProps) {
     const createAt = DateTime.fromISO(props.order?.create_at).toFormat('dd MMMM, HH:mm');
 
     const total = props.order?.type?.value === 'eat' ?
-        iikoMenuIsFetched && props.order?.iikoProducts.reduce((val, x) => {
+        iikoMenuIsFetched && state.orders?.find(o => Number(o.id) === Number(props.order?.id))?.iikoProducts?.filter(p => !p.stoplist).reduce((val, x) => {
             const product = findItemInCache(x.product, menuCache)
             const sum = val + x.quantity * product.itemSizes[0]?.prices[0]?.price
             return sum
@@ -315,6 +315,9 @@ export default function OrderServices(props: BasketHistoryProps) {
     }, [props.order, portalSettings])
 
     // useEffect(() => console.log('history props.order ', props.order), [props.order])
+
+    const orderTotal = total + (props.order.store?.fee
+        ? props.order.store?.fee.type === 'fix' ? props.order.store?.fee.value : total * props.order.store.fee.value / 100 : 0)
 
 
     return (<>
@@ -418,7 +421,7 @@ export default function OrderServices(props: BasketHistoryProps) {
                                                         size='sm' h={'fit-content'} radius={'md'}
                                                         onClick={() => retryPayment()}
                                                     >
-                                                        <Group gap={12}>
+                                                        <Group gap={12} wrap='nowrap'>
                                                             {/* <ReactSVG src='/svg/cart-white.svg' /> */}
                                                             <FaRotate size={18} color='white' />
                                                             Повторить оплату
@@ -543,21 +546,32 @@ export default function OrderServices(props: BasketHistoryProps) {
                                     <span className='guest-order__total-label'>Способ оплаты</span>
                                     <span className='guest-order__total-amount'>{getPaymentType({ order: props.order, type: 'default' })}</span>
                                 </div>
+                                {props.order.store.fee ?
+                                    <>
+                                        <div className='guest-order__total-row'>
+                                            <span className='guest-order__total-label'>Сумма заказа</span>
+                                            <span className='guest-order__total-amount'>
+                                                {props.order?.type?.value === 'eat' ?
+                                                    iikoMenuIsFetched ? total : <Loader color='gray' style={{ margin: '0 auto' }} size={24} />
+                                                    : orderProducts ? props.order.products.reduce(
+                                                        (val, x) => val + x.quantity * (orderProducts?.find(p => x.id === parseInt(p.id)) as IProduct).price, 0
+                                                    ) : <Loader color='gray' style={{ margin: '0 auto' }} size={12} />} ₽
+
+                                            </span>
+                                        </div>
+                                        <Group w={'100%'} justify='space-between'>
+                                            <Text c={'#666'} fw={400}>{props.order.store.fee?.name}</Text>
+                                            <Group wrap='nowrap' gap={4}>
+                                                <Text c={'#252525'}>({props.order.store.fee?.value}{props.order.store.fee?.type === 'fix' ? ' ₽' : '%'})</Text>
+                                                <Text c={'#252525'} fw={600}>{total * props.order.store.fee?.value / 100} ₽</Text>
+                                            </Group>
+                                        </Group>
+                                    </>
+                                    : <></>
+                                }
                                 <div className='guest-order__total-row'>
                                     <span className='guest-order__total-label'>Итого</span>
-                                    <span className='guest-order__total-amount'>
-                                        {props.order?.type?.value === 'eat' ?
-                                            iikoMenuIsFetched ? state.orders?.find(o => Number(o.id) === Number(props.order?.id))?.iikoProducts.reduce((val, x) => {
-                                                const product = findItemInCache(x.product, menuCache)
-                                                // const sum = val + x.quantity * product.itemSizes[0]?.prices[0]?.price
-                                                const sum = val + (x.quantity * product.itemSizes[0]?.prices[0]?.price * (x.stoplist ? 0 : 1))
-                                                return sum
-                                            }, 0) : <Loader color='gray' style={{ margin: '0 auto' }} size={24} />
-                                            : orderProducts ? state.orders?.find(o => Number(o.id) === Number(props.order?.id))?.products.reduce(
-                                                (val, x) => val + x.quantity * (orderProducts?.find(p => Number(x.id) === Number(p.id)) as IProduct).price, 0
-                                            ) : <Loader color='gray' style={{ margin: '0 auto' }} size={12} />} ₽
-
-                                    </span>
+                                    <span className='guest-order__total-amount'>{orderTotal ?? 0} ₽</span>
                                 </div>
                             </div>
 

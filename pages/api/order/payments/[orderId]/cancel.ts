@@ -41,11 +41,13 @@ export default async function handler(req, res) {
                     }
                 }
             ))?.data
+            console.log({ findPayment })
             const targetPayment = findPayment?.data?.length > 0 ? {
                 id: findPayment?.data[0]?.id,
                 ...findPayment?.data[0]?.attributes
             } : null
 
+            console.log({ targetPayment })
 
             if (!targetPayment?.payment_id) {
                 res.status(400).json({ message: 'Не найден id для платежа' });
@@ -61,6 +63,9 @@ export default async function handler(req, res) {
                 }
             ))?.data
                 .data?.find(ps => ps.id === targetPayment?.payment_system?.data?.id)
+
+
+            console.log({ paymentSystemPayloadData })
 
             const payload = {
                 id: paymentSystemPayloadData?.id,
@@ -78,7 +83,11 @@ export default async function handler(req, res) {
                 secretKey: payload.secretKey,
             })
 
-            const payment = await checkout.cancelPayment(targetPayment.payment_id)
+            console.log({ paymentSystemPayloadData })
+            let payment = null
+            if (targetPayment.status === 'waiting_for_capture') {
+                payment = await checkout.cancelPayment(targetPayment.payment_id).catch(error => { console.error(error) })
+            }
 
             res.status(200).json({ payload, payment, targetPayment });
             return
