@@ -7,8 +7,9 @@ import { getPaymentType } from './getPaymentType';
 export async function telegramSend(message: string, chat_id, message_thread_id) {
     const status = await axiosInstance.post('/api/telegram/send', {
         message,
-        chat_id: -1001934278839,
-        // message_thread_id
+        // chat_id: -1001934278839,
+        chat_id,
+        message_thread_id
     })
 
     if (status.status === 200) return true

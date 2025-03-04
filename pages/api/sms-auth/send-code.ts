@@ -9,16 +9,20 @@ export default async function handler(req: NextApiRequest, res) {
 
     const { phoneNumber, message } = req.body
 
+    const forwardedFor = req.headers['x-forwarded-for'] as string;
+    const realIp = forwardedFor ? forwardedFor.split(',')[0].trim() : req.socket.remoteAddress;
+
     // const clientIp =
     //     req.headers['x-forwarded-for']?.split(',')[0] || // Если через прокси
     //     req.socket.remoteAddress
-    const xRealIp = req.headers['x-real-ip']
-    const xForwardedFor = (req.headers['x-forwarded-for'] as string)?.split(',')[0]
-    
-    const ip =
-        xRealIp ||
-        xForwardedFor 
-    console.log({ xRealIp, xForwardedFor, headers: req.headers })
+    // const xRealIp = req.headers['x-real-ip']
+    // const xForwardedFor = (req.headers['x-forwarded-for'] as string)?.split(',')[0]
+
+    const ip = realIp
+    console.log({
+        realIp,
+        // headers: req.headers, remoteAddress: req.socket.remoteAddress
+    })
 
     const clientIp = ip.includes('127.0.0.1') ? '8.8.8.8' : ip
 
@@ -42,8 +46,7 @@ export default async function handler(req: NextApiRequest, res) {
         const portalSettings = await getPortalSettings()
         console.log({ portalSettings })
 
-        const isDisableSMSAuth = false
-        if (portalSettings && !portalSettings.isDisableSMSAuth && isDisableSMSAuth) {
+        if (portalSettings && !portalSettings.isDisableSMSAuth) {
             const response = await axios.get(smsUrl, { params })
             if (response.data.status === 'OK') {
                 console.log({ status: 'sent' })
