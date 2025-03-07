@@ -12,8 +12,8 @@ export namespace DEFAULTS {
 
     //prod or dev
     export const GENERAL_URL = {
-        app: APP_URL.dev,
-        server: SERVER_URL.dev
+        app: APP_URL.prod,
+        server: SERVER_URL.prod
     }
 
     export const SOCKET_URL = {
