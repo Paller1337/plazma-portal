@@ -210,6 +210,16 @@ export default function OrderServices(props: PageProps) {
             })
             return
         }
+
+        if (props.store?.min_order_amount && (total - props.store?.min_order_amount) < 0) {
+            notify({
+                icon: <RiErrorWarningLine />,
+                title: 'Заказ не оформлен.',
+                message: `Минимальная сумма заказа ${props.store?.min_order_amount}`,
+            })
+            return
+        }
+
         if (!room.label || !room.value) {
             setRoom(p => ({
                 ...p,
@@ -563,7 +573,40 @@ export default function OrderServices(props: PageProps) {
                             </Group>
                         </Stack>
                     </Stack>
-                    <div className='order-footer'>
+                    <Stack
+                        px={24} py={18} gap={12}
+                        style={{ borderTop: `1px solid rgba(38, 38, 38, 0.2)` }}
+                        pos={'relative'}
+                    >
+                        {props.store?.min_order_amount || total - props.store?.min_order_amount >= 0 ? <></> :
+                            <Stack bg={'rgba(235, 232, 224, 0.8)'} style={{ zIndex: 10, borderRadius: '0 0 12px 12px' }}
+                                pos={'absolute'} left={0} right={0} top={0} bottom={0}
+                                py={32} px={24} align='center'
+                            >
+                                <Stack
+                                    style={{ border: `1px solid rgba(38, 38, 38, 0.2)`, borderRadius: 12 }} bg={'white'}
+                                    px={16} py={16} gap={4} w={'fit-content'} align='center'
+                                >
+                                    <Text c={'#252525'} fw={700}>Минимальная сумма заказа - {props.store?.min_order_amount}₽</Text>
+                                    <Group gap={4}>
+                                        <Text c={'#252525'} fw={500}>В корзине не хватает</Text>
+                                        <Text c={'#252525'} fw={500}>на {props.store?.min_order_amount - total}₽</Text>
+                                    </Group>
+
+                                    <Button
+                                        bg={'#56754B'}
+                                        p={12} variant='filled'
+                                        c={'white'} mt={12}
+                                        lh={'125%'}
+                                        size='sm' h={'fit-content'} radius={'md'}
+                                        // onClick={() => console.log(`/store/${router.pathname.split('/')[router.pathname.split('/').length - 1]}`)}
+                                        onClick={() => router.push(`/store/${router.pathname.split('/')[router.pathname.split('/').length - 1]}`, null, { shallow: true })}
+                                    >
+                                        Вернуться к выбору блюд
+                                    </Button>
+                                </Stack>
+                            </Stack>
+                        }
                         <Select
                             label='Номер проживания'
                             mb={'md'}
@@ -740,7 +783,7 @@ export default function OrderServices(props: PageProps) {
                                 </Paper>
                                 : <></>}
                         </Stack>
-                    </div>
+                    </Stack>
                 </div>
             </div>
 

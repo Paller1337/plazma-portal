@@ -73,6 +73,7 @@ export interface IStore {
     isActive?: boolean
     isCustom?: boolean
     customId?: string
+    min_order_amount?: number
 }
 
 interface StorePageProps {

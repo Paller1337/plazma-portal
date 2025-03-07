@@ -257,7 +257,7 @@ export default function CustomStorePage(props: EatPageProps) {
     }, [currentMenuId, portalSettings])
 
 
-
+    const orderButtonIsDisabled = !storeStatus.isOpen || total < props.store?.min_order_amount
 
     const tprice = 10000
     return (<>
@@ -302,19 +302,23 @@ export default function CustomStorePage(props: EatPageProps) {
                             </Stack>
                         </Stack>
                         <Stack gap={8}>
-                            {storeStatus.untilClose_min && storeStatus.untilClose_min < 45 ?
-                                <Paper mt={8} px={12} py={4} radius={'lg'} bg={'orange'} w={'fit-content'}>
-                                    <Text fw={600} fz={14} c={'white'}>До закрытия {storeStatus.untilClose}</Text>
-                                </Paper>
-                                : <></>
-                            }
-                            {storeStatus.untilOpen_min ?
-                                <Paper mt={8} px={12} py={4} bg={'green'} radius={'lg'} w={'fit-content'}>
-                                    <Text fw={600} fz={14} c={'white'}>До открытия {storeStatus.untilOpen}</Text>
-                                </Paper>
-                                : <></>
-                            }
-
+                            <Stack gap={4}>
+                                {storeStatus.untilClose_min && storeStatus.untilClose_min < 45 ?
+                                    <Paper mt={8} px={12} py={4} radius={'lg'} bg={'orange'} w={'fit-content'}>
+                                        <Text fw={600} fz={14} c={'white'}>До закрытия {storeStatus.untilClose}</Text>
+                                    </Paper>
+                                    : <></>
+                                }
+                                {storeStatus.untilOpen_min ?
+                                    <Paper mt={8} px={12} py={4} bg={'green'} radius={'lg'} w={'fit-content'}>
+                                        <Text fw={600} fz={14} c={'white'}>До открытия {storeStatus.untilOpen}</Text>
+                                    </Paper>
+                                    : <></>
+                                }
+                                {props.store?.min_order_amount > 0 && <Paper mt={8} px={12} py={4} bg={'orange'} radius={'lg'} w={'fit-content'}>
+                                    <Text fw={600} fz={14} c={'white'}>Минимальная сумма заказа {props.store?.min_order_amount} ₽</Text>
+                                </Paper>}
+                            </Stack>
                             {isLoading ? <Skeleton height={24} radius="xl" /> :
                                 isActive ? <EatMenuControl
                                     data={props.menus}
@@ -403,7 +407,7 @@ export default function CustomStorePage(props: EatPageProps) {
                                                                     onClick={() => openProductModal(item, itemNomen, cat)}
                                                                 >
                                                                     <div className={`store-content__product-image${tprice && tprice > 0 ? ' with-price' : ''}`}
-                                                                        // style={portalSettings?.debug ? { background: itemNomen?.seoTitle ? 'green' : '#f1f3f5' } : {}}
+                                                                    // style={portalSettings?.debug ? { background: itemNomen?.seoTitle ? 'green' : '#f1f3f5' } : {}}
                                                                     >
                                                                         {portalSettings?.debug && itemNomen?.seoTitle
                                                                             ?
@@ -447,11 +451,14 @@ export default function CustomStorePage(props: EatPageProps) {
 
             {currentStoreState && currentStoreState?.order.length > 0 ?
                 <div className='store-cart-button'>
-                    <Link className={`portal-button portal-button_stretch ${!storeStatus.isOpen ? ' portal-button_disabled' : ''}`} href={`/basket/${customStoreId}`}
+                    <Link className={`portal-button portal-button_stretch ${orderButtonIsDisabled ? ' portal-button_disabled' : ''}`} href={`/basket/${customStoreId}`}
                         style={{ backgroundColor: 'rgb(86, 117, 75)' }}
                         prefetch
                     >
-                        {!storeStatus.isOpen ? 'До открытия ' + storeStatus.untilOpen : `Перейти к заказу ${total ? `${total}₽` : ''}`}
+                        {!storeStatus.isOpen ? 'До открытия ' + storeStatus.untilOpen :
+                            total < props.store?.min_order_amount ? `Для заказа добавьте на ${props.store?.min_order_amount - total} ₽`
+                                :
+                                `Перейти к заказу ${total ? `${total} ₽` : `Мин. сумма заказа ${props.store?.min_order_amount}`}`}
                     </Link>
                     {/* <Button text='' bgColor='' stretch onClick={() => router.push(`/basket/${props.store?.id}`)} /> */}
                 </div>

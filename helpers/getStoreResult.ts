@@ -47,5 +47,6 @@ export const getStoreResult = (store): IStore => {
         customId: store?.attributes?.customId || '',
         isActive: store?.attributes?.isActive || false,
         isCustom: store?.attributes?.isCustom || false,
+        min_order_amount: store?.attributes?.min_order_amount || 0,
     }
 }
