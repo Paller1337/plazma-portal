@@ -259,7 +259,7 @@ function BanquetEditPage(props: BanquetPortalPageProps) {
         console.log('createState: ', createState)
     }, [createState])
 
-    const errorMessage = props.banquet?.iikoMessage ? (JSON.parse(props.banquet?.iikoMessage)).eventInfo.errorInfo.message.description : 'Неизвестная ошибка'
+    const errorMessage = props.banquet?.iikoMessage ? (JSON.parse(props.banquet?.iikoMessage))?.eventInfo?.errorInfo?.message?.description : 'Неизвестная ошибка'
     useEffect(() => {
         console.log('errorMessage: ', errorMessage)
     }, [errorMessage])

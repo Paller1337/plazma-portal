@@ -12,7 +12,7 @@ export namespace DEFAULTS {
 
     //prod or dev
     export const GENERAL_URL = {
-        app: APP_URL.prod,
+        app: APP_URL.dev,
         server: SERVER_URL.prod
     }
 
